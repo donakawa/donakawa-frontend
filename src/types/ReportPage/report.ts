@@ -24,3 +24,28 @@ export type PurchaseItem = {
   daylabel: string;
   itemImgUrl: string;
 };
+
+export type CalendarElement = {
+  year: number;
+  month: number;
+  totalWon: number;
+  purchaseCount: number;
+};
+
+export type CalendarPurchaseItem = {
+  id: string;
+  date: string;
+  timeLabel: DayTime;
+  reason: ConsumptionReason[];
+  title: string;
+  price: number;
+  imageUrl: string;
+  hasReview: boolean;
+};
+
+export type CalendarCell = {
+  date: Date | null;
+  dayNumber: number | null;
+  inCurrentMonth: boolean;
+  hasPurchase: boolean;
+};

@@ -9,7 +9,12 @@ import LoginPage from '@/pages/LoginPage/LoginPage';
 import HomePage from '@/pages/HomePage/HomePage';
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
+import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
+import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
 import MyPage from '@/pages/MyPage/MyPage';
+
+// 임시
+import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -20,7 +25,15 @@ const publicChildren: RouteObject[] = [
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
   { path: 'wishlist', element: <WishlistPage /> },
-  { path: 'report', element: <ReportPage /> },
+  {
+    path: 'report',
+    children: [
+      { index: true, element: <ReportPage /> },
+      { path: 'review', element: <PurchaseReviewPage /> },
+      { path: 'review/write', element: <ReviewWritePage /> },
+      { path: 'detail', element: <ReportDetailPage enableMock /> },
+    ],
+  },
   { path: 'mypage', element: <MyPage /> },
 ];
 
