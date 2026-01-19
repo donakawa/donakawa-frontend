@@ -11,7 +11,7 @@ import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
-import MyPage from '@/pages/MyPage/MyPage';
+// import MyPage from '@/pages/MyPage/MyPage';
 
 // 임시
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
@@ -34,7 +34,7 @@ const protectedChildren: RouteObject[] = [
       { path: 'detail', element: <ReportDetailPage enableMock /> },
     ],
   },
-  { path: 'mypage', element: <MyPage /> },
+  // { path: 'mypage', element: <MyPage /> },
 ];
 
 const routes: RouteObject[] = [

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import StarIcon from '@/assets/star_line.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import RightArrow from '@/assets/arrow_right.svg';
@@ -12,6 +13,12 @@ import type {
 } from '@/types/ReportPage/report';
 
 export default function RecordView() {
+  const navigate = useNavigate();
+
+  const goToWritePage = () => {
+    navigate(`/report/review`);
+  };
+
   const monthlyReport: MonthlyReport = {
     totalWon: 234_500,
     savedWon: 23_500,
@@ -274,7 +281,7 @@ export default function RecordView() {
           <div className="text-xs font-normal" style={{ color: 'var(--color-black)' }}>
             소비 후기 작성하러 가볼까요?
           </div>
-          <img src={RightArrow} aria-hidden className="w-[7px] h-[13px] block" alt="" />
+          <img src={RightArrow} aria-hidden className="w-[7px] h-[13px] block" alt="" onClick={goToWritePage} />
         </div>
 
         <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pt-2 pb-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -302,6 +309,17 @@ export default function RecordView() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <div className="bg-primary-200 rounded-[10px] p-[14px] gap-4">
+          <div className="text-xs font-normal" style={{ color: 'var(--color-primary-500)' }}>
+            내가 포기한 아이템
+          </div>
+          <div className="text-m font-semibold" style={{ color: 'var(--color-black' }}>
+            포기한 아이템
+          </div>
         </div>
       </section>
     </div>
