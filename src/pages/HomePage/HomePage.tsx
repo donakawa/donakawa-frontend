@@ -46,7 +46,7 @@ const HomePage = () => {
         <span className="text-primary-600 leading-none font-galmuri">onakawa</span>
       </header>
       {/* 말풍선 & 캐릭터 섹션 */}
-      <section className="flex flex-col items-center my-[24px] px-[20px]">
+      <section className="flex flex-col items-center my-[24px] px-[20px] min-h-[200px]">
         {/* 말풍선 */}
         <div className="relative text-center bg-white border-2 mb-[24px] max-w-[278px] border-primary-600 rounded-xl drop-shadow-[0_0_3px_rgba(0,0,0,0.25)]">
           <p className="text-[14px] mx-[17px] my-[14px]">
