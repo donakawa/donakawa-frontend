@@ -10,6 +10,8 @@ import HomePage from '@/pages/HomePage/HomePage';
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
 import MyPage from '@/pages/MyPage/MyPage';
+import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
+import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -19,6 +21,8 @@ const publicChildren: RouteObject[] = [
 
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
+  { path: 'budget/setting', element: <BudgetSettingPage /> },
+  { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
   { path: 'report', element: <ReportPage /> },
   { path: 'mypage', element: <MyPage /> },
