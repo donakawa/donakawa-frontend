@@ -2,7 +2,7 @@ import React from 'react';
 
 interface StepLayoutProps {
   stepText: string;
-  title: string;
+  title: string | React.ReactNode;
   isRequired?: boolean; // step 1 제목 옆에 * 표시
   titleAlign?: 'left' | 'center'; //step 6 제목 정렬
   description?: string; // 제목 아래 설명

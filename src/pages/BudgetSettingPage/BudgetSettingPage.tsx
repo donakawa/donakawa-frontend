@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+
 import Step1 from './components/Step1';
 import Step2 from './components/Step2';
 import Step3 from './components/Step3';
@@ -9,11 +10,28 @@ import Step5 from './components/Step5';
 import Step6 from './components/Step6';
 import ProgressBar from './components/ProgressBar';
 
+import { type HeaderControlContext } from '@/layouts/ProtectedLayout';
+
 const BudgetSettingPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const TOTAL_STEPS = 6;
   const [direction, setDirection] = useState(0);
+
+  const { setCustomBack, setRightAction } = useOutletContext<HeaderControlContext>();
+
+  useEffect(() => {
+    setCustomBack(() => prevStep);
+
+    if (1 === step || step > 4) {
+      setRightAction(null);
+    } else if (step) {
+      setRightAction({
+        label: '건너뛰기',
+        onClick: nextStep,
+      });
+    }
+  }, [step]);
 
   const nextStep = () => {
     if (step === TOTAL_STEPS) {
@@ -25,6 +43,10 @@ const BudgetSettingPage = () => {
   };
 
   const prevStep = () => {
+    if (step === 1) {
+      navigate(-1);
+      return;
+    }
     setDirection(-1);
     setStep((prev) => prev - 1);
   };
@@ -46,7 +68,7 @@ const BudgetSettingPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-white">
+    <div className="h-screen flex flex-col">
       <ProgressBar currentStep={step} totalSteps={TOTAL_STEPS} />
       <div className="flex-1 relative">
         <AnimatePresence initial={false} custom={direction}>

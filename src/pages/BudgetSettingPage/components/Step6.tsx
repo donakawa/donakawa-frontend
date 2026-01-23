@@ -26,7 +26,13 @@ const Step6 = ({ onNext }: { onNext: (data: { budget: number }) => void }) => {
   return (
     <StepLayout
       stepText="자산 형성 전략"
-      title="0000000님에게 딱 맞는 온라인 쇼핑 목표액은"
+      title={
+        <>
+          0000000님에게 딱 맞는
+          <br />
+          온라인 쇼핑 목표액은
+        </>
+      }
       titleAlign="center"
       isNextDisabled={numericBudget === 0}
       onNext={() => onNext({ budget: numericBudget })}

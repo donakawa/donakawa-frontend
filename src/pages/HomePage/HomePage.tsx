@@ -62,7 +62,6 @@ const HomePage = () => {
           <MascotIcon className="w-full h-full" />
         </div>
       </section>
-      {/* 
 
       {/* 하단 흰색 카드 영역 */}
       <motion.section

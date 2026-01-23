@@ -37,11 +37,11 @@ const MoneyInputSection = ({ value, onChange }: MoneyInputSectionProps) => {
                   rounded-[6px] outline-none placeholder:text-gray-200 
                   shadow-[0_0_3px_rgba(0,0,0,0.25)] focus-within:shadow-primary-500"
         />
-        <span className="text-[24px] font-medium whitespace-nowrap">원 이하</span>
+        <span className="text-[24px] font-medium whitespace-nowrap">원</span>
       </div>
 
       {/* 퀵 버튼들 */}
-      <div className="flex flex-wrap gap-[14px]">
+      <div className="flex flex-wrap gap-[13px]">
         {AMOUNTS.map((amount) => (
           <button
             key={amount}
