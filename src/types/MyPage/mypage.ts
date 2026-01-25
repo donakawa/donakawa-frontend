@@ -1,5 +1,3 @@
-// export type TabKey = 'Completed' | 'Giveup';
-
 export type Profile = {
   nickname: string;
   email: string;
@@ -7,4 +5,4 @@ export type Profile = {
   giveupPrice: number;
 };
 
-export type Goal = string[];
+export type Goal = string;

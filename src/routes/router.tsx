@@ -11,10 +11,8 @@ import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
-// import MyPage from '@/pages/MyPage/MyPage';
-
-// 임시
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
+// import MyPage from '@/pages/MyPage/MyPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -31,10 +29,9 @@ const protectedChildren: RouteObject[] = [
       { index: true, element: <ReportPage /> },
       { path: 'review', element: <PurchaseReviewPage /> },
       { path: 'review/write', element: <ReviewWritePage /> },
-      { path: 'detail', element: <ReportDetailPage enableMock /> },
+      { path: 'detail', element: <ReportDetailPage /> },
     ],
   },
-  // { path: 'mypage', element: <MyPage /> },
 ];
 
 const routes: RouteObject[] = [
