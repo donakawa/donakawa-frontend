@@ -32,10 +32,9 @@ const MoneyInputSection = ({ value, onChange }: MoneyInputSectionProps) => {
           value={value}
           onChange={handleInputChange}
           placeholder="0"
-          className="w-full border border-gray-50 py-[18px] px-[33px] 
+          className="w-full border-[2px] border-gray-100 py-[18px] px-[33px] 
                   text-[16px] focus-within:border-primary-500 transition-colors 
-                  rounded-[6px] outline-none placeholder:text-gray-200 
-                  shadow-[0_0_3px_rgba(0,0,0,0.25)] focus-within:shadow-primary-500"
+                  rounded-[6px] outline-none placeholder:text-gray-200"
         />
         <span className="text-[24px] font-medium whitespace-nowrap">원</span>
       </div>
@@ -46,7 +45,7 @@ const MoneyInputSection = ({ value, onChange }: MoneyInputSectionProps) => {
           <button
             key={amount}
             onClick={() => handleQuickAdd(amount)}
-            className="px-[8px] py-[6px] rounded-full border border-primary-300 
+            className="px-[8px] py-[6px] rounded-full border-[1.5px] border-primary-300 
                     text-[14px] hover:bg-primary-300 active:scale-95 transition-all">
             + {amount >= 10000 ? `${amount / 10000}만` : `${amount / 1000}천`}
           </button>

@@ -3,7 +3,7 @@ import React from 'react';
 interface StepLayoutProps {
   stepText: string;
   title: string | React.ReactNode;
-  isRequired?: boolean; // step 1 제목 옆에 * 표시
+  isRequired?: boolean; // step 1&5 제목 옆에 * 표시
   titleAlign?: 'left' | 'center'; //step 6 제목 정렬
   description?: string; // 제목 아래 설명
   children: React.ReactNode;
@@ -47,9 +47,7 @@ const StepLayout = ({
           onClick={onNext}
           disabled={isNextDisabled}
           className={`w-full py-[18px] rounded-[5px] text-[16px] font-medium transition-all ${
-            !isNextDisabled
-              ? 'bg-primary-500 text-white shadow-lg shadow-primary-100'
-              : 'bg-gray-100 text-white cursor-not-allowed'
+            !isNextDisabled ? 'bg-primary-500 text-white' : 'bg-gray-100 text-white cursor-not-allowed'
           }`}>
           {nextButtonText}
         </button>

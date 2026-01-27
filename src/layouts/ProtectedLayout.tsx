@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 
@@ -22,11 +22,13 @@ export default function ProtectedLayout() {
   const [rightAction, setRightAction] = useState<{ label: string; onClick: () => void } | null>(null);
 
   // 페이지 이동 시 상태 초기화
-  useEffect(() => {
-    setCustomBack(null);
-    setRightAction(null);
-  }, [location.pathname]);
+  const handleSetCustomBack = useCallback((fn: (() => void) | null) => {
+    setCustomBack(() => fn);
+  }, []);
 
+  const handleSetRightAction = useCallback((action: { label: string; onClick: () => void } | null) => {
+    setRightAction(action);
+  }, []);
   // 제목 결정
   const getTitle = (path: string) => {
     if (path.startsWith('/budget/setting')) return '목표 예산 설정';
@@ -58,7 +60,14 @@ export default function ProtectedLayout() {
 
       <main className="flex-1">
         {/* 자식에게 'setRightAction' 전달 */}
-        <Outlet context={{ setCustomBack, setRightAction } satisfies HeaderControlContext} />
+        <Outlet
+          context={
+            {
+              setCustomBack: handleSetCustomBack,
+              setRightAction: handleSetRightAction,
+            } satisfies HeaderControlContext
+          }
+        />
       </main>
 
       {/* 네비바 */}

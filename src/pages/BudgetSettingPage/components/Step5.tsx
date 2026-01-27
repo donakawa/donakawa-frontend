@@ -49,11 +49,9 @@ const Step5 = ({ onNext }: { onNext: (data: { strategy: string }) => void }) => 
             <button
               key={item.id}
               onClick={() => setSelectedId(item.id)}
-              className={`flex items-center gap-[20px] p-[12px] rounded-[10px] transition-all text-left w-full
+              className={`flex items-center gap-[20px] p-[12px] border-[2px] rounded-[10px] transition-all text-left w-full
                 ${
-                  isSelected
-                    ? 'border-primary-500 border-[1.5px] bg-primary-100 shadow-primary-600 shadow-[0_0_4px_rgba(0,0,0,0.25)]'
-                    : 'border-gray-50 border bg-white shadow-[0_0_3px_rgba(0,0,0,0.25)]'
+                  isSelected ? 'border-primary-500  bg-primary-100 shadow-primary-600 ' : 'border-gray-100'
                 } active:scale-[0.98]`}>
               <div>{item.icon}</div>
               <div className="flex flex-col gap-[8px]">

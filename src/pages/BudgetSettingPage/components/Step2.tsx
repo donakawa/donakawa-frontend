@@ -37,9 +37,8 @@ const Step2 = ({ onNext }: StepProps) => {
           onChange={handleChange}
           placeholder="1"
           maxLength={2}
-          className="w-[60px] border border-gray-50 py-[18px] px-[21px] text-center
-                  rounded-[6px] outline-none placeholder:text-gray-200 focus-within:border-primary-500 transition-colors 
-                  shadow-[0_0_3px_rgba(0,0,0,0.25)] focus-within:shadow-primary-500"
+          className="w-[60px] border-[2px] border-gray-100 py-[18px] px-[21px] text-center
+                  rounded-[6px] outline-none placeholder:text-gray-200 focus-within:border-primary-500 transition-colors"
         />
         <span className="text-[24px] font-medium">일</span>
       </div>

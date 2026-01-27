@@ -45,10 +45,9 @@ const Step6 = ({ onNext }: { onNext: (data: { budget: number }) => void }) => {
           value={budget}
           onChange={handleChange}
           placeholder="0"
-          className="w-full border border-gray-50 py-[18px] px-[33px] 
+          className="w-full border-[2px] border-gray-100 py-[18px] px-[33px] 
                   text-[16px] focus-within:border-primary-500 transition-colors 
-                  rounded-[6px] outline-none placeholder:text-gray-200 
-                  shadow-[0_0_3px_rgba(0,0,0,0.25)] focus-within:shadow-primary-500"
+                  rounded-[6px] outline-none placeholder:text-gray-200"
         />
         <span className="text-[24px] font-medium whitespace-nowrap">원 이하</span>
       </div>

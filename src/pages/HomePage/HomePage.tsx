@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import SeedIcon from '@/assets/seed.svg?react';
 import SeedGreenIcon from '@/assets/seed_green.svg?react';
 import MascotIcon from '@/assets/mascot.svg?react';
@@ -6,6 +7,7 @@ import SatisfactionIcon from '@/assets/satisfactionface.svg?react';
 import RegretIcon from '@/assets/regretface.svg?react';
 import ArrowIcon from '@/assets/arrow.svg?react';
 import PieChart from './components/PieChart';
+import Trophy from '@/assets/trophy.svg?react';
 
 import { type PanInfo, motion, useDragControls, useAnimation } from 'framer-motion';
 
@@ -41,9 +43,12 @@ const HomePage = () => {
         isPositive ? 'bg-secondary-100' : 'bg-[#E3EEFF]'
       }`}>
       {/* 헤더 */}
-      <header className="pl-[20px] py-[2px] w-full flex gap-1 bg-white border-gray-50 shadow-[0_0_3px_rgba(0,0,0,0.25)] sticky top-0 z-10 items-end">
+      <header className="px-[20px] py-[2px] w-full flex gap-1 bg-white border-gray-50 shadow-[0_0_3px_rgba(0,0,0,0.25)] sticky top-0 z-10 items-end">
         <SeedIcon className="w-[26px] h-[37px]" />
         <span className="text-primary-600 leading-none font-galmuri">onakawa</span>
+        <Link to="/budget/setting" className="ml-auto">
+          <Trophy className="cursor-pointer" />
+        </Link>
       </header>
       {/* 말풍선 & 캐릭터 섹션 */}
       <section className="flex flex-col items-center my-[24px] px-[20px] min-h-[200px]">
