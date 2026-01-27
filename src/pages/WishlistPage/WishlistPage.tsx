@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 
-import WishGroupRow from './components/wishGrouprow';
 import WishlistGrid from './components/wishlistGrid';
 import type { WishlistItemType } from './components/wishlistGrid';
 import WishlistPanel from './components/wishlistPanel';
