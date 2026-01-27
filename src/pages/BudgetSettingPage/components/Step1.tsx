@@ -1,4 +1,3 @@
-// pages/BudgetSetting/components/Step1.tsx
 import React, { useState } from 'react';
 import StepLayout from './StepLayout';
 import MoneyInputSection from './MoneyInputSection';

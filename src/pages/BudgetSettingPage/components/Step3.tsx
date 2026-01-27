@@ -3,7 +3,7 @@ import StepLayout from './StepLayout';
 import MoneyInputSection from './MoneyInputSection';
 
 interface StepProps {
-  onNext: (data: { income: number }) => void;
+  onNext: (data: { fixedCost: number }) => void;
 }
 const Step3 = ({ onNext }: StepProps) => {
   const [inputValue, setInputValue] = useState<string>('');
@@ -17,7 +17,7 @@ const Step3 = ({ onNext }: StepProps) => {
       title="월 고정 생활비가 얼마인가요?"
       description="월세, 교통비, 식비 등을 합산한 금액을 입력해주세요."
       isNextDisabled={numericValue === 0}
-      onNext={() => onNext({ income: numericValue })}>
+      onNext={() => onNext({ fixedCost: numericValue })}>
       <MoneyInputSection value={inputValue} onChange={setInputValue} />
     </StepLayout>
   );
