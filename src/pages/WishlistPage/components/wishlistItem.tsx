@@ -31,12 +31,19 @@ export default function WishlistItem({
     <button type="button" onClick={handleClick} className="text-left w-full">
       <div
         className={[
-          'relative w-full aspect-square overflow-hidden bg-[color:var(--color-gray-100)]',
+          'relative',
+          'w-[94px] h-[94px]',
+          'overflow-hidden',
           'rounded-[5px]',
+          'bg-[color:var(--color-gray-100)]',
           'shadow-[0_0_4px_rgba(0,0,0,0.25)]',
         ].join(' ')}
       >
-        <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-full object-cover"
+        />
 
         {editMode && (
           <div
@@ -66,11 +73,10 @@ export default function WishlistItem({
             )}
           </div>
         )}
-
       </div>
 
       <div className="pt-2">
-        <div className="text-[18px] font-semibold text-[color:var(--color-black)] leading-none">
+        <div className="text-[12px] font-semibold text-[color:var(--color-black)] leading-none">
           {price.toLocaleString()}
         </div>
         <div className="mt-1 text-[14px] text-[color:var(--color-black)] truncate">

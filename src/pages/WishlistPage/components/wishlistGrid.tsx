@@ -25,21 +25,25 @@ export default function WishlistGrid({
   onItemClick,
 }: Props) {
   return (
-    <div className="pb-6">
-      <div className="grid grid-cols-3 gap-x-4 gap-y-6">
-        {items.map((it) => (
-          <WishlistItem
-            key={it.id}
-            imageUrl={it.imageUrl}
-            price={it.price}
-            title={it.title}
-            editMode={editMode}
-            selected={selectedIds.has(it.id)}
-            onToggleSelect={() => onToggleSelect?.(it.id)}
-            onClick={() => onItemClick?.(it.id)}
-          />
-        ))}
-      </div>
+    <div
+      className={[
+        'w-[335px] h-[534px]',
+        'grid grid-cols-3',
+        'gap-x-[26px] gap-y-[26px]',
+      ].join(' ')}
+    >
+      {items.map((it) => (
+        <WishlistItem
+          key={it.id}
+          imageUrl={it.imageUrl}
+          price={it.price}
+          title={it.title}
+          editMode={editMode}
+          selected={selectedIds.has(it.id)}
+          onToggleSelect={() => onToggleSelect?.(it.id)}
+          onClick={() => onItemClick?.(it.id)}
+        />
+      ))}
     </div>
   );
 }
