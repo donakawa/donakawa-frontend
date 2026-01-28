@@ -1,0 +1,150 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import RightArrow from '@/assets/arrow_right.svg';
+import LeftArrow from '@/assets/arrow_left.svg';
+import CheckIcon from '@/assets/circle_check.svg';
+
+type ConnectedProvider = 'google' | 'none';
+
+type SettingProfile = {
+  email: string;
+  connectedProvider: ConnectedProvider;
+};
+
+export default function MyPageSettingPage() {
+  const navigate = useNavigate();
+
+  const profile: SettingProfile = useMemo(
+    () => ({
+      email: 'gamjaaaaa@gmail.com',
+      connectedProvider: 'google',
+    }),
+    [],
+  );
+
+  const goBack = () => navigate(-1);
+
+  const goNickname = () => navigate('/mypage/setting/nickname');
+  const goPassword = () => navigate('/mypage/setting/password');
+  const goGoogle = () => navigate('/mypage/setting/google');
+
+  return (
+    <div className="w-full min-h-screen bg-white text-black">
+      <header className="h-[64px] px-4 pt-[10px] grid grid-cols-[40px_1fr_40px] items-center">
+        <button
+          type="button"
+          aria-label="뒤로가기"
+          onClick={goBack}
+          className="w-10 h-10 grid place-items-center border-0 bg-transparent p-0 cursor-pointer">
+          <img src={LeftArrow} alt="" className="w-3 h-[22px] block" />
+        </button>
+
+        <h1 className="m-0 text-center text-[20px] font-[600]">설정</h1>
+
+        <div aria-hidden className="w-10 h-10" />
+      </header>
+
+      <main className="px-4 pt-3 pb-6 flex flex-col gap-[22px]">
+        {/* 내 계정 관리 */}
+        <section className="flex flex-col gap-[10px]">
+          <div className="text-[12px] font-[400] text-gray-600 pl-[2px]">내 계정 관리</div>
+
+          <div className="rounded-[20px] bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col gap-[15px] px-4 py-[18px]">
+            <button
+              type="button"
+              onClick={goNickname}
+              aria-label="닉네임 변경"
+              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
+              <div className="flex items-center gap-2">
+                <div className="text-[14px] font-[400] text-black">닉네임 변경</div>
+              </div>
+              <div className="grid place-items-center">
+                <img src={RightArrow} alt="닉네임 변경" className="w-2 h-[13px] block opacity-75" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={goPassword}
+              aria-label="비밀번호 변경"
+              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
+              <div className="flex items-center gap-2">
+                <div className="text-[14px] font-[400] text-black">비밀번호 변경</div>
+              </div>
+              <div className="grid place-items-center">
+                <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={goGoogle}
+              aria-label="구글 연동"
+              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
+              <div className="flex items-center gap-2">
+                <div className="text-[14px] font-[400] text-black">구글 연동</div>
+
+                <div className="flex items-center gap-2">
+                  {profile.connectedProvider === 'google' ? (
+                    <img src={CheckIcon} alt="연동됨" className="w-4 h-4 mt-[3px] block" />
+                  ) : (
+                    <div aria-hidden className="w-5 h-5" />
+                  )}
+                  <div className="text-[13px] font-[400] text-gray-600">{profile.email}</div>
+                </div>
+              </div>
+
+              <div className="grid place-items-center">
+                <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* 고객지원 */}
+        <section className="flex flex-col gap-[10px]">
+          <div className="text-[12px] font-[400] text-gray-600 pl-[2px]">고객지원</div>
+
+          <div className="rounded-[20px] bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col gap-[15px] px-4 py-[18px]">
+            <button
+              type="button"
+              aria-label="이용약관"
+              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
+              <div className="flex items-center gap-2">
+                <div className="text-[14px] font-[400] text-black">이용약관</div>
+              </div>
+              <div className="grid place-items-center">
+                <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              aria-label="의견 보내기"
+              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
+              <div className="flex items-center gap-2">
+                <div className="text-[14px] font-[400] text-black">의견 보내기</div>
+              </div>
+              <div className="grid place-items-center">
+                <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              aria-label="회원 탈퇴"
+              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
+              <div className="flex items-center gap-2">
+                <div className="text-[14px] font-[400] text-error">회원 탈퇴</div>
+              </div>
+              <div className="grid place-items-center">
+                <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
+              </div>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

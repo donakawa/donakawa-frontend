@@ -84,7 +84,7 @@ export default function ReviewWritePage() {
             'border-0 bg-transparent text-[16px] font-semibold',
             isCompleted
               ? 'text-[var(--color-primary-green-500)] cursor-pointer opacity-100'
-              : 'text-[rgba(0,0,0,0.35)] cursor-default opacity-80',
+              : 'text-gray-600 cursor-default opacity-80',
           )}>
           완료
         </button>
@@ -93,7 +93,7 @@ export default function ReviewWritePage() {
       <main className="p-4">
         <section className="pb-[18px]">
           <div className="flex gap-[14px]">
-            <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-[#f4f4f4] flex-none">
+            <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-white flex-none">
               <img src={purchase.imageUrl} alt={purchase.title} className="w-full h-full object-cover block" />
             </div>
 
@@ -102,7 +102,7 @@ export default function ReviewWritePage() {
                 {purchase.title}
               </div>
               <div className="text-[18px] font-medium">{purchase.price.toLocaleString('ko-KR')}</div>
-              <div className="text-[16px] font-medium text-[rgba(0,0,0,0.35)]">구매한 지 {purchase.dayLabel}DAY+</div>
+              <div className="text-[16px] font-medium text-gray-600">구매한 지 {purchase.dayLabel}DAY+</div>
             </div>
           </div>
 
@@ -110,14 +110,14 @@ export default function ReviewWritePage() {
             {purchase.tags.map((t: string) => (
               <span
                 key={`${purchase.id}-${t}`}
-                className="px-[6px] py-[3px] rounded-full bg-[var(--color-white)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-[var(--color-primary-brown-500)]">
+                className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-[var(--color-primary-brown-500)]">
                 #{t}
               </span>
             ))}
           </div>
 
           <div className="mt-4 flex items-center gap-[10px]">
-            <div className="text-[14px] font-normal text-[rgba(0,0,0,0.55)]">{purchase.dateText}</div>
+            <div className="text-[14px] font-normal text-primary-brown-400">{purchase.dateText}</div>
 
             <div
               aria-hidden
@@ -128,7 +128,7 @@ export default function ReviewWritePage() {
             />
           </div>
 
-          <div className="mt-[18px] h-px bg-[rgba(0,0,0,0.08)]" />
+          <div className="mt-[18px] h-px bg-gray-100" />
         </section>
 
         <section className="py-[26px]">
@@ -158,14 +158,14 @@ export default function ReviewWritePage() {
         <section className="py-[26px]">
           <h2 className="m-0 mb-[14px] text-[14px] font-normal text-center">구매 후 얼만큼 사용했나요?</h2>
 
-          <div className="mx-[10px] mt-[10px] mb-[-10px] flex justify-between text-[12px] font-normal text-[rgba(0,0,0,0.35)]">
+          <div className="mx-[10px] mt-[10px] mb-[-10px] flex justify-between text-[12px] font-normal text-gray-600">
             <span>거의 안 씀</span>
             <span>매우 자주</span>
           </div>
 
           <div className="relative select-none w-[85%] mx-auto mt-5 flex items-center">
-            <div className="absolute top-1/2 left-1/2 w-[90%] h-1 -translate-x-1/2 -translate-y-1/2 bg-[#ededed] rounded-[50px] z-0">
-              <div className="h-full bg-[#6b4b45] rounded-[3px]" style={{ width: `${usageRatio * 100}%` }} />
+            <div className="absolute top-1/2 left-1/2 w-[90%] h-1 -translate-x-1/2 -translate-y-1/2 bg-gray-100 rounded-[50px] z-0">
+              <div className="h-full bg-primary-brown-400 rounded-[3px]" style={{ width: `${usageRatio * 100}%` }} />
             </div>
 
             <div className="relative z-[1] flex justify-between w-full">
@@ -179,7 +179,7 @@ export default function ReviewWritePage() {
                     onClick={() => setUsage(v as UsageLevel)}
                     className={cn(
                       'w-5 h-5 rounded-full border-0 p-0 cursor-pointer',
-                      active ? 'bg-[#6b4b45]' : 'bg-[#ededed]',
+                      active ? 'bg-primary-brown-400' : 'bg-gray-100',
                     )}
                   />
                 );

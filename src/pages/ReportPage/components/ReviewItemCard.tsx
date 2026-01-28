@@ -27,9 +27,8 @@ export default function ReviewItemCard({ item, onOpenClick }: ReviewItemCardProp
       <div
         onClick={handleCompletedClick}
         role={onOpenClick ? 'button' : undefined}
-        className={cn('p-4 border-b border-b-[rgba(0,0,0,0.06)]', onOpenClick ? 'cursor-pointer' : 'cursor-default')}>
+        className={cn('p-4 border-b border-b-gray-100', onOpenClick ? 'cursor-pointer' : 'cursor-default')}>
         <div className="flex gap-[21px]">
-          {/* Left */}
           <div className="w-[94px] flex-none">
             <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden shrink-0">
               <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover block" />
@@ -43,13 +42,12 @@ export default function ReviewItemCard({ item, onOpenClick }: ReviewItemCardProp
             </div>
           </div>
 
-          {/* Right */}
           <div className="flex-1 py-[3px] min-w-0 flex flex-col justify-between">
             <div className="flex gap-2 flex-wrap">
               {item.tags.map((t) => (
                 <span
                   key={`${item.id}-${t}`}
-                  className="px-[6px] py-[3px] rounded-full bg-[var(--color-white)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-[var(--color-primary-brown-500)]">
+                  className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-500">
                   #{t}
                 </span>
               ))}
@@ -75,7 +73,7 @@ export default function ReviewItemCard({ item, onOpenClick }: ReviewItemCardProp
   }
 
   return (
-    <div className="p-4 border-b border-b-[rgba(0,0,0,0.06)]">
+    <div className="p-4 border-b border-b-gray-100">
       <div className="flex gap-[14px]">
         <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden shrink-0">
           <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover block" />
@@ -84,14 +82,14 @@ export default function ReviewItemCard({ item, onOpenClick }: ReviewItemCardProp
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           <div className="text-[16px] font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.title}</div>
           <div className="text-[16px] font-medium">{item.price.toLocaleString('ko-KR')}</div>
-          <div className="text-[16px] font-medium text-[rgba(0,0,0,0.45)]">구매한 지 {item.daylabel}DAY+</div>
+          <div className="text-[16px] font-medium text-gray-600">구매한 지 {item.daylabel}DAY+</div>
         </div>
       </div>
 
       <button
         type="button"
         onClick={goToWritePage}
-        className="mt-[14px] w-full h-9 border-0 rounded-[5px] bg-[#93b993] text-white text-[16px] font-medium cursor-pointer">
+        className="mt-[14px] w-full h-9 border-0 rounded-[5px] bg-primary-400 text-white text-[16px] font-medium cursor-pointer">
         소비 후기 작성
       </button>
     </div>

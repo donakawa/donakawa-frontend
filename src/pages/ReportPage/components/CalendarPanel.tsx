@@ -98,7 +98,7 @@ export default function CalendarPanel() {
   };
 
   return (
-    <div className="px-4 pt-10 pb-0 min-h-screen flex flex-col gap-[30px] bg-[var(--color-secondary-100)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]">
+    <div className="px-4 pt-10 pb-0 min-h-screen flex flex-col gap-[30px] bg-secondary-100 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]">
       <div className="flex items-center gap-[10px]">
         <button
           type="button"
@@ -108,7 +108,7 @@ export default function CalendarPanel() {
           <img src={LeftArrow} alt="" />
         </button>
 
-        <div className="text-[20px] font-semibold text-[var(--color-black)]">
+        <div className="text-[20px] font-semibold text-black">
           {year}.{String(month).padStart(2, '0')}
         </div>
 
@@ -122,16 +122,14 @@ export default function CalendarPanel() {
       </div>
 
       <div className="flex items-center gap-[14px] px-1">
-        <div className="text-[24px] font-bold text-[var(--color-primary-brown-400)]">
-          {formatWon(element.totalWon)}원
-        </div>
-        <div className="text-[20px] font-semibold text-[var(--color-gray-500)]">{element.purchaseCount}회 구매</div>
+        <div className="text-[24px] font-bold text-primary-brown-400">{formatWon(element.totalWon)}원</div>
+        <div className="text-[20px] font-semibold text-gray-600">{element.purchaseCount}회 구매</div>
       </div>
 
       <div className="flex flex-col gap-[14px]">
         <div className="grid grid-cols-7 py-2 gap-0">
           {(['월', '화', '수', '목', '금', '토', '일'] as const).map((w) => (
-            <div key={w} className="text-center text-[16px] font-medium text-[var(--color-black)]">
+            <div key={w} className="text-center text-[16px] font-medium text-black">
               {w}
             </div>
           ))}
@@ -154,7 +152,7 @@ export default function CalendarPanel() {
                   <div
                     className={cn(
                       'w-[28px] h-[28px] rounded-full grid place-items-center font-normal',
-                      'bg-transparent text-[rgba(0,0,0,0.25)]',
+                      'bg-transparent text-gray-600',
                     )}
                   />
                   <div className="mt-1 flex gap-[3px] h-[6px]" aria-hidden />
@@ -177,7 +175,7 @@ export default function CalendarPanel() {
                 <div
                   className={cn(
                     'w-[28px] h-[28px] rounded-full grid place-items-center font-normal',
-                    selected ? 'bg-[#6E9E7A] text-white' : 'bg-transparent text-[var(--color-gray-600)]',
+                    selected ? 'bg-primary-500 text-white' : 'bg-transparent text-gray-600',
                   )}>
                   {cell.dayNumber}
                 </div>
@@ -185,9 +183,9 @@ export default function CalendarPanel() {
                 <div className="mt-1 flex gap-[3px] h-[6px]" aria-hidden>
                   {cell.hasPurchase ? (
                     <>
-                      <span className="w-1 h-1 rounded-full bg-[var(--color-primary-brown-300)]" />
-                      <span className="w-1 h-1 rounded-full bg-[var(--color-primary-brown-300)]" />
-                      <span className="w-1 h-1 rounded-full bg-[var(--color-primary-brown-300)]" />
+                      <span className="w-1 h-1 rounded-full bg-primary-brown-300" />
+                      <span className="w-1 h-1 rounded-full bg-primary-brown-300" />
+                      <span className="w-1 h-1 rounded-full bg-primary-brown-300" />
                     </>
                   ) : null}
                 </div>
@@ -197,49 +195,47 @@ export default function CalendarPanel() {
         </div>
       </div>
 
-      <div className="-mx-4 w-[calc(100%+32px)] bg-[var(--color-primary-100)] rounded-t-[20px] border border-[rgba(0,0,0,0.05)] shadow-[0px_-1px_8px_rgba(0,0,0,0.05)] px-[14px] pt-[14px] pb-[10px] flex-1 flex flex-col min-h-[220px]">
-        <div aria-hidden className="w-[46px] h-[5px] rounded-[999px] bg-[rgba(0,0,0,0.12)] mx-auto mb-3" />
+      <div className="-mx-4 w-[calc(100%+32px)] bg-primary-100 rounded-t-[20px] border border-gray-100 shadow-[0px_-1px_8px_rgba(0,0,0,0.05)] px-[14px] pt-[14px] pb-[10px] flex-1 flex flex-col min-h-[220px]">
+        <div aria-hidden className="w-[46px] h-[5px] rounded-[100px] bg-gray-100 mx-auto mb-3" />
 
         <div className="flex flex-col gap-3 max-h-[340px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {selectedPurchases.length === 0 ? (
-            <div className="text-[var(--color-primary-brown-400)] text-[12px] font-normal">
-              선택한 날짜에 구매 기록이 없어요.
-            </div>
+            <div className="text-primary-brown-400 text-[12px] font-normal">선택한 날짜에 구매 기록이 없어요.</div>
           ) : (
             selectedPurchases.map((p) => (
               <div
                 key={p.id}
                 className="grid grid-cols-[94px_1fr] gap-x-3 px-2 py-3 border-b border-b-[rgba(0,0,0,0.06)]">
                 <div>
-                  <div className="w-[94px] h-[94px] rounded-[5px] bg-[var(--color-gray-100)] shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
+                  <div className="w-[94px] h-[94px] rounded-[5px] bg-gray-100 shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
                     {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-cover block" /> : null}
                   </div>
 
-                  <div className="mt-2 text-[12px] font-medium text-[var(--color-black)]">{formatWon(p.price)}</div>
+                  <div className="mt-2 text-[12px] font-medium text-black">{formatWon(p.price)}</div>
 
-                  <div className="text-[14px] font-normal text-[var(--color-black)] overflow-hidden text-ellipsis whitespace-nowrap">
+                  <div className="text-[14px] font-normal text-black overflow-hidden text-ellipsis whitespace-nowrap">
                     {p.title}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center text-[13px] font-medium text-[var(--color-black)]">
-                    <div className="min-w-[60px] text-[var(--color-black)] font-normal text-[12px]">구매 이유:</div>
+                  <div className="flex items-center text-[13px] font-medium text-black">
+                    <div className="min-w-[60px] text-black font-normal text-[12px]">구매 이유:</div>
 
                     <div className="flex flex-wrap gap-[6px]">
                       {p.reason.map((r) => (
                         <div
                           key={`${p.id}-${r}`}
-                          className="px-[6px] py-[3px] rounded-full bg-[var(--color-white)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-[var(--color-primary-brown-500)]">
+                          className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-500">
                           #{r}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center text-[13px] font-medium text-[var(--color-black)]">
-                    <div className="min-w-[60px] text-[var(--color-black)] font-normal text-[12px]">구매 일시:</div>
-                    <div className="text-[var(--color-primary-brown-400)] text-[12px] font-normal">
+                  <div className="flex items-center text-[13px] font-medium text-black">
+                    <div className="min-w-[60px] text-black font-normal text-[12px]">구매 일시:</div>
+                    <div className="text-primary-brown-400 text-[12px] font-normal">
                       {formatKoreanDate(p.date)} {p.timeLabel}
                     </div>
                   </div>
@@ -247,7 +243,7 @@ export default function CalendarPanel() {
                   <button
                     type="button"
                     onClick={() => navigate('/report/review')}
-                    className="mt-2 w-fit border-0 bg-transparent p-0 cursor-pointer text-[var(--color-gray-600)] text-[12px] font-normal inline-flex items-center gap-[6px]">
+                    className="mt-2 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-normal inline-flex items-center gap-[6px]">
                     구매 후기 작성하러 가기 <span className="text-[18px]">›</span>
                   </button>
                 </div>
