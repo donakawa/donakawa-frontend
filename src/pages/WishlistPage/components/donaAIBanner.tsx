@@ -27,6 +27,13 @@ const DonaAiBanner = () => {
     navigate('/home');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleChatStart();
+    }
+  };
+
   return (
     //배너
     <div 
@@ -35,12 +42,17 @@ const DonaAiBanner = () => {
         transition-all duration-500 ease-in-out bg-[color:var(--color-banner)] h-[72px] rounded-[100px]
         ${isExpanded ? 'left-[100px] w-[254px]' : 'left-[252px] w-[102px]'}
       `}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label="도나 AI 상담 시작"
       onClick={handleChatStart}
     >
       {/* 화살표 버튼 */}
       <button 
         onClick={toggleExpand}
         className="absolute left-2 w-6 h-6 flex items-center justify-center z-20 cursor-pointer"
+        aria-label={isExpanded ? '배너 접기' : '배너 펼치기'}
       >
         {isExpanded ? <CloseArrow /> : <OpenArrow />}
       </button>
