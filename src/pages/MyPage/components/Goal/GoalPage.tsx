@@ -5,7 +5,6 @@ import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
 import type { AimKeyword } from '@/types/MyPage/mypage';
 
-import LeftArrow from '@/assets/arrow_left.svg';
 import CloseIcon from '@/assets/close.svg';
 
 const MAX_LEN = 10;

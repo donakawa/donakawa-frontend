@@ -26,6 +26,7 @@ import GiveupItemsPage from '@/pages/ReportPage/GiveupPage';
 
 // 마이페이지
 import MyPage from '@/pages/MyPage/MyPage';
+import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Passward';
@@ -57,6 +58,22 @@ const protectedChildren: RouteObject[] = [
       { path: 'review/write', element: <ReviewWritePage /> },
       { path: 'detail', element: <ReportDetailPage /> },
       { path: 'giveup', element: <GiveupItemsPage /> },
+    ],
+  },
+  {
+    path: 'mypage',
+    children: [
+      { index: true, element: <MyPage /> },
+      { path: 'goal', element: <GoalPage /> },
+      { path: 'completed', element: <ReportDetailPage enableMock /> },
+      {
+        path: 'setting',
+        children: [
+          { index: true, element: <ProfileSettingPage /> },
+          { path: 'nickname', element: <NicknameSettingPage /> },
+          { path: 'password', element: <PasswordFlowPage /> },
+        ],
+      },
     ],
   },
   {
