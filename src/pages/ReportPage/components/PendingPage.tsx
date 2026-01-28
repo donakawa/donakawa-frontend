@@ -9,7 +9,7 @@ interface PendingViewProps {
 export default function PendingView({ items, onWriteClick }: PendingViewProps) {
   return (
     <>
-      <div className="px-4 pt-4 text-[12px] font-medium text-[rgba(0,0,0,0.45)]">
+      <div className="px-4 pt-4 text-[12px] font-medium text-gray-600">
         작성하지 않은 소비 후기가 {items.length}건 있어요.
       </div>
 

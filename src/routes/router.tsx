@@ -18,6 +18,10 @@ import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
+import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
+import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
+import PasswordFlowPage from '@/pages/MyPage/components/Password/Passward';
+import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -40,6 +44,22 @@ const protectedChildren: RouteObject[] = [
       { path: 'review', element: <PurchaseReviewPage /> },
       { path: 'review/write', element: <ReviewWritePage /> },
       { path: 'detail', element: <ReportDetailPage /> },
+    ],
+  },
+  {
+    path: 'mypage',
+    children: [
+      { index: true, element: <MyPage /> },
+      { path: 'goal', element: <GoalPage /> },
+      { path: 'completed', element: <ReportDetailPage enableMock /> },
+      {
+        path: 'setting',
+        children: [
+          { index: true, element: <ProfileSettingPage /> },
+          { path: 'nickname', element: <NicknameSettingPage /> },
+          { path: 'password', element: <PasswordFlowPage /> },
+        ],
+      },
     ],
   },
 ];
