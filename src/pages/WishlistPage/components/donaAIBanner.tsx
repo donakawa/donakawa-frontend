@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DonaIcon from '@/assets/ai_dona.svg?react';
 import CloseArrow from '@/assets/ai_close_arrow.svg?react';
@@ -7,6 +7,15 @@ import OpenArrow from '@/assets/ai_open_arrow.svg?react';
 const DonaAiBanner = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const navigate = useNavigate();
+
+  //3초 후 배너 자동 닫기
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsExpanded(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
