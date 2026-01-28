@@ -125,3 +125,11 @@
   position: relative;
   overflow: hidden;
 }
+
+input[type='password']::-webkit-textfield-decoration-container {
+  display: none !important;
+}
+
+input[type='password']::-ms-reveal {
+  display: none !important;
+}

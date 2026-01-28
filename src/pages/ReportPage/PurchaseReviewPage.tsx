@@ -76,13 +76,13 @@ export default function PurchaseReview() {
         <div className="w-10 h-10" />
       </header>
 
-      <div className="h-12 grid grid-cols-2 items-stretch border-b border-b-[rgba(0,0,0,0.06)]">
+      <div className="h-12 grid grid-cols-2 items-stretch border-b border-b-gray-100">
         <button
           type="button"
           onClick={() => setActiveTab('pending')}
           className={cn(
             'border-0 bg-transparent text-[16px] font-medium cursor-pointer',
-            activeTab === 'pending' ? 'text-[rgba(0,0,0,0.95)]' : 'text-[rgba(0,0,0,0.20)]',
+            activeTab === 'pending' ? 'text-black' : 'text-gray-100',
           )}>
           후기 작성
         </button>
@@ -92,7 +92,7 @@ export default function PurchaseReview() {
           onClick={() => setActiveTab('completed')}
           className={cn(
             'border-0 bg-transparent text-[16px] font-medium cursor-pointer',
-            activeTab === 'completed' ? 'text-[rgba(0,0,0,0.95)]' : 'text-[rgba(0,0,0,0.20)]',
+            activeTab === 'completed' ? 'text-black' : 'text-gray-100',
           )}>
           작성한 후기
         </button>

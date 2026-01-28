@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ReportDetailProduct, PurchaseDecision } from '@/types/ReportPage/Detail';
 
 import SampleImage from '@/assets/sample2.svg';
+import DonaAI from '@/assets/안경도나.svg';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -56,9 +57,9 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
 
   return (
     <div className="w-full min-h-screen bg-white text-[#111]">
-      <main className="w-full bg-[rgba(255,255,230,1)] flex flex-col gap-3">
+      <main className="w-full bg-secondary-100 flex flex-col gap-3">
         <section className="bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]">
-          <section className="relative w-full overflow-hidden bg-[#eee]">
+          <section className="relative w-full overflow-hidden bg-white">
             <header className="absolute top-0 left-0 right-0 h-[64px] pt-3 px-3 grid grid-cols-[40px_1fr_40px] items-center z-10 text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.35)]">
               <button
                 type="button"
@@ -81,7 +82,7 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
             <div className="absolute left-4 right-4 bottom-[14px] flex items-center justify-end gap-3">
               <button
                 type="button"
-                className="px-[14px] py-[6px] rounded-full bg-white text-[rgba(104,171,110,1)] text-[12px] font-normal cursor-pointer">
+                className="px-[14px] py-[6px] rounded-full bg-white text-primary-500 text-[12px] font-normal cursor-pointer">
                 정보 수정
               </button>
             </div>
@@ -89,16 +90,14 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
 
           <section className="px-[18px] py-[14px]">
             <div className="flex items-center mb-[6px]">
-              <span className="text-[12px] font-normal text-[rgba(0,0,0,0.35)]">
-                담은 지 +{product.daysAfterSaved}일
-              </span>
+              <span className="text-[12px] font-normal text-gray-600">담은 지 +{product.daysAfterSaved}일</span>
             </div>
 
             <h2 className="text-[18px] font-semibold text-[rgba(0,0,0,0.85)]">{product.title}</h2>
 
             <div className="flex items-baseline gap-[6px] mb-[14px]">
-              <span className="text-[20px] font-semibold text-[rgba(0,0,0,0.9)]">{formatWon(product.priceWon)}</span>
-              <span className="text-[14px] font-normal text-[rgba(0,0,0,0.6)]">원</span>
+              <span className="text-[20px] font-semibold text-black">{formatWon(product.priceWon)}</span>
+              <span className="text-[14px] font-normal text-black">원</span>
             </div>
 
             <div className={cn('flex justify-center', decision ? 'gap-0' : 'gap-[30px]')}>
@@ -107,14 +106,14 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
                   <button
                     type="button"
                     onClick={() => onClickDecision('CONFIRM')}
-                    className="h-9 w-[144px] rounded-full border-[1.5px] border-[rgba(164,121,113,1)] bg-white text-[16px] font-medium text-[rgba(164,121,113,1)] cursor-pointer">
+                    className="h-9 w-[144px] rounded-full border-[1.5px] border-primary-brown-200 bg-white text-[16px] font-medium text-primary-brown-200 cursor-pointer">
                     구매 결정
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onClickDecision('CANCEL')}
-                    className="h-9 w-[144px] rounded-full border-[1.5px] border-[rgba(164,121,113,1)] bg-white text-[16px] font-medium text-[rgba(164,121,113,1)] cursor-pointer">
+                    className="h-9 w-[144px] rounded-full border-[1.5px] border-primary-brown-200 bg-white text-[16px] font-medium text-primary-brown-200 cursor-pointer">
                     구매 포기
                   </button>
                 </>
@@ -122,7 +121,7 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
                 <button
                   type="button"
                   onClick={() => onClickDecision(decision)}
-                  className="h-9 w-[144px] rounded-full border-0 bg-[rgba(164,121,113,1)] text-white text-[16px] font-medium cursor-pointer active:translate-y-[1px]">
+                  className="h-9 w-[144px] rounded-full border-0 bg-primary-brown-200 text-white text-[16px] font-medium cursor-pointer active:translate-y-[1px]">
                   {decision === 'CONFIRM' ? '구매 결정' : '구매 포기'}
                 </button>
               )}
@@ -132,17 +131,17 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
 
         <section className="bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]">
           <section className="p-[18px]">
-            <div className="relative rounded-[6px] border-[1.5px] border-[rgba(143,188,147,1)] shadow-[0px_0px_4px_0px_rgba(104,171,110,1)] bg-white p-[14px]">
+            <div className="relative rounded-[6px] border-[1.5px] border-primary-400 bg-white p-[14px]">
               <textarea
                 value={memo}
                 onChange={(e) => setMemo(e.target.value.slice(0, product.memoLimit))}
                 placeholder="메모를 입력해 주세요"
                 aria-label="메모 입력"
-                className="w-full min-h-[44px] border-0 outline-none resize-none text-[16px] font-normal text-[rgba(0,0,0,0.82)] placeholder:text-[rgba(0,0,0,0.28)] placeholder:font-semibold"
+                className="w-full min-h-[44px] border-0 outline-none resize-none text-[16px] font-normal text-black placeholder:text-gray-600 placeholder:font-semibold"
               />
               <div
                 aria-label="메모 글자수"
-                className="absolute right-3 bottom-[10px] text-[14px] font-normal text-[rgba(0,0,0,0.35)]">
+                className="absolute right-3 bottom-[10px] text-[14px] font-normal text-gray-600">
                 {memoCountText}
               </div>
             </div>
@@ -152,28 +151,45 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
             <button
               type="button"
               onClick={onClickStore}
-              className="w-full h-[74px] rounded-full cursor-pointer bg-[rgba(255,255,230,1)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] flex items-center justify-between px-[18px]">
+              className="w-full h-[74px] rounded-full cursor-pointer bg-secondary-100 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] flex items-center justify-between px-[18px]">
               <div className="flex items-center gap-3">
-                <div aria-hidden className="w-[38px] h-[38px] rounded-full bg-[rgba(0,0,0,0.12)]" />
+                <div aria-hidden className="w-[38px] h-[38px] rounded-full bg-gray-300" />
 
                 <div className="flex flex-col gap-1 items-start">
-                  <div className="text-[14px] font-normal text-[rgba(0,0,0,0.85)]">{product.storeName}</div>
-                  <div className="text-[12px] font-normal text-[rgba(0,0,0,0.35)]">{product.storeSubText}</div>
+                  <div className="text-[14px] font-normal text-black">{product.storeName}</div>
+                  <div className="text-[12px] font-normal text-black">{product.storeSubText}</div>
                 </div>
               </div>
 
-              <span aria-hidden className="text-[26px] font-black text-[rgba(0,0,0,0.5)]">
+              <span aria-hidden className="text-[26px] font-black text-black">
                 ›
               </span>
             </button>
           </section>
 
           <section className="px-[18px] py-4">
-            <div className="w-full rounded-[16px] bg-[#cfe0c6] text-[rgba(47,77,52,0.95)] px-[18px] pt-[18px] pb-[22px] flex flex-col items-start gap-4">
-              <div className="text-[12px] font-normal text-[rgba(104,171,110,1)]">내게 필요한 소비일까?</div>
-              <h3 className="m-0 font-['Galmuri11',sans-serif] text-[24px] font-bold leading-none text-[rgba(0,0,0,0.9)]">
-                도나AI
-              </h3>
+            <div
+              className={[
+                'w-full rounded-[16px]',
+                'bg-primary-200',
+                'px-[18px] pt-[18px] pb-[18px]',
+                'flex items-end justify-between',
+              ].join(' ')}>
+              <div className="flex flex-col items-start gap-3">
+                <div className="text-[12px] font-[400] text-primary-500">내게 필요한 소비일까?</div>
+                <h3 className="m-0 font-['Galmuri11',sans-serif] text-[16px] font-[700] leading-[1.5] text-black">
+                  구매가 고민될 때,
+                  <br />
+                  도나AI와 상담은 어때요?
+                </h3>
+              </div>
+
+              <img
+                src={DonaAI}
+                alt="도나 AI"
+                className="w-[71px] h-[67px] object-contain shrink-0"
+                style={{ imageRendering: 'pixelated' }}
+              />
             </div>
           </section>
         </section>
