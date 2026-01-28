@@ -1,3 +1,9 @@
+import DonaAiBanner from "./components/donaAIBanner";
+
 export default function WishlistPage() {
-  return <div>Wishlist 페이지입니다.</div>;
+  return (
+    <div className="AppContainer relative flex flex-col h-screen overflow-hidden">
+      <DonaAiBanner />
+    </div>
+  );
 }
