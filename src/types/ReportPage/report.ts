@@ -15,7 +15,13 @@ export type MonthlyReport = {
 
 export type DayTime = '아침' | '낮' | '저녁' | '새벽';
 
+export type Weekday = '월' | '화' | '수' | '목' | '금' | '토' | '일';
+
 export type TimeDistribution = Record<DayTime, number>;
+
+export type WeekdayDistribution = Record<Weekday, number>;
+
+export type DistributionMode = 'time' | 'weekday';
 
 export type PurchaseItem = {
   id: string;
