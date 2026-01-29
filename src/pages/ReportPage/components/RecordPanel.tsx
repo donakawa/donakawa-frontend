@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import StarIcon from '@/assets/star_line.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import RightArrow from '@/assets/arrow_right.svg';
@@ -10,7 +12,13 @@ import type {
   Star,
   DayTime,
   TimeDistribution,
+  Weekday,
+  WeekdayDistribution,
+  DistributionMode,
 } from '@/types/ReportPage/report';
+
+const WEEKDAYS: Weekday[] = ['월', '화', '수', '목', '금', '토', '일'];
+const TIMES: DayTime[] = ['아침', '낮', '저녁', '새벽'];
 
 export default function RecordView() {
   const navigate = useNavigate();
@@ -18,6 +26,9 @@ export default function RecordView() {
   const goToWritePage = () => {
     navigate(`/report/review`);
   };
+
+  // ✅ 요일/시간 토글 상태
+  const [distMode, setDistMode] = useState<DistributionMode>('weekday');
 
   const monthlyReport: MonthlyReport = {
     totalWon: 234_500,
@@ -33,11 +44,23 @@ export default function RecordView() {
       '세일이나 품절임박 등에 휘말리지 않도록 주의해 보아요. 구매 전, ‘세일하지 않아도 구매할만한 물건일까?’를 깊이 고민해 보세요.',
   };
 
+  // ✅ 시간 분포(기존)
   const timeDistribution: TimeDistribution = {
     아침: 75,
     낮: 75,
     저녁: 75,
     새벽: 75,
+  };
+
+  // ✅ 요일 분포(추가)
+  const weekdayDistribution: WeekdayDistribution = {
+    월: 25,
+    화: 80,
+    수: 65,
+    목: 100,
+    금: 30,
+    토: 80,
+    일: 90,
   };
 
   const purchaseItems: PurchaseItem[] = [
@@ -192,6 +215,7 @@ export default function RecordView() {
           <div className="flex gap-2 pb-2.5">
             <button
               type="button"
+              onClick={() => setDistMode('weekday')}
               className="
                 px-3 py-1.5
                 rounded-full
@@ -200,12 +224,16 @@ export default function RecordView() {
                 active:scale-[0.98]
                 transition-[background,border-color,transform] duration-150 ease-out
               "
-              style={{ background: 'var(--color-primary-brown-400)', color: 'var(--color-white)' }}>
-              달
+              style={{
+                background: distMode === 'weekday' ? 'var(--color-primary-brown-400)' : 'var(--color-white)',
+                color: distMode === 'weekday' ? 'var(--color-white)' : 'var(--color-gray-1000)',
+              }}>
+              요일
             </button>
 
             <button
               type="button"
+              onClick={() => setDistMode('time')}
               className="
                 px-3 py-1.5
                 rounded-full
@@ -214,8 +242,11 @@ export default function RecordView() {
                 active:scale-[0.98]
                 transition-[background,border-color,transform] duration-150 ease-out
               "
-              style={{ background: 'var(--color-white)', color: 'var(--color-gray-1000)' }}>
-              주
+              style={{
+                background: distMode === 'time' ? 'var(--color-primary-brown-400)' : 'var(--color-white)',
+                color: distMode === 'time' ? 'var(--color-white)' : 'var(--color-gray-1000)',
+              }}>
+              시간
             </button>
           </div>
 
@@ -252,23 +283,11 @@ export default function RecordView() {
                 ))}
               </div>
 
-              <div className="relative z-[1] flex justify-around items-end pr-1.5">
-                {(Object.keys(timeDistribution) as DayTime[]).map((k) => (
-                  <div key={k} className="w-[44px] flex flex-col items-center gap-2">
-                    <div className="w-[22px] h-[170px] overflow-hidden flex items-end">
-                      <div
-                        className="w-full rounded-[100px_100px_0_0] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]"
-                        style={{
-                          height: `${TimePercent(timeDistribution[k])}%`,
-                          background: 'var(--color-primary-600)',
-                        }}
-                      />
-                    </div>
-                    <div className="text-xs font-normal" style={{ color: 'var(--color-gray-600)' }}>
-                      {k}
-                    </div>
-                  </div>
-                ))}
+              <div className="relative z-[1] flex items-end justify-between pr-1.5 gap-1">
+                {distMode === 'weekday' &&
+                  WEEKDAYS.map((k) => <Bar key={k} label={k} value={weekdayDistribution[k]} />)}
+
+                {distMode === 'time' && TIMES.map((k) => <Bar key={k} label={k} value={timeDistribution[k]} />)}
               </div>
             </div>
           </div>
@@ -313,15 +332,36 @@ export default function RecordView() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <div className="bg-primary-200 rounded-[10px] p-[14px] gap-4">
-          <div className="text-xs font-normal" style={{ color: 'var(--color-primary-500)' }}>
-            내가 포기한 아이템
-          </div>
-          <div className="text-m font-semibold" style={{ color: 'var(--color-black' }}>
-            포기한 아이템
-          </div>
+        <div className="bg-primary-200 rounded-[10px] p-[14px] gap-3 flex flex-col">
+          <div className="text-[12px] font-normal text-primary-500">내 지갑을 지킨</div>
+          <div className="text-[18px] font-semibold">구매 포기템</div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function Bar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex flex-col items-center gap-2 min-w-0 flex-1">
+      <div className="w-[18px] h-[170px] overflow-hidden flex items-end">
+        <div
+          className="
+            w-full
+            rounded-[100px_100px_0_0]
+            shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]
+            transition-[height] duration-200 ease-out
+          "
+          style={{
+            height: `${TimePercent(value)}%`,
+            background: 'var(--color-primary-600)',
+          }}
+        />
+      </div>
+
+      <div className="text-xs font-normal" style={{ color: 'var(--color-gray-600)' }}>
+        {label}
+      </div>
     </div>
   );
 }
