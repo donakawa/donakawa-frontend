@@ -1,13 +1,65 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import RightArrow from '@/assets/arrow_right(gray).svg';
 import LeftArrow from '@/assets/arrow_left(gray).svg';
+import UpArrow from '@/assets/arrow_up(gray).svg';
+import SunIcon from '@/assets/태양.svg';
+import MoonIcon from '@/assets/새벽_달.svg';
+import PlusIcon from '@/assets/view_more(brown).svg';
+import StarFilled from '@/assets/star_full.svg';
+import StarEmpty from '@/assets/star_line.svg';
 
-import type { CalendarCell, CalendarElement, CalendarPurchaseItem, ConsumptionReason } from '@/types/ReportPage/report';
+import type {
+  CalendarCell,
+  CalendarElement,
+  CalendarPurchaseItem,
+  ConsumptionReason,
+  DayTime,
+} from '@/types/ReportPage/report';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
+}
+
+const TIME_ORDER: DayTime[] = ['아침', '낮', '저녁', '새벽'];
+
+function getTimeIcon(time: DayTime): { src: string; alt: string } {
+  if (time === '저녁' || time === '새벽') return { src: MoonIcon, alt: '달' };
+  return { src: SunIcon, alt: '해' };
+}
+
+function groupByTime(list: CalendarPurchaseItem[]): Record<DayTime, CalendarPurchaseItem[]> {
+  const grouped: Record<DayTime, CalendarPurchaseItem[]> = {
+    아침: [],
+    낮: [],
+    저녁: [],
+    새벽: [],
+  };
+
+  for (const item of list) grouped[item.timeLabel].push(item);
+  return grouped;
+}
+
+// 별점 표시
+function RatingStars({ value }: { value: number }) {
+  const clamped = Math.max(0, Math.min(5, Math.floor(value))); // 0~5 정수로 clamp
+  return (
+    <div className="mt-1 inline-flex items-center gap-[6px]" aria-label={`별점 ${clamped}점`}>
+      {Array.from({ length: 5 }).map((_, i) => {
+        const filled = i < clamped;
+        return (
+          <img
+            key={`star-${i}`}
+            src={filled ? StarFilled : StarEmpty}
+            alt={filled ? '채워진 별' : '빈 별'}
+            className="w-[18px] h-[18px] block"
+            draggable={false}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 export default function CalendarPanel() {
@@ -15,8 +67,36 @@ export default function CalendarPanel() {
 
   const [year, setYear] = useState<number>(2026);
   const [month, setMonth] = useState<number>(1);
-
   const [selectedDate, setSelectedDate] = useState<string>(toISO(2026, 1, 10));
+
+  // 구매 목록 열림/닫힘
+  const [sheetOpen, setSheetOpen] = useState<boolean>(false);
+
+  const sheetScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const toggleSheet = () => {
+    setSheetOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        requestAnimationFrame(() => {
+          sheetScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+        });
+      }
+      return next;
+    });
+  };
+
+  // 구매 목록 열려있으면 -> 배경 스크롤 잠금
+  useEffect(() => {
+    if (sheetOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sheetOpen]);
 
   const purchases: CalendarPurchaseItem[] = useMemo(
     () => [
@@ -38,7 +118,8 @@ export default function CalendarPanel() {
         title: '캐시미어 로제 더블 하프코트',
         price: 238_400,
         imageUrl: '',
-        hasReview: false,
+        hasReview: true,
+        rating: 4,
       },
       {
         id: '3',
@@ -48,7 +129,29 @@ export default function CalendarPanel() {
         title: '캐시미어 로제 더블 하프코트',
         price: 238_400,
         imageUrl: '',
+        hasReview: true,
+        rating: 5,
+      },
+      {
+        id: '4',
+        date: toISO(2026, 1, 10),
+        timeLabel: '저녁',
+        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
+        title: '캐시미어 로제 더블 하프코트',
+        price: 238_400,
+        imageUrl: '',
         hasReview: false,
+      },
+      {
+        id: '5',
+        date: toISO(2026, 1, 10),
+        timeLabel: '낮',
+        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
+        title: '캐시미어 로제 더블 하프코트',
+        price: 238_400,
+        imageUrl: '',
+        hasReview: true,
+        rating: 3,
       },
     ],
     [],
@@ -74,11 +177,13 @@ export default function CalendarPanel() {
     [year, month],
   );
 
-  const days: CalendarCell[] = useMemo(() => {
-    return MonthDaysWithLeadingBlanks(year, month, purchaseMap);
-  }, [year, month, purchaseMap]);
+  const days: CalendarCell[] = useMemo(
+    () => MonthDaysWithLeadingBlanks(year, month, purchaseMap),
+    [year, month, purchaseMap],
+  );
 
   const selectedPurchases = purchaseMap.get(selectedDate) ?? [];
+  const grouped = useMemo(() => groupByTime(selectedPurchases), [selectedPurchases]);
 
   const moveMonth = (delta: -1 | 1) => {
     const keepDay = parseISO(selectedDate)?.d ?? 1;
@@ -95,10 +200,16 @@ export default function CalendarPanel() {
     setYear(nextY);
     setMonth(nextM);
     setSelectedDate(toISO(nextY, nextM, nextD));
+
+    // 월 이동 시 목록 닫기
+    setSheetOpen(false);
   };
 
+  const SHEET_CLOSED_H = 220;
+  const SHEET_TOP_GAP = 150;
+
   return (
-    <div className="px-4 pt-10 pb-0 min-h-screen flex flex-col gap-[30px] bg-secondary-100 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]">
+    <div className="px-4 pt-10 pb-0 min-h-screen flex flex-col gap-[30px] bg-secondary-100 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] relative">
       <div className="flex items-center gap-[10px]">
         <button
           type="button"
@@ -135,7 +246,7 @@ export default function CalendarPanel() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-[6px]">
           {days.map((cell, idx) => {
             if (!cell.date || cell.dayNumber == null) {
               return (
@@ -149,12 +260,7 @@ export default function CalendarPanel() {
                     'flex flex-col items-center justify-start h-[44px]',
                     'cursor-default',
                   )}>
-                  <div
-                    className={cn(
-                      'w-[28px] h-[28px] rounded-full grid place-items-center font-normal',
-                      'bg-transparent text-gray-600',
-                    )}
-                  />
+                  <div className={cn('w-[28px] h-[28px] rounded-full grid place-items-center font-normal')} />
                   <div className="mt-1 flex gap-[3px] h-[6px]" aria-hidden />
                 </button>
               );
@@ -163,11 +269,18 @@ export default function CalendarPanel() {
             const iso = toISO(cell.date.getFullYear(), cell.date.getMonth() + 1, cell.date.getDate());
             const selected = iso === selectedDate;
 
+            const count = purchaseMap.get(iso)?.length ?? 0;
+            const dotCount = Math.min(3, count);
+            const showPlus = count > 3;
+
             return (
               <button
                 key={iso}
                 type="button"
-                onClick={() => setSelectedDate(iso)}
+                onClick={() => {
+                  setSelectedDate(iso);
+                  setSheetOpen(false);
+                }}
                 className={cn(
                   'border-0 bg-transparent p-0 cursor-pointer',
                   'flex flex-col items-center justify-start h-[44px]',
@@ -180,12 +293,13 @@ export default function CalendarPanel() {
                   {cell.dayNumber}
                 </div>
 
-                <div className="mt-1 flex gap-[3px] h-[6px]" aria-hidden>
-                  {cell.hasPurchase ? (
+                <div className="mt-1 flex items-center gap-[3px] h-[6px]" aria-hidden>
+                  {count > 0 ? (
                     <>
-                      <span className="w-1 h-1 rounded-full bg-primary-brown-300" />
-                      <span className="w-1 h-1 rounded-full bg-primary-brown-300" />
-                      <span className="w-1 h-1 rounded-full bg-primary-brown-300" />
+                      {Array.from({ length: dotCount }).map((_, i) => (
+                        <span key={`${iso}-dot-${i}`} className="w-1 h-1 rounded-full bg-primary-brown-300" />
+                      ))}
+                      {showPlus ? <img src={PlusIcon} alt="더보기" className="w-[4px] h-[4px] block" /> : null}
                     </>
                   ) : null}
                 </div>
@@ -195,63 +309,115 @@ export default function CalendarPanel() {
         </div>
       </div>
 
-      <div className="-mx-4 w-[calc(100%+32px)] bg-primary-100 rounded-t-[20px] border border-gray-100 shadow-[0px_-1px_8px_rgba(0,0,0,0.05)] px-[14px] pt-[14px] pb-[10px] flex-1 flex flex-col min-h-[220px]">
-        <div aria-hidden className="w-[46px] h-[5px] rounded-[100px] bg-gray-100 mx-auto mb-3" />
+      {/* 구매 목록 */}
+      <div
+        className={cn(
+          'fixed bottom-0 left-1/2 -translate-x-1/2',
+          'w-[min(375px,100vw)]',
+          'bg-primary-100 rounded-t-[20px] border border-gray-100',
+          'shadow-[0px_-8px_18px_rgba(0,0,0,0.08)]',
+          'px-[14px] pt-[14px] pb-[10px]',
+          'flex flex-col',
+          'transition-[height] duration-200 ease-out',
+        )}
+        style={{
+          height: sheetOpen ? `calc(100dvh - ${SHEET_TOP_GAP}px)` : '40dvh',
+        }}>
+        <button
+          type="button"
+          onClick={toggleSheet}
+          aria-label={sheetOpen ? '내리기' : '끌어올리기'}
+          className="mx-auto mb-3 w-fit border-0 bg-transparent p-0 cursor-pointer active:scale-[0.98]">
+          <img
+            src={UpArrow}
+            alt=""
+            className={cn(
+              'w-[30px] h-[30px] block transition-transform duration-200',
+              sheetOpen ? 'rotate-180' : 'rotate-0',
+            )}
+          />
+        </button>
 
-        <div className="flex flex-col gap-3 max-h-[340px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="text-primary-brown-400 text-[16px] font-500 mb-3 ml-3">{formatKoreanDate(selectedDate)}</div>
+
+        <div
+          ref={sheetScrollRef}
+          className={cn(
+            'flex flex-col gap-3',
+            // 구매 목록 닫혀있으면 스크롤 잠금
+            sheetOpen ? 'overflow-y-auto' : 'overflow-hidden',
+            '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          )}
+          style={{
+            maxHeight: sheetOpen ? `calc(100dvh - ${SHEET_TOP_GAP + 90}px)` : 'calc(40dvh - 90px)',
+          }}>
           {selectedPurchases.length === 0 ? (
             <div className="text-primary-brown-400 text-[12px] font-normal">선택한 날짜에 구매 기록이 없어요.</div>
           ) : (
-            selectedPurchases.map((p) => (
-              <div
-                key={p.id}
-                className="grid grid-cols-[94px_1fr] gap-x-3 px-2 py-3 border-b border-b-[rgba(0,0,0,0.06)]">
-                <div>
-                  <div className="w-[94px] h-[94px] rounded-[5px] bg-gray-100 shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
-                    {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-cover block" /> : null}
+            TIME_ORDER.map((time) => {
+              const list = grouped[time];
+              if (list.length === 0) return null;
+
+              const icon = getTimeIcon(time);
+
+              return (
+                <div key={time} className="flex flex-col pl-1">
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <img src={icon.src} alt={icon.alt} className="h-[30px] block" />
                   </div>
 
-                  <div className="mt-2 text-[12px] font-medium text-black">{formatWon(p.price)}</div>
-
-                  <div className="text-[14px] font-normal text-black overflow-hidden text-ellipsis whitespace-nowrap">
-                    {p.title}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center text-[13px] font-medium text-black">
-                    <div className="min-w-[60px] text-black font-normal text-[12px]">구매 이유:</div>
-
-                    <div className="flex flex-wrap gap-[6px]">
-                      {p.reason.map((r) => (
-                        <div
-                          key={`${p.id}-${r}`}
-                          className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-500">
-                          #{r}
+                  {list.map((p) => (
+                    <div
+                      key={p.id}
+                      className="grid grid-cols-[94px_1fr] gap-x-4 px-2 py-5 border-b border-b-[rgba(0,0,0,0.06)]">
+                      <div className="flex items-center justify-center">
+                        <div className="w-[94px] h-[104px] rounded-[5px] bg-gray-100 shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
+                          {p.imageUrl ? (
+                            <img src={p.imageUrl} alt="" className="w-full h-full object-cover block" />
+                          ) : null}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="flex items-center text-[13px] font-medium text-black">
-                    <div className="min-w-[60px] text-black font-normal text-[12px]">구매 일시:</div>
-                    <div className="text-primary-brown-400 text-[12px] font-normal">
-                      {formatKoreanDate(p.date)} {p.timeLabel}
-                    </div>
-                  </div>
+                      <div className="flex flex-col gap-0.5 flex justify-between pl-1">
+                        <div className="text-[16px] font-500 text-black">{p.title}</div>
 
-                  <button
-                    type="button"
-                    onClick={() => navigate('/report/review')}
-                    className="mt-2 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-normal inline-flex items-center gap-[6px]">
-                    구매 후기 작성하러 가기 <span className="text-[18px]">›</span>
-                  </button>
+                        <div className="text-[16px] font-500 text-black mb-1">{formatWon(p.price)}</div>
+
+                        <div className="flex flex-wrap gap-[8px]">
+                          {p.reason.map((r) => (
+                            <div
+                              key={`${p.id}-${r}`}
+                              className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-400 text-primary-brown-400">
+                              #{r}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* 리뷰 작성시 -> 별점 */}
+                        {p.hasReview && typeof (p as any).rating === 'number' ? (
+                          <div className="mt-1 w-fit">
+                            <RatingStars value={(p as any).rating as number} />
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/report/review')}
+                            className="mt-1 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-400 inline-flex items-center gap-[8px]">
+                            구매 후기 작성하러 가기
+                            <img src={RightArrow} alt="" className="w-[6px] h-[10px] block" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
+
+      <div style={{ height: `${SHEET_CLOSED_H + 12}px` }} />
     </div>
   );
 }
@@ -290,7 +456,6 @@ function MonthDaysWithLeadingBlanks(
 
   // 월요일 시작
   const mondayStartIndex = (first.getDay() + 6) % 7;
-
   const lastDay = daysInMonth(year, month1to12);
 
   const cells: CalendarCell[] = [];
