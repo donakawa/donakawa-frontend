@@ -22,6 +22,8 @@ const publicChildren: RouteObject[] = [
 
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
+  { path: 'budget/setting', element: <BudgetSettingPage /> },
+  { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
   {
     path: 'report',
