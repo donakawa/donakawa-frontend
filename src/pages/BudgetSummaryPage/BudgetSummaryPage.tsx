@@ -40,7 +40,7 @@ const BudgetSummaryPage = () => {
       setRightAction(null);
     } else {
       setRightAction({
-        label: '수정',
+        label: '수정하기',
         onClick: () => setIsEdit(true),
       });
     }

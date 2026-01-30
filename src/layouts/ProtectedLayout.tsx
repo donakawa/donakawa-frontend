@@ -16,6 +16,7 @@ export default function ProtectedLayout() {
   const isAuthenticated = true;
   const location = useLocation();
   const navigate = useNavigate();
+  const path = location.pathname;
 
   // 뒤로가기 함수 & 오른쪽 버튼 액션 관리 상태
   const [customBack, setCustomBack] = useState<(() => void) | null>(null);
@@ -29,19 +30,24 @@ export default function ProtectedLayout() {
   const handleSetRightAction = useCallback((action: { label: string; onClick: () => void } | null) => {
     setRightAction(action);
   }, []);
-  // 제목 결정
+
+  // 헤더 타이틀 결정
   const getTitle = (path: string) => {
     if (path.startsWith('/budget/setting')) return '목표 예산 설정';
     if (path.startsWith('/budget/result')) return '목표 예산 설정';
+    if (path.startsWith('/consumption/satisfaction')) return '만족 소비';
+    if (path.startsWith('/consumption/regret')) return '후회 소비';
     return '';
   };
 
-  const isMainTab = ['/home', '/wishlist', '/report', '/mypage'].includes(location.pathname);
+  // 네비바가 나와야 하는 곳
+  const showNav = ['/home', '/wishlist', '/report', '/mypage', '/consumption'].some((p) => path.startsWith(p));
+
+  // 헤더가 숨겨져야 하는 곳
+  const hideHeader = ['/home', '/wishlist', '/report', '/mypage'].some((p) => path === p);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // nav 바 아이콘 색상 결정 로직
-  // path가 현재 주소를 포함하면 primary, 아니면 gray 반환
   const getNavColor = (path: string) => {
     return location.pathname.startsWith(path) ? 'text-primary-600' : 'text-gray-600';
   };
@@ -49,7 +55,7 @@ export default function ProtectedLayout() {
   return (
     <div className="flex flex-col h-screen">
       {/* 헤더 */}
-      {!isMainTab && (
+      {!hideHeader && (
         <Header
           title={getTitle(location.pathname)}
           onBackClick={customBack || undefined}
@@ -71,7 +77,7 @@ export default function ProtectedLayout() {
       </main>
 
       {/* 네비바 */}
-      {isMainTab && (
+      {showNav && (
         <nav className="sticky bottom-0 z-50 bg-white rounded-t-[10px] shadow-[0_0_3px_rgba(0,0,0,0.25)]">
           <div className="flex justify-around items-center h-full px-2 pt-[23px] pb-[10px]">
             <button onClick={() => navigate('/home')}>

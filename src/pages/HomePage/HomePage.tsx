@@ -43,7 +43,7 @@ const HomePage = () => {
         isPositive ? 'bg-secondary-100' : 'bg-[#E3EEFF]'
       }`}>
       {/* 헤더 */}
-      <header className="px-[20px] py-[2px] w-full flex gap-1 bg-white border-gray-50 shadow-[0_0_3px_rgba(0,0,0,0.25)] sticky top-0 z-10 items-end">
+      <header className="px-[20px] py-[6px] w-full flex gap-1 bg-white border-gray-50 shadow-[0_0_3px_rgba(0,0,0,0.25)] sticky top-0 z-10 items-end">
         <SeedIcon className="w-[26px] h-[37px]" />
         <span className="text-primary-600 leading-none font-galmuri">onakawa</span>
         <Link to="/budget/setting" className="ml-auto">
@@ -112,18 +112,22 @@ const HomePage = () => {
           </div>
           {/* 만족/후회 버튼 */}
           <div className="grid grid-cols-2 gap-[13px] mb-[28px]">
-            <button className="flex items-center justify-between px-[10px] py-[17px] bg-white rounded-[20px] border-1 border-gray-50  shadow-[0_0_4px_rgba(0,0,0,0.25)]">
+            <Link
+              to="/consumption/satisfaction"
+              className="flex items-center justify-between px-[10px] py-[17px] bg-white rounded-[20px] border-1 border-gray-50  shadow-[0_0_4px_rgba(0,0,0,0.25)]">
               <div className="flex items-center gap-[8px] text-[16px] font-medium ">
                 <SatisfactionIcon className="w-[39px] h-[39px]" /> 만족 소비
               </div>
               <ArrowIcon className="w-[24px] h-[24px] px-[8px] py-[5px] text-gray-600" />
-            </button>
-            <button className="flex items-center justify-between px-[10px] py-[17px] bg-white rounded-[20px] border-1 border-gray-50 shadow-[0_0_4px_rgba(0,0,0,0.25)]">
+            </Link>
+            <Link
+              to="/consumption/regret"
+              className="flex items-center justify-between px-[10px] py-[17px] bg-white rounded-[20px] border-1 border-gray-50 shadow-[0_0_4px_rgba(0,0,0,0.25)]">
               <div className="flex items-center gap-[8px] text-[16px] font-medium">
                 <RegretIcon className="w-[39px] h-[39px] " /> 후회 소비
               </div>
               <ArrowIcon className="w-[24px] h-[24px] px-[8px] py-[5px] text-gray-600" />
-            </button>
+            </Link>
           </div>
           {/* 소비 후기 리스트 섹션 */}
           <div className="mb-[100px]">
