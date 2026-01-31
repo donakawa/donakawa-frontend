@@ -32,17 +32,20 @@ const SignupPage = () => {
           <IoChevronBack />
         </button>
 
-        {/* 진행 상태 바: 중앙 정렬 */}
-        <div className="flex gap-1.5">
-          {[1, 2, 3, 4].map((num) => (
-            <div 
-              key={num}
-              className={`h-1.5 w-10 rounded-full transition-colors ${
-                step >= num ? 'bg-primary-brown-300' : 'bg-gray-200'
-              }`} 
-            />
-          ))}
-        </div>
+        {/*  진행 상태 바 */}
+        {step < 4 && (
+          <div className="flex gap-1.5">
+            {/* 총 3단계 [1, 2, 3] */}
+            {[1, 2, 3].map((num) => (
+              <div 
+                key={num}
+                className={`h-1.5 w-10 rounded-full transition-colors ${
+                  step === num ? 'bg-primary-brown-300' : 'bg-gray-200'
+                }`} 
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 2. 단계별 컴포넌트 */}

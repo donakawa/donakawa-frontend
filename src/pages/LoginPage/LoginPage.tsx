@@ -1,21 +1,36 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import logo from '../../assets/seed.svg';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // 간단한 유효성 검사 (길이 체크)
   const isEmailValid = email.length > 0;
   const isPasswordValid = password.length > 0;
   const isFormValid = isEmailValid && isPasswordValid;
 
+  // 3. 로그인 버튼 로직 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
+
+    // TODO: 나중에 여기에 백엔드 API 연결 (axios.post...)
+    console.log('로그인 정보:', { email });
+    
+    // 일단 무조건 홈으로 이동시킴 (테스트용)
+    navigate('/home'); 
+  };
+
+  // 4. 구글 로그인 버튼 로직
+  const handleGoogleLogin = () => {
+      alert('구글 로그인 기능은 백엔드 연결 후 구현됩니다!');
   };
 
   const getInputClass = (isValid: boolean) => {
@@ -42,6 +57,7 @@ const LoginPage = () => {
           <input
             type="email"
             placeholder="이메일"
+            aria-label="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={getInputClass(isEmailValid)}
@@ -53,30 +69,33 @@ const LoginPage = () => {
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder="비밀번호"
+            aria-label="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className= {`${getInputClass(isPasswordValid)} pr-12`}
+            className={`${getInputClass(isPasswordValid)} pr-12`}
           />
-          {/* 눈 모양 아이콘 토글 */}
+          {/* 6. 눈 모양 아이콘 토글 */}
           <button
             type="button"
             aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPassword}
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+              isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
             {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
           </button>
         </div>
 
-        {/* 아이디/비밀번호 찾기 */}
+        {/* 2. 아이디/비밀번호 찾기 (기능 없음, 링크만 존재) */}
         <div className="flex justify-end">
           <button type="button" className="text-xs text-gray-400 hover:underline">
             아이디/ 비밀번호 찾기
           </button>
         </div>
 
-        {/* 로그인 버튼 */}
+        {/* 3. 로그인 버튼 */}
         <button
           type="submit"
           disabled={!isFormValid}
@@ -90,16 +109,17 @@ const LoginPage = () => {
 
       {/* 3. 소셜 로그인 및 회원가입 */}
       <div className="mt-8 w-full max-w-sm space-y-4">
-        {/* 구글 로그인 */}
+        {/* 4. 구글 로그인 */}
         <button
           type="button"
+          onClick={handleGoogleLogin}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium transition-colors hover:bg-gray-50"
         >
           <FcGoogle size={20} />
           구글 로그인
         </button>
 
-        {/* 회원가입 링크 */}
+        {/* 5. 회원가입 링크 */}
         <div className="text-center">
           <Link to="/signup" className="text-sm font-medium text-primary-brown-300 hover:underline">
             회원가입

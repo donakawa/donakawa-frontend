@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IoCheckmark } from 'react-icons/io5'; // 체크 아이콘 (유효할 때 사용)
+import { IoCheckmark } from 'react-icons/io5';
 
 interface Props {
   onNext: () => void;
@@ -18,6 +18,13 @@ const Step3Nickname = ({ onNext }: Props) => {
   // 에러 상태 (10글자 초과)
   const isError = currentLength > maxLength;
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     // 영문, 숫자, 한글(자음/모음 포함)만 입력 가능하게 필터링
+    const value = e.target.value;
+    const sanitizedValue = value.replace(/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]/g, ''); 
+    setNickname(sanitizedValue);
+  };
+
   return (
     <div className="w-full max-w-sm animate-fade-in">
       {/* 타이틀 영역 */}
@@ -33,10 +40,9 @@ const Step3Nickname = ({ onNext }: Props) => {
         <div className="relative">
           <input
             type="text"
-            placeholder="닉네임"
+            placeholder="10자 이내의 영문/한글/숫자 입력 가능"
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            // 에러면 빨간 테두리, 유효하면 초록 테두리, 아니면 기본
+            onChange={handleChange}
             className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
               ${isError 
                 ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500' 
@@ -47,7 +53,7 @@ const Step3Nickname = ({ onNext }: Props) => {
           />
         </div>
 
-        {/* 글자 수 카운터 및 상태 메시지 (우측 정렬) */}
+        {/* 글자 수 카운터 및 상태 메시지 */}
         <div className="flex justify-end items-center gap-1 text-xs">
           {isValid && !isError && (
              <IoCheckmark className="text-primary-600" />
@@ -57,8 +63,8 @@ const Step3Nickname = ({ onNext }: Props) => {
               ${isError ? 'text-red-500' : isValid ? 'text-primary-600' : 'text-gray-400'}
             `}
           >
-            {/* 글자가 없으면 '최대 10자', 있으면 '현재/최대' 표시 */}
-            {currentLength === 0 ? `최대 ${maxLength}자` : `${currentLength}/${maxLength}`}
+            {/*  0글자일 때도 0/10으로 나오도록 통일 */}
+            {currentLength}/{maxLength}
           </span>
         </div>
       </div>

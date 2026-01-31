@@ -46,15 +46,29 @@ const Step4Goal = () => {
     setIsCompleteScreen(true);
   };
 
-  // 최종 '도나카와 시작하기' 버튼 (메인 or 로그인 이동)
-  const handleStart = () => {
+  // 1. 닫기(X) 버튼 클릭 -> 로그인 화면 이동
+  const handleClose = () => {
     navigate('/login');
+  };
+
+  // 2. 시작하기 버튼 클릭 -> 홈 화면(로그인 상태) 이동
+  const handleStart = () => {
+    navigate('/home'); 
   };
 
   // --- 화면 2: 가입 완료 화면 ---
   if (isCompleteScreen) {
     return (
       <div className="flex w-full max-w-sm flex-col items-center animate-fade-in text-center pt-20">
+        {/* X 버튼 (화면 우측 상단 고정) */}
+        <button 
+            onClick={handleClose} 
+            className="absolute top-5 right-6 text-2xl text-gray-800 p-2"
+            aria-label="닫기"
+        >
+            <IoClose />
+        </button>
+
         <div className="relative mb-6 flex h-20 w-20 items-center justify-center">
             {/* 체크 아이콘 */}
             <div className="z-10 text-7xl text-black">

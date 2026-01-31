@@ -44,6 +44,7 @@ const Step1Email = ({ onNext }: Props) => {
 
   const handleSendCode = () => {
     if(!isEmailValid) return;
+    alert('인증번호가 발송되었습니다.');
     setTimeLeft(299); 
     setView('code');
   };
