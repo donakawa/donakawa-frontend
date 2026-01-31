@@ -31,6 +31,7 @@ export default function WishlistItem({
     <button type="button" onClick={handleClick} className="text-left w-full">
       <div
         className={[
+<<<<<<< HEAD
           'relative',
           'w-[94px] h-[94px]',
           'overflow-hidden',
@@ -44,6 +45,14 @@ export default function WishlistItem({
           alt={title}
           className="w-full h-full object-cover"
         />
+=======
+          'relative w-full aspect-square overflow-hidden bg-[color:var(--color-gray-100)]',
+          'rounded-[5px]',
+          'shadow-[0_0_4px_rgba(0,0,0,0.25)]',
+        ].join(' ')}
+      >
+        <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+>>>>>>> 16c4dd5 (✨ Feat: 위시리스트_메인 페이지 및 수정하기 페이지 퍼블리싱(#6))
 
         {editMode && (
           <div
@@ -73,10 +82,11 @@ export default function WishlistItem({
             )}
           </div>
         )}
+
       </div>
 
       <div className="pt-2">
-        <div className="text-[12px] font-semibold text-[color:var(--color-black)] leading-none">
+        <div className="text-[18px] font-semibold text-[color:var(--color-black)] leading-none">
           {price.toLocaleString()}
         </div>
         <div className="mt-1 text-[14px] text-[color:var(--color-black)] truncate">
