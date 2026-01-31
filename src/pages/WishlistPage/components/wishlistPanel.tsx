@@ -14,7 +14,7 @@ export default function WishlistPanel({
   return (
     <section
       className={[
-        'w-[375px] h-[601px] mt-[174px] mx-auto',
+        'w-[375px] h-[601px] mt-[1px] mx-auto',
         'flex flex-col',
         editMode ? 'bg-[color:var(--color-gray-100)]' : 'bg-[color:var(--color-secondary-100)]',
         'rounded-t-[20px]',
