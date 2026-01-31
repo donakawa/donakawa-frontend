@@ -20,7 +20,7 @@ const SuccessModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 font-sans text-[color:var(--color-black)]">
-      <div className="w-[335px] h-[363px] bg-[color:var(--color-white)] rounded-[20px] relative shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="w-[335px] h-[363px] bg-[color:var(--color-white)] rounded-[20px] relative shadow-xl overflow-hidden duration-200">
         
         <button onClick={onClose} aria-label="닫기" className="absolute right-[19px] top-[13px] cursor-pointer z-10">
           <CloseButton width={24} height={24} />
