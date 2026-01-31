@@ -24,25 +24,21 @@ export default function ReviewItemCard({ item, onOpenClick }: ReviewItemCardProp
 
   if (isCompleted) {
     return (
-      <div
-        onClick={handleCompletedClick}
-        role={onOpenClick ? 'button' : undefined}
-        className={cn('p-4 border-b border-b-gray-100', onOpenClick ? 'cursor-pointer' : 'cursor-default')}>
-        <div className="flex gap-[21px]">
-          <div className="w-[94px] flex-none">
-            <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden shrink-0">
+      <div className="p-5 relative">
+        <div className="absolute left-4 right-4 bottom-0 h-px bg-gray-100" />
+        <div className="flex gap-[20px]">
+          <div className="w-[94px] flex items-center justify-center flex-none">
+            <div className="w-[94px] h-[104px] rounded-[5px] overflow-hidden shrink-0">
               <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover block" />
-            </div>
-
-            <div className="mt-[6px]">
-              <div className="text-[12px] font-medium mb-1">{item.price.toLocaleString('ko-KR')}</div>
-              <div className="text-[14px] font-normal leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis">
-                {item.title}
-              </div>
             </div>
           </div>
 
-          <div className="flex-1 py-[3px] min-w-0 flex flex-col justify-between">
+          <div className="flex-1 min-w-0 flex flex-col gap-[6px]">
+            <div className="min-w-0">
+              <div className="text-[16px] font-medium text-black break-keep">{item.title}</div>
+              <div className=" text-[16px] font-medium text-black">{item.price.toLocaleString('ko-KR')}</div>
+            </div>
+
             <div className="flex gap-2 flex-wrap">
               {item.tags.map((t) => (
                 <span
@@ -73,13 +69,14 @@ export default function ReviewItemCard({ item, onOpenClick }: ReviewItemCardProp
   }
 
   return (
-    <div className="p-4 border-b border-b-gray-100">
+    <div className="p-5 relative">
+      <div className="absolute left-4 right-4 bottom-0 h-px bg-gray-100" />
       <div className="flex gap-[14px]">
         <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden shrink-0">
           <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover block" />
         </div>
 
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <div className="flex-1 min-w-0 flex flex-col justify-between gap-1">
           <div className="text-[16px] font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.title}</div>
           <div className="text-[16px] font-medium">{item.price.toLocaleString('ko-KR')}</div>
           <div className="text-[16px] font-medium text-gray-600">구매한 지 {item.daylabel}DAY+</div>

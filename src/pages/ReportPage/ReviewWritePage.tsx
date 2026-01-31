@@ -3,8 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { RatingValue, UsageLevel, ReviewWritePurchase } from '@/types/ReportPage/review';
 
+import LeftArrow from '@/assets/arrow_left.svg';
+import MoonIcon from '@/assets/달.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import StarIcon from '@/assets/star_rare.svg';
+import Sample from '@/assets/sample.svg';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -23,7 +26,7 @@ export default function ReviewWritePage() {
         title: '캐시미어 로제 더블 하프코트',
         price: 238_400,
         dayLabel: 23,
-        imageUrl: '',
+        imageUrl: Sample,
         tags: ['세일 중', '기분 전환'],
         dateText: '2026.01.10',
         timeLabel: '저녁',
@@ -33,7 +36,7 @@ export default function ReviewWritePage() {
         title: '캐시미어 로제 더블 하프코트',
         price: 238_400,
         dayLabel: 23,
-        imageUrl: '',
+        imageUrl: Sample,
         tags: ['세일 중', '기분 전환'],
         dateText: '2026.01.10',
         timeLabel: '저녁',
@@ -69,9 +72,9 @@ export default function ReviewWritePage() {
         <button
           type="button"
           aria-label="뒤로가기"
-          onClick={handleBack}
-          className="w-10 h-10 border-0 bg-transparent text-[18px] cursor-pointer">
-          ←
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 border-0 bg-transparent p-0 flex items-center justify-center cursor-pointer">
+          <img src={LeftArrow} alt="뒤로가기" className="w-[13px] h-[22px] block" />
         </button>
 
         <h1 className="m-0 text-center text-[20px] font-semibold">소비 후기 작성</h1>
@@ -81,23 +84,27 @@ export default function ReviewWritePage() {
           onClick={handleDone}
           disabled={!isCompleted}
           className={cn(
-            'border-0 bg-transparent text-[16px] font-semibold',
-            isCompleted
-              ? 'text-[var(--color-primary-green-500)] cursor-pointer opacity-100'
-              : 'text-gray-600 cursor-default opacity-80',
+            'border-0 bg-transparent text-[16px] font-medium',
+            isCompleted ? 'text-primary-400 cursor-pointer opacity-100' : 'text-gray-600 cursor-default opacity-80',
           )}>
           완료
         </button>
       </header>
 
-      <main className="p-4">
+      <main className="p-5">
         <section className="pb-[18px]">
-          <div className="flex gap-[14px]">
+          <div className="flex items-center gap-[10px] mb-[12px]">
+            <div className="text-[14px] font-normal text-primary-brown-400">{purchase.dateText}</div>
+
+            <img src={MoonIcon} alt="" aria-hidden className="h-[30px]" />
+          </div>
+
+          <div className="flex gap-[20px]">
             <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-white flex-none">
               <img src={purchase.imageUrl} alt={purchase.title} className="w-full h-full object-cover block" />
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col gap-1">
+            <div className="flex-1 min-w-0 flex flex-col justify-between gap-1">
               <div className="text-[16px] font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                 {purchase.title}
               </div>
@@ -107,28 +114,16 @@ export default function ReviewWritePage() {
           </div>
 
           <div className="mt-[14px] flex gap-[10px] flex-wrap">
-            {purchase.tags.map((t: string) => (
+            {purchase.tags.map((t) => (
               <span
                 key={`${purchase.id}-${t}`}
-                className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-[var(--color-primary-brown-500)]">
+                className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] text-[var(--color-primary-brown-500)]">
                 #{t}
               </span>
             ))}
           </div>
 
-          <div className="mt-4 flex items-center gap-[10px]">
-            <div className="text-[14px] font-normal text-primary-brown-400">{purchase.dateText}</div>
-
-            <div
-              aria-hidden
-              className="w-7 h-7 rounded-full"
-              style={{
-                background: 'radial-gradient(circle at 35% 35%, #ffe6a8 0 55%, #f6c96a 56% 100%)',
-              }}
-            />
-          </div>
-
-          <div className="mt-[18px] h-px bg-gray-100" />
+          <div className="mt-[40px] h-px bg-gray-100" />
         </section>
 
         <section className="py-[26px]">
