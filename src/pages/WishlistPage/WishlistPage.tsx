@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 
 import WishGroupRow from './components/wishGrouprow';
 import WishlistGrid from './components/wishlistGrid';
@@ -67,12 +67,25 @@ export default function WishlistPage() {
   const moveFolders = useMemo(() => groups.map((g) => ({ id: g.id, name: g.name })), [groups]);
   const hasSelection = selectedItemIds.size > 0;
 
+  const toastTimeoutRef = useRef<number | null>(null);
+
   const showToast = (message: string) => {
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(message);
     setToastOpen(true);
-    window.setTimeout(() => setToastOpen(false), 2000);
+    toastTimeoutRef.current = window.setTimeout(() => setToastOpen(false), 2000);
   };
 
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+  
   const handleLinkComplete = (data: WishItemData) => {
     setInitialData(data);
     setShowLinkRegistration(false);
@@ -186,7 +199,7 @@ export default function WishlistPage() {
           <>
             <div className="flex items-center justify-between mb-4 shrink-0">
               <PillIconButton Icon={EditPill} ariaLabel="수정하기" onClick={enterEditMode} />
-              <AddIconButton onClick={() => setAddModalOpen(true)} />
+              <AddIconButton onClick={() => setAddModalOpen(true)} ariaLabel={'add-icon'} />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={items} />

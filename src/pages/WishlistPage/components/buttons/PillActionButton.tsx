@@ -10,6 +10,8 @@ export default function PillActionButton({
   label,
   onClick,
   variant = 'filled',
+  disabled = false,
+  className = '',
 }: Props) {
     const base = [
     'w-[110px] h-[40px] rounded-[100px]',
@@ -17,7 +19,8 @@ export default function PillActionButton({
     'p-0',
     'text-[16px] leading-none',
     'border-[1.5px] border-[color:var(--color-primary-brown-300)]',
-    'active:scale-[0.99]'
+    'active:scale-[0.99]',
+    disabled ? 'opacity-50 cursor-not-allowed' : '',
   ].join(' ');
 
   //outline, filled 따라 다른 버튼 제공
@@ -30,7 +33,8 @@ export default function PillActionButton({
   return (
     <button
       onClick={onClick}
-      className={[base, variant === 'outline' ? outline : filled].join(' ')}
+      disabled={disabled}
+      className={[base, variant === 'outline' ? outline : filled, className].join(' ')}
     >
       {label}
     </button>

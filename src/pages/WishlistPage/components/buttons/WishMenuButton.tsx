@@ -1,6 +1,7 @@
 export default function WishMenuButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={[
         "w-full py-[22px] text-left",
