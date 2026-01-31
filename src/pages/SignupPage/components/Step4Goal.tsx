@@ -18,8 +18,9 @@ const Step4Goal = () => {
 
   // 목표 확정 처리
   const handleConfirm = () => {
-    if (inputVal.trim().length > 0) {
-      setSelectedGoal(inputVal);
+    const trimmed = inputVal.trim();
+    if (trimmed.length > 0) {
+      setSelectedGoal(trimmed);
       setInputVal(''); // 입력창 비우기
     }
   };
@@ -109,7 +110,12 @@ const Step4Goal = () => {
               // 목표가 선택되었을 때 (캡슐 모양 스타일 적용)
               <div className="inline-flex items-center gap-2 rounded-full border border-primary-600 bg-white px-3 py-1.5">
                 <span className="text-sm font-bold text-gray-800 pt-0.5">{selectedGoal}</span>
-                <button onClick={handleRemoveGoal} className="text-gray-400 hover:text-gray-600 flex items-center">
+                <button
+                  type="button"
+                  aria-label="선택한 목표 삭제"
+                  onClick={handleRemoveGoal}
+                  className="text-gray-400 hover:text-gray-600 flex items-center"
+                >
                   <IoClose size={16} />
                 </button>
               </div>

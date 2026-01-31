@@ -34,7 +34,7 @@ const SignupPage = () => {
 
         {/* 진행 상태 바: 중앙 정렬 */}
         <div className="flex gap-1.5">
-          {[1, 2, 3].map((num) => (
+          {[1, 2, 3, 4].map((num) => (
             <div 
               key={num}
               className={`h-1.5 w-10 rounded-full transition-colors ${

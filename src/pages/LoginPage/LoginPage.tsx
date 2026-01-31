@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
-import logo from '../../assets/favicon.ico';
+import logo from '../../assets/seed.svg';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +16,6 @@ const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
-    console.log('로그인 시도:', email, password);
   };
 
   const getInputClass = (isValid: boolean) => {
@@ -56,12 +55,13 @@ const LoginPage = () => {
             placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={getInputClass(isPasswordValid)}
-            style={{ paddingRight: '3rem' }}
+            className= {`${getInputClass(isPasswordValid)} pr-12`}
           />
           {/* 눈 모양 아이콘 토글 */}
           <button
             type="button"
+            aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
+            aria-pressed={showPassword}
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >

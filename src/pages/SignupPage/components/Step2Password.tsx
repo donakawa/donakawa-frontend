@@ -62,6 +62,8 @@ const Step2Password = ({ onNext }: Props) => {
           {/* 눈 아이콘 */}
           <button
             type="button"
+            aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
+            aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
           >
@@ -92,6 +94,8 @@ const Step2Password = ({ onNext }: Props) => {
           />
            <button
             type="button"
+            aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
+            aria-pressed={showConfirmPw}
             onClick={() => setShowConfirmPw(!showConfirmPw)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
           >
