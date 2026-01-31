@@ -7,6 +7,7 @@ import ProtectedLayout from '@/layouts/ProtectedLayout';
 import SignupPage from '@/pages/SignupPage/SignupPage';
 import LoginPage from '@/pages/LoginPage/LoginPage';
 import HomePage from '@/pages/HomePage/HomePage';
+import AIChatPage from '@/pages/HomePage/AIChatPage';
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
@@ -32,6 +33,10 @@ const protectedChildren: RouteObject[] = [
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
+  { path: 'home', element: <HomePage /> }, // 수정 사항 반영해야됨
+
+  { path: 'ai-chat', element: <AIChatPage /> },
+
   { path: 'wishlist', element: <WishlistPage /> },
   {
     path: 'report',
