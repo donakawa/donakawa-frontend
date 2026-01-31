@@ -4,18 +4,27 @@ import type { RouteObject } from 'react-router-dom';
 import RootLayout from '@/layouts/RootLayout';
 import ProtectedLayout from '@/layouts/ProtectedLayout';
 
+// 로그인/회원가입
 import SignupPage from '@/pages/SignupPage/SignupPage';
 import LoginPage from '@/pages/LoginPage/LoginPage';
+
+// 홈
 import HomePage from '@/pages/HomePage/HomePage';
 import AIChatPage from '@/pages/HomePage/AIChatPage';
+import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
+import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
+
+// 위시리스트
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
+
+// 기록
 import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
+
+// 마이페이지
 import MyPage from '@/pages/MyPage/MyPage';
-// import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
-// import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Passward';
@@ -28,11 +37,17 @@ const publicChildren: RouteObject[] = [
 ];
 
 const protectedChildren: RouteObject[] = [
-  { path: 'home', element: <HomePage /> }, // 수정 사항 반영해야됨
-
-  { path: 'ai-chat', element: <AIChatPage /> },
-
+  {
+    path: 'home',
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: 'ai-chat', element: <AIChatPage /> },
+      { path: 'budget/setting', element: <BudgetSettingPage /> },
+      { path: 'budget/result', element: <BudgetSummaryPage /> },
+    ],
+  },
   { path: 'wishlist', element: <WishlistPage /> },
+
   {
     path: 'report',
     children: [
