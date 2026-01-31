@@ -338,7 +338,7 @@ export default function CalendarPanel() {
           />
         </button>
 
-        <div className="text-primary-brown-400 text-[16px] font-500 mb-3 ml-3">{formatKoreanDate(selectedDate)}</div>
+        <div className="text-primary-brown-400 text-[16px] font-medium mb-3 ml-3">{formatKoreanDate(selectedDate)}</div>
 
         <div
           ref={sheetScrollRef}
@@ -379,15 +379,15 @@ export default function CalendarPanel() {
                       </div>
 
                       <div className="flex flex-col gap-0.5 flex justify-between pl-1">
-                        <div className="text-[16px] font-500 text-black">{p.title}</div>
+                        <div className="text-[16px] font-medium text-black">{p.title}</div>
 
-                        <div className="text-[16px] font-500 text-black mb-1">{formatWon(p.price)}</div>
+                        <div className="text-[16px] font-medium text-black mb-1">{formatWon(p.price)}</div>
 
                         <div className="flex flex-wrap gap-[8px]">
                           {p.reason.map((r) => (
                             <div
                               key={`${p.id}-${r}`}
-                              className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-400 text-primary-brown-400">
+                              className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-400">
                               #{r}
                             </div>
                           ))}
@@ -402,7 +402,7 @@ export default function CalendarPanel() {
                           <button
                             type="button"
                             onClick={() => navigate('/report/review')}
-                            className="mt-1 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-400 inline-flex items-center gap-[8px]">
+                            className="mt-1 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-normal inline-flex items-center gap-[8px]">
                             구매 후기 작성하러 가기
                             <img src={RightArrow} alt="" className="w-[6px] h-[10px] block" />
                           </button>

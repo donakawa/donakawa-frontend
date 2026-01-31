@@ -7,6 +7,7 @@ import ProtectedLayout from '@/layouts/ProtectedLayout';
 import SignupPage from '@/pages/SignupPage/SignupPage';
 import LoginPage from '@/pages/LoginPage/LoginPage';
 import HomePage from '@/pages/HomePage/HomePage';
+import AIChatPage from '@/pages/HomePage/AIChatPage';
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
@@ -18,6 +19,8 @@ import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
+// import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
+// import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Passward';
@@ -36,6 +39,7 @@ const protectedChildren: RouteObject[] = [
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
+  { path: 'ai-chat', element: <AIChatPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
   {
     path: 'report',

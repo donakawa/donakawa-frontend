@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import type { ReviewTabKey, PendingReviewItem, CompletedReviewItem } from '@/types/ReportPage/review';
 
 import Sample from '@/assets/sample.svg';
+import LeftArrow from '@/assets/arrow_left.svg';
 
 import PendingPage from '@/pages/ReportPage/components/PendingPage';
 import CompletedPage from '@/pages/ReportPage/components/CompletedPage';
@@ -12,6 +14,8 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 export default function PurchaseReview() {
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState<ReviewTabKey>('pending');
 
   const pendingItems: PendingReviewItem[] = useMemo(
@@ -67,8 +71,9 @@ export default function PurchaseReview() {
         <button
           type="button"
           aria-label="뒤로가기"
-          className="w-10 h-10 border-0 bg-transparent text-[18px] cursor-pointer">
-          ←
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 border-0 bg-transparent p-0 flex items-center justify-center cursor-pointer">
+          <img src={LeftArrow} alt="뒤로가기" className="w-[13px] h-[22px] block" />
         </button>
 
         <h1 className="m-0 text-center text-[20px] font-semibold">구매한 템</h1>
