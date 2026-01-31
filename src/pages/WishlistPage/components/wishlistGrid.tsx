@@ -27,9 +27,10 @@ export default function WishlistGrid({
   return (
     <div
       className={[
-        'w-[335px] h-[534px]',
         'grid grid-cols-3',
         'gap-x-[26px] gap-y-[26px]',
+        'w-full',
+        'h-fit',
       ].join(' ')}
     >
       {items.map((it) => (
