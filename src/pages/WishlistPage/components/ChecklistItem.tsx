@@ -35,12 +35,15 @@ const ChecklistItem = ({
     >
       <div className="flex flex-row items-center gap-[8px] w-[247px] h-[21px]">
         {/* Checkbox 영역 */}
-        <div onClick={onCheckClick} className="shrink-0 cursor-pointer flex items-center justify-center w-[18px] h-[18px]">
+        <button
+          type="button"
+          onClick={onCheckClick}
+          className="shrink-0 cursor-pointer flex items-center justify-center w-[18px] h-[18px] bg-transparent p-0"
+        >
           {isSelected ? <CheckOnIcon width={18} height={18} /> : <CheckOffIcon width={18} height={18} />}
-        </div>
-
+        </button>
         {/* 텍스트 영역*/}
-        <div onClick={onTextClick} className="flex-1 flex items-center h-full cursor-pointer overflow-hidden">
+        <div className="flex-1 flex items-center h-full overflow-hidden">
           {isCustom && isEditing ? (
             <input
               type="text"
@@ -53,9 +56,15 @@ const ChecklistItem = ({
               autoFocus
             />
           ) : (
-            <span className={`text-[14px] leading-[150%] truncate ${isSelected || (isCustom && customInput) ? 'text-black font-medium' : isCustom ? 'text-[color:var(--color-gray-600)]' : 'text-black'}`}>
-              {isCustom ? (customInput || text) : text}
-            </span>
+            <button
+              type="button"
+              onClick={onTextClick}
+              className="flex-1 text-left cursor-pointer overflow-hidden bg-transparent p-0"
+            >
+              <span className={`text-[14px] leading-[150%] truncate ${isSelected || (isCustom && customInput) ? 'text-black font-medium' : isCustom ? 'text-[color:var(--color-gray-600)]' : 'text-black'}`}>
+                {isCustom ? (customInput || text) : text}
+              </span>
+            </button>
           )}
         </div>
       </div>

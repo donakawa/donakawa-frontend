@@ -32,13 +32,16 @@ const CalendarStrip = ({
         const isSunOrSat = item.dayIndex === 0 || item.dayIndex === 6;
 
         return (
-          <div 
-            key={idx} 
+          <button
+            type="button"
+            key={idx}
             onClick={() => {
               if (!item.isFuture) onDateSelect(item.fullDate);
             }}
+            disabled={item.isFuture}
+            aria-disabled={item.isFuture}
             className={`flex flex-col items-center gap-[4px] min-w-[30px] ${
-              item.isFuture ? "opacity-30" : "cursor-pointer"
+              item.isFuture ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
             } ${isSelected ? 'is-selected' : ''} ${isToday ? 'is-today' : ''}`}
           >
             <span className={`text-[14px] ${isSunOrSat ? 'text-[color:var(--color-error)]' : 'text-black'}`}>
@@ -48,7 +51,7 @@ const CalendarStrip = ({
               ${isSelected ? "bg-[color:var(--color-primary-600)] text-white" : "text-black hover:bg-gray-100"}`}>
               {item.dateNum}
             </div>
-          </div>
+          </button>
         );
       })}
     </div>

@@ -28,22 +28,27 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
   const [viewDate, setViewDate] = useState(new Date()); 
   const [selectedFullDate, setSelectedFullDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  
+  const resetState = () => {
+    setStep(1);
+    setSelectedItems([]);
+    setCustomInput("");
+    setIsCustomSelected(false);
+    setIsEditing(false);
+    setViewDate(new Date());
+    setSelectedFullDate(new Date());
+    setSelectedTime(null);
+  };
 
-  if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen);
-    // 모달이 닫힐 때 모든 상태 초기화
-    if (!isOpen) {
-      setStep(1);
-      setSelectedItems([]);
-      setCustomInput("");
-      setIsCustomSelected(false);
-      setIsEditing(false);
-      setViewDate(new Date());
-      setSelectedFullDate(new Date());
-      setSelectedTime(null);
-    }
-  }
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+  
+  const handleComplete = () => {
+    resetState();
+    onComplete();
+  };
 
   // 캘린더 관련 useMemo
   const { calendarDays, today } = useMemo(() => {
@@ -91,12 +96,16 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
   const options = ["필요해서", "세일 중이라", "기분 전환", "보상으로", "품절될 것 같아서", "선물용으로"];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 font-sans text-black">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="구매 기록 모달"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 font-sans text-black"
+    >
       <div className="w-[335px] h-[600px] bg-white rounded-[20px] relative shadow-xl overflow-hidden">
         
         <ProgressBar step={step} />
-
-        <button onClick={onClose} className="absolute right-[19px] top-[13px] cursor-pointer z-10">
+        <button onClick={handleClose} aria-label="닫기" className="absolute right-[19px] top-[13px] cursor-pointer z-10">
           <CloseButton width={24} height={24} />
         </button>
 
@@ -214,7 +223,7 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
                 </button>
                 <button 
                   disabled={!selectedTime} 
-                  onClick={onComplete}
+                  onClick={handleComplete}
                   className={`w-[104px] h-[40px] rounded-full text-white text-[14px] font-medium transition-all 
                   ${selectedTime ? "bg-[color:var(--color-primary-brown-300)] shadow-md cursor-pointer" : "bg-[#C6C6C6] cursor-not-allowed"}`}
                 >
