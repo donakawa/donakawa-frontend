@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-// 나중 주석 해제
-// import WishlistGrid, { type WishlistItemType } from '../../pages/WishlistPage/components/wishlistGrid';
-// import WishlistPanel from '../../pages/WishlistPage/components/wishlistPanel';
+import WishlistGrid, { type WishlistItemType } from '../../pages/WishlistPage/components/wishlistGrid';
+import WishlistPanel from '../../pages/WishlistPage/components/wishlistPanel';
 
 // 타입 설정 (만족 소비 / 후회 소비)
 type ConsumptionType = 'satisfaction' | 'regret';
@@ -22,23 +21,21 @@ const ConsumptionPage = () => {
 
   const [stats, setStats] = useState({ avgDays: 0, count: 0 });
 
-  // 나중 주석 해제
-  //const [products, setProducts] = useState<WishlistItemType[]>([]);
+  const [products, setProducts] = useState<WishlistItemType[]>([]);
 
-  // 더미데이터
-  // useEffect(() => {
-  //   if (currentType === 'satisfaction') {
-  //     setStats({ avgDays: 7, count: 3 });
-  //     setProducts([
-  //       { id: '1', title: '캐시미어 로제...', price: 238400, imageUrl: 'https://placehold.co/150' },
-  //       { id: '2', title: '캐시미어 로제...', price: 105000, imageUrl: 'https://placehold.co/150' },
-  //       { id: '3', title: '캐시미어 로제...', price: 320000, imageUrl: 'https://placehold.co/150' },
-  //     ]);
-  //   } else {
-  //     setStats({ avgDays: 2, count: 1 });
-  //     setProducts([{ id: '4', title: '코트...', price: 50000, imageUrl: 'https://placehold.co/150' }]);
-  //   }
-  // }, [currentType]);
+  useEffect(() => {
+    if (currentType === 'satisfaction') {
+      setStats({ avgDays: 7, count: 3 });
+      setProducts([
+        { id: '1', title: '캐시미어 로제...', price: 238400, imageUrl: 'https://placehold.co/150' },
+        { id: '2', title: '캐시미어 로제...', price: 105000, imageUrl: 'https://placehold.co/150' },
+        { id: '3', title: '캐시미어 로제...', price: 320000, imageUrl: 'https://placehold.co/150' },
+      ]);
+    } else {
+      setStats({ avgDays: 2, count: 1 });
+      setProducts([{ id: '4', title: '코트...', price: 50000, imageUrl: 'https://placehold.co/150' }]);
+    }
+  }, [currentType]);
 
   return (
     <div className="flex flex-col">
@@ -50,11 +47,11 @@ const ConsumptionPage = () => {
       </section>
 
       <div className="flex-1 overflow-hidden">
-        {/* <WishlistPanel editMode={false} bottomPaddingPx={0}>
+        <WishlistPanel editMode={false} bottomPaddingPx={0}>
           <div className="flex-1 overflow-y-auto no-scrollbar pb-[90px]">
             <WishlistGrid items={products} editMode={false} onItemClick={(id) => console.log('상품 클릭:', id)} />
           </div>
-        </WishlistPanel> */}
+        </WishlistPanel>
       </div>
     </div>
   );
