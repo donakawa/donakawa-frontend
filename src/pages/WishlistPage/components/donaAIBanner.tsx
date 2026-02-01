@@ -8,21 +8,17 @@ const DonaAiBanner = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const navigate = useNavigate();
 
-  //3초 후 배너 자동 닫기
+  // 3초 후 자동 닫기
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsExpanded(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
+    const timer = window.setTimeout(() => setIsExpanded(false), 3000);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
+    setIsExpanded((prev) => !prev);
   };
 
-  //우선 home
   const handleChatStart = () => {
     navigate('/home');
   };
@@ -35,12 +31,17 @@ const DonaAiBanner = () => {
   };
 
   return (
-    //배너
-    <div 
+    <div
       className={`
-        relative top-[450px] flex items-center cursor-pointer overflow-hidden
-        transition-all duration-500 ease-in-out bg-[color:var(--color-banner)] h-[72px] rounded-[100px]
-        ${isExpanded ? 'left-[100px] w-[254px]' : 'left-[252px] w-[102px]'}
+        absolute z-50
+        right-5
+        bottom-[88px]
+        flex items-center cursor-pointer overflow-hidden
+        transition-all duration-500 ease-in-out
+        bg-[color:var(--color-banner)]
+        h-[72px] rounded-[100px]
+        shadow-[0_8px_18px_rgba(0,0,0,0.12)]
+        ${isExpanded ? 'w-[254px]' : 'w-[102px]'}
       `}
       role="button"
       tabIndex={0}
@@ -49,7 +50,8 @@ const DonaAiBanner = () => {
       onClick={handleChatStart}
     >
       {/* 화살표 버튼 */}
-      <button 
+      <button
+        type="button"
         onClick={toggleExpand}
         className="absolute left-2 w-6 h-6 flex items-center justify-center z-20 cursor-pointer"
         aria-label={isExpanded ? '배너 접기' : '배너 펼치기'}
@@ -58,19 +60,18 @@ const DonaAiBanner = () => {
       </button>
 
       {/* 텍스트 */}
-      <div className={`
-        flex flex-col ml-[36px] whitespace-nowrap transition-opacity duration-300
-        text-[12px] font-bold tracking-tighter font-galmuri
-        ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-      `}>
-        <span>
-          구매가 고민될 때,
-        </span>
-        <span>
-          도나AI와 상담은 어때요?
-        </span>
+      <div
+        className={`
+          flex flex-col ml-[36px] whitespace-nowrap transition-opacity duration-300
+          text-[12px] font-bold tracking-tighter font-galmuri
+          ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+        `}
+      >
+        <span>구매가 고민될 때,</span>
+        <span>도나AI와 상담은 어때요?</span>
       </div>
 
+      {/* 캐릭터 */}
       <div className="absolute right-0 w-[72px] h-[72px]">
         <DonaIcon />
       </div>

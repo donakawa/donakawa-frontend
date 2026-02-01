@@ -41,7 +41,7 @@ export default function WishRegistrationPage({ onBack, onComplete, initialData }
   return (
     <div className="absolute inset-0 z-[100] bg-white flex flex-col">
       <header className="flex items-center justify-between px-5 h-[56px] shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2">
+        <button type="button" onClick={onBack} aria-label="뒤로가기" className="p-2 -ml-2">
           <BackIcon className="w-6 h-6" />
         </button>
         <h2 className="text-[18px] font-bold text-black">위시템 등록</h2>
@@ -61,7 +61,9 @@ export default function WishRegistrationPage({ onBack, onComplete, initialData }
           {image && <img src={image} alt="preview" className="w-full h-full object-cover" />}
           <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*"/>
           <button 
+            type="button"
             onClick={() => fileInputRef.current?.click()}
+            aria-label="사진 변경"
             className="absolute right-3 bottom-3 w-[33px] h-[33px] bg-white rounded-full flex items-center justify-center shadow-sm"
           >
             <EditPhotoIcon className="w-[21px] h-[21px] text-primary-500" />

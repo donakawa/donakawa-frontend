@@ -27,6 +27,7 @@ import MovePill from '@/assets/move.svg?react';
 import ClosePill from '@/assets/close.svg?react';
 import type { WishItemData } from './types/WishItemData';
 import FolderEditPage from './FolderEditPage';
+import DonaAiBanner from './components/donaAIBanner';
 import WishGroupRow from './components/wishGrouprow';
 
 const HEADER_HEIGHT = 56;
@@ -213,6 +214,7 @@ export default function WishlistPage() {
       <MoveFolderSheet open={moveSheetOpen} folders={moveFolders} onClose={() => setMoveSheetOpen(false)} onAddFolderClick={() => { setMoveSheetOpen(false);setShowAddFolder(true);}} onSelectFolder={() => { setMoveSheetOpen(false); exitEditMode(); showToast('폴더로 이동했습니다.'); }} />
       <AddWishItemModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onAddViaLink={() => { setAddModalOpen(false); setShowLinkRegistration(true); }} onAddDirectly={() => { setAddModalOpen(false); setShowRegistration(true); }} />
       {toastOpen && <Toast message={toastMessage} />}
+      <DonaAiBanner />
     </div>
   );
 }
