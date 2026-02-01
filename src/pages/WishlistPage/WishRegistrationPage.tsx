@@ -8,7 +8,7 @@ import ReasonModal from './components/modals/ReasonModal';
 
 interface Props {
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (data: WishItemData & { reason: string }) => void;
   initialData?: WishItemData;
 }
 
@@ -46,7 +46,7 @@ export default function WishRegistrationPage({ onBack, onComplete, initialData }
         </button>
         <h2 className="text-[18px] font-bold text-black">위시템 등록</h2>
         <button
-          onClick={onComplete}
+          onClick={() => onComplete({ name, price, brand, store, image: image || '', reason })}
           disabled={!isComplete}
           className={`text-[16px] font-medium transition-colors ${
             isComplete ? 'text-primary-500' : 'text-gray-300'

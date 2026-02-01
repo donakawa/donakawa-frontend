@@ -199,7 +199,7 @@ export default function WishlistPage() {
           <>
             <div className="flex items-center justify-between mb-4 shrink-0">
               <PillIconButton Icon={EditPill} ariaLabel="수정하기" onClick={enterEditMode} />
-              <AddIconButton onClick={() => setAddModalOpen(true)} ariaLabel={'add-icon'} />
+              <AddIconButton onClick={() => setAddModalOpen(true)} ariaLabel="위시템 추가" />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={items} />

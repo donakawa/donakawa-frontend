@@ -35,8 +35,8 @@ export default function AddFolderPage({ onBack, onComplete }: Props) {
             onChange={(e) => setFolderName(e.target.value.slice(0, 8))}
             placeholder="폴더명을 입력해 주세요."
             className={`w-full h-[52px] px-4 rounded-[8px] border outline-none transition-all ${
-              folderName.length > 0 ? 'border-[color:var(--color-gray-100)]' : 'border-[color:var(--color-gray-100)]'
-            } placeholder:text-black`}
+              folderName.length > 0 ? 'border-[color:var(--color-primary-500)]' : 'border-[color:var(--color-gray-300)]'
+            } placeholder:text-[color:var(--color-gray-300)]`}
           />
           
           {/* 글자 수 표시 및 체크 아이콘 */}
@@ -52,7 +52,7 @@ export default function AddFolderPage({ onBack, onComplete }: Props) {
         </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-30 w-full flex justify-center">
+        <div className="mt-[60px] w-full flex justify-center">
           <button
             onClick={handleAddFolder}
             disabled={!folderName.trim()}

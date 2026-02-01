@@ -46,6 +46,7 @@ export default function FolderList({
             {isDeleteMode && onDeleteClick && (
               <button 
                 onClick={() => onDeleteClick(f)}
+                aria-label={`${f.name} 폴더 삭제`}
                 className="shrink-0 active:scale-90 transition-transform"
               >
                 <DeleteFolderIcon className="w-6 h-6" /> 

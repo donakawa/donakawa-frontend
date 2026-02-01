@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import RegistrationInput from './components/RegistrationInput';
 import LinkLoadingScreen from './LinkLoadingScreen';
 import type { WishItemData } from './types/WishItemData';
@@ -11,12 +11,18 @@ interface Props {
 export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+    };
+  }, []);
   const handleRegister = () => {
-    if (!url) return;
+    if (!url || isLoading) return;
     setIsLoading(true);
     
-    setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
       setIsLoading(false);
       onComplete({
         name: '캐시미어 로제 더블 숏 코트[BLACK]',

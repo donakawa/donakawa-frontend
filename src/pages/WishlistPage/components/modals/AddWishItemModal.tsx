@@ -40,7 +40,14 @@ export default function AddWishItemModal({
         ].join(" ")}
       >
         
-        <CloseIcon onClick={onClose} className="absolute right-4 top-4 p-2 text-gray-400 active:scale-95 transition-transform" />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="닫기"
+          className="absolute right-4 top-4 p-2 text-gray-400 active:scale-95 transition-transform"
+        >
+          <CloseIcon />
+        </button>
         <h2 className="mt-[38px] text-center text-[20px] font-semibold text-gray-900">
           위시템 추가
         </h2>
