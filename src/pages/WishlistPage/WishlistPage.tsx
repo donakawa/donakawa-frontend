@@ -45,9 +45,9 @@ export default function WishlistPage() {
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-
   const editMode = useToggle(false);
   const { selectedId, select } = useSelectableId('all');
+  const [bannerEpoch, setBannerEpoch] = useState(0);
 
   const groups = useMemo(() => [
     { id: 'g1', name: '겨울 아우터' },
@@ -69,6 +69,22 @@ export default function WishlistPage() {
   const hasSelection = selectedItemIds.size > 0;
 
   const toastTimeoutRef = useRef<number | null>(null);
+  const bannerRef = useRef<HTMLDivElement | null>(null);
+  const [dismissedEpoch, setDismissedEpoch] = useState<number | null>(null);
+
+  const isMain =
+    !showLinkRegistration &&
+    !showRegistration &&
+    !showAddFolder &&
+    !showFolderEdit;
+
+  // 메인 화면에서만 배너가 뜨고, 같은 epoch에서 dismiss 했으면 안 뜸
+  const showBanner = isMain && dismissedEpoch !== bannerEpoch;
+
+  const dismissBanner = () => setDismissedEpoch(bannerEpoch);
+
+  // "메인으로 돌아왔을 때" 배너를 다시 띄우기 위한 리셋
+  const resetBanner = () => setBannerEpoch((v) => v + 1);
 
   const showToast = (message: string) => {
     if (toastTimeoutRef.current) {
@@ -86,7 +102,8 @@ export default function WishlistPage() {
       }
     };
   }, []);
-  
+
+
   const handleLinkComplete = (data: WishItemData) => {
     setInitialData(data);
     setShowLinkRegistration(false);
@@ -97,6 +114,7 @@ export default function WishlistPage() {
     setShowRegistration(false);
     setInitialData(null);
     showToast('위시템이 추가되었습니다!');
+    resetBanner();
   };
 
   const confirmDeleteSelected = () => {
@@ -104,21 +122,24 @@ export default function WishlistPage() {
     setSelectedItemIds(new Set());
     editMode.off();
     showToast('위시템이 삭제되었습니다.');
+    resetBanner();
   };
 
   const handleAddFolderComplete = (folderName: string) => {
     setShowAddFolder(false);
     editMode.off();
     showToast(`'${folderName}' 폴더가 추가되었습니다!`);
+    resetBanner();
   };
   
   const handleFolderDeleteComplete = (folderName: string) => {
     setShowFolderEdit(false);
     showToast(`'${folderName}' 폴더가 삭제되었습니다.`);
+    resetBanner();
   };
 
-  const enterEditMode = () => { editMode.on(); setSelectedItemIds(new Set()); };
-  const exitEditMode = () => { editMode.off(); setSelectedItemIds(new Set()); };
+  const enterEditMode = () => { dismissBanner(); editMode.on(); setSelectedItemIds(new Set()); };
+  const exitEditMode = () => { editMode.off(); setSelectedItemIds(new Set()); resetBanner();};
   
   const toggleSelectItem = (id: string) => {
     setSelectedItemIds((prev) => {
@@ -130,13 +151,13 @@ export default function WishlistPage() {
   };
   
   if (showLinkRegistration) {
-    return <LinkRegistrationPage onBack={() => setShowLinkRegistration(false)} onComplete={handleLinkComplete} />;
+    return <LinkRegistrationPage onBack={() => {setShowLinkRegistration(false); resetBanner();}} onComplete={handleLinkComplete} />;
   }
 
   if (showRegistration) {
     return (
       <WishRegistrationPage 
-        onBack={() => { setShowRegistration(false); setInitialData(null); }} 
+        onBack={() => { setShowRegistration(false); setInitialData(null); resetBanner();}} 
         onComplete={handleRegistrationComplete}
         initialData={initialData||undefined}
       />
@@ -146,7 +167,7 @@ export default function WishlistPage() {
   if (showAddFolder) {
     return (
       <AddFolderPage 
-        onBack={() => setShowAddFolder(false)} 
+        onBack={() => {setShowAddFolder(false); resetBanner(); }}
         onComplete={handleAddFolderComplete} 
       />
     );
@@ -156,7 +177,7 @@ export default function WishlistPage() {
     return (
       <FolderEditPage 
         folders={moveFolders}
-        onBack={() => setShowFolderEdit(false)}
+        onBack={() => {setShowFolderEdit(false); resetBanner();}}
         onAddFolder={() => {
           setShowFolderEdit(false);
           setShowAddFolder(true);
@@ -171,7 +192,7 @@ export default function WishlistPage() {
       <div className="shrink-0 bg-white" style={{ height: HEADER_HEIGHT }}>
         <header className="px-5 flex items-center justify-between h-full">
           <WishListLogo className="w-[112px] h-[22px]" />
-          <AddFolderButton onClick={() => setShowFolderEdit(true)} />
+          <AddFolderButton onClick={() => { dismissBanner(); setShowFolderEdit(true); }} />
         </header>
       </div>
 
@@ -186,10 +207,10 @@ export default function WishlistPage() {
           <>
             <div className="flex items-center justify-between mb-4 shrink-0">
               <div className="flex items-center gap-3">
-                <PillIconButton Icon={DeletePill} ariaLabel="상품삭제" onClick={() => setDeleteModalOpen(true)} disabled={!hasSelection} />
-                <PillIconButton Icon={MovePill} ariaLabel="폴더로 이동" onClick={() => setMoveSheetOpen(true)} disabled={!hasSelection} />
+                <PillIconButton Icon={DeletePill} ariaLabel="상품삭제" onClick={() => {dismissBanner(); setDeleteModalOpen(true);}} disabled={!hasSelection} />
+                <PillIconButton Icon={MovePill} ariaLabel="폴더로 이동" onClick={() => {dismissBanner(); setMoveSheetOpen(true);}} disabled={!hasSelection} />
               </div>
-              <PillIconButton Icon={ClosePill} ariaLabel="닫기" onClick={exitEditMode} />
+              <PillIconButton Icon={ClosePill} ariaLabel="닫기" onClick={() => { dismissBanner(); exitEditMode(); }} />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={items} editMode selectedIds={selectedItemIds} onToggleSelect={toggleSelectItem} />
@@ -200,7 +221,7 @@ export default function WishlistPage() {
           <>
             <div className="flex items-center justify-between mb-4 shrink-0">
               <PillIconButton Icon={EditPill} ariaLabel="수정하기" onClick={enterEditMode} />
-              <AddIconButton onClick={() => setAddModalOpen(true)} ariaLabel="위시템 추가" />
+              <AddIconButton onClick={() => { dismissBanner(); setAddModalOpen(true); }} ariaLabel="위시템 추가" />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={items} />
@@ -210,11 +231,17 @@ export default function WishlistPage() {
         )}
       </WishlistPanel>
 
-      <ConfirmDeleteModal open={deleteModalOpen} title="위시템을 삭제하시겠어요?" description="삭제 시 되돌릴 수 없습니다." onCancel={() => setDeleteModalOpen(false)} onConfirm={confirmDeleteSelected} />
-      <MoveFolderSheet open={moveSheetOpen} folders={moveFolders} onClose={() => setMoveSheetOpen(false)} onAddFolderClick={() => { setMoveSheetOpen(false);setShowAddFolder(true);}} onSelectFolder={() => { setMoveSheetOpen(false); exitEditMode(); showToast('폴더로 이동했습니다.'); }} />
-      <AddWishItemModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onAddViaLink={() => { setAddModalOpen(false); setShowLinkRegistration(true); }} onAddDirectly={() => { setAddModalOpen(false); setShowRegistration(true); }} />
+      <ConfirmDeleteModal open={deleteModalOpen} title="위시템을 삭제하시겠어요?" description="삭제 시 되돌릴 수 없습니다." onCancel={() => {setDeleteModalOpen(false); resetBanner();}} onConfirm={confirmDeleteSelected} />
+      <MoveFolderSheet open={moveSheetOpen} folders={moveFolders} onClose={() => setMoveSheetOpen(false)} onAddFolderClick={() => { setMoveSheetOpen(false);setShowAddFolder(true);dismissBanner();}} onSelectFolder={() => { setMoveSheetOpen(false); exitEditMode(); showToast('폴더로 이동했습니다.'); resetBanner();}} />
+      <AddWishItemModal open={addModalOpen} onClose={() => {setAddModalOpen(false);resetBanner();}} onAddViaLink={() => { dismissBanner(); setAddModalOpen(false); setShowLinkRegistration(true); }} onAddDirectly={() => { dismissBanner(); setAddModalOpen(false); setShowRegistration(true); }} />
       {toastOpen && <Toast message={toastMessage} />}
-      <DonaAiBanner />
+      {showBanner && (
+        <DonaAiBanner
+          key={bannerEpoch}
+          ref={bannerRef}
+          onDismiss={dismissBanner}
+        />
+      )}
     </div>
   );
 }
