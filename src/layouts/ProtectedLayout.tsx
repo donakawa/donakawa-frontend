@@ -48,8 +48,15 @@ export default function ProtectedLayout() {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  const getNavColor = (path: string) => {
-    return location.pathname.startsWith(path) ? 'text-primary-600' : 'text-gray-600';
+  // 네비바 아이콘 색상 결정
+  const getNavColor = (targetPath: string) => {
+    if (targetPath === '/home') {
+      // '/home' 이거나 '/consumption' 이면 활성화
+      const isActive = location.pathname.startsWith('/home') || location.pathname.startsWith('/consumption');
+      return isActive ? 'text-primary-600' : 'text-gray-600';
+    }
+
+    return location.pathname.startsWith(targetPath) ? 'text-primary-600' : 'text-gray-600';
   };
 
   return (

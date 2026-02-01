@@ -51,7 +51,7 @@ const ConsumptionPage = () => {
 
       <div className="flex-1 overflow-hidden">
         {/* <WishlistPanel editMode={false} bottomPaddingPx={0}>
-          <div className="flex-1 overflow-y-auto no-scrollbar">
+          <div className="flex-1 overflow-y-auto no-scrollbar pb-[90px]">
             <WishlistGrid items={products} editMode={false} onItemClick={(id) => console.log('상품 클릭:', id)} />
           </div>
         </WishlistPanel> */}
