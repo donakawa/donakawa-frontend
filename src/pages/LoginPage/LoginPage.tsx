@@ -23,7 +23,6 @@ const LoginPage = () => {
 
     // 2. 토큰이 있다면 로그인 처리
     if (accessToken) {
-      console.log('구글 로그인 성공! 토큰:', accessToken);
       
       localStorage.setItem('accessToken', accessToken);
       if (refreshToken) {
@@ -48,12 +47,13 @@ const LoginPage = () => {
     try {
       // 1. API 호출
       const data = await login({ email, password });
-      
-      console.log('로그인 성공!', data);
 
       // 2. 토큰 저장 (보통 로컬 스토리지에 저장)
       // 백엔드에서 주는 이름(accessToken 등)에 맞춰서 저장하세요.
       localStorage.setItem('accessToken', data.accessToken); 
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
 
       // 3. 홈으로 이동
       navigate('/home'); 

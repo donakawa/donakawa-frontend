@@ -18,6 +18,8 @@ const Step1Email = ({ onNext }: Props) => {
   // 타이머 로직 
   useEffect(() => {
     if (view !== 'code') return;
+    if (timeLeft <= 0) return;
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) { clearInterval(timer); return 0; }
@@ -25,7 +27,7 @@ const Step1Email = ({ onNext }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [view, timeLeft]);
+  }, [view]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -224,7 +226,7 @@ const Step1Email = ({ onNext }: Props) => {
 
       {/* 3. 모달 */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="flex w-full max-w-[300px] flex-col items-center rounded-2xl bg-white p-8 text-center shadow-2xl animate-pop-up">
             <div className="mb-4 text-5xl text-primary-brown-300">
               <IoCheckmark />

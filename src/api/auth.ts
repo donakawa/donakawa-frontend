@@ -45,6 +45,6 @@ export const register = async (data: RegisterRequest) => {
 
 // 5. 닉네임 중복 확인
 export const checkNicknameDuplicate = async (nickname: string) => {
-  const response = await instance.get(`/auth/nickname/duplicate?nickname=${nickname}`);
+  const response = await instance.get(`/auth/nickname/duplicate?nickname=${encodeURIComponent(nickname)}`);
   return response.data;
 };

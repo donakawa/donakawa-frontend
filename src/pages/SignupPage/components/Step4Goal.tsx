@@ -54,13 +54,10 @@ const Step4Goal = ({ formData }: Props) => {
         goal: selectedGoal,
       };
 
-      console.log('회원가입 요청 데이터:', finalData);
-
       // 2) 회원가입 API 호출
       await register(finalData);
 
       // 회원가입 성공 시 바로 로그인 API 호출 (토큰 받기)
-      console.log('자동 로그인 시도...');
       const loginData = await login({ email: formData.email, password: formData.password });
       
       //  토큰 저장
@@ -86,14 +83,11 @@ const Step4Goal = ({ formData }: Props) => {
         ...formData,
         goal: '목표 없음',
       };
-      
-      console.log('회원가입 요청(건너뛰기):', finalData);
 
       // 1) 회원가입 API 호출
       await register(finalData);
 
       //  회원가입 성공 시 바로 로그인 API 호출
-      console.log('자동 로그인 시도...');
       const loginData = await login({ email: formData.email, password: formData.password });
       
       //  토큰 저장
@@ -206,9 +200,9 @@ const Step4Goal = ({ formData }: Props) => {
 
           <button
             onClick={handleConfirm}
-            disabled={inputVal.length === 0 || selectedGoal !== null}
+            disabled={inputVal.trim().length === 0 || selectedGoal !== null}
             className={`rounded-xl px-4 text-sm font-bold text-white transition-colors shrink-0
-              ${(inputVal.length > 0 && !selectedGoal) 
+              ${(inputVal.trim().length > 0 && !selectedGoal) 
                 ? 'bg-primary-brown-300 hover:bg-primary-brown-400' 
                 : 'bg-gray-200' 
               }
