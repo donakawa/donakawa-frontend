@@ -1,10 +1,8 @@
-// src/pages/SignupPage/components/Step2Password.tsx
-
-import { useState } from 'react'; // useEffect 제거됨
+import { useState } from 'react';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 
 interface Props {
-  onNext: () => void;
+  onNext: (password: string) => void;
 }
 
 const Step2Password = ({ onNext }: Props) => {
@@ -16,16 +14,18 @@ const Step2Password = ({ onNext }: Props) => {
   const [showPw, setShowPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
-  // useEffect 없이 렌더링될 때마다 즉시 계산합니다.
-  
-  // 1. 형식 검사 (영문+숫자 조합, 8~12자리)
+  // 1. 형식 검사 (영문+숫자 조합, 8~12자리) - 파생 상태
   const isValidFormat = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,12}$/.test(password);
 
-  // 2. 일치 검사
+  // 2. 일치 검사 - 파생 상태
   const isMatch = password === confirmPassword && password !== '';
 
   // 최종 버튼 활성화 조건
   const canGoNext = isValidFormat && isMatch;
+
+  const handleNext = () => {
+    onNext(password);
+  };
 
   return (
     <div className="w-full max-w-sm animate-fade-in">
@@ -111,7 +111,7 @@ const Step2Password = ({ onNext }: Props) => {
 
       {/* 다음 버튼 */}
       <button
-        onClick={onNext}
+        onClick={handleNext}
         disabled={!canGoNext}
         className={`mt-10 w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
           canGoNext ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'

@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import logo from '../../assets/seed.svg';
+import { login } from '../../api/auth';
+import { AxiosError } from 'axios'; 
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // 구글 로그인 후 돌아왔을 때 토큰 처리 로직 
+  useEffect(() => {
+    // 1. 주소창의 쿼리 파라미터(?accessToken=...)를 가져옴
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+
+    // 2. 토큰이 있다면 로그인 처리
+    if (accessToken) {
+      console.log('구글 로그인 성공! 토큰:', accessToken);
+      
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+
+      // 3. 홈으로 이동 (replace: true는 뒤로가기 했을 때 로그인 페이지로 다시 안 오게 함)
+      navigate('/home', { replace: true });
+    }
+  }, [location, navigate]);
 
   // 간단한 유효성 검사 (길이 체크)
   const isEmailValid = email.length > 0;
@@ -17,20 +41,36 @@ const LoginPage = () => {
   const isFormValid = isEmailValid && isPasswordValid;
 
   // 3. 로그인 버튼 로직 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
 
-    // TODO: 나중에 여기에 백엔드 API 연결 (axios.post...)
-    console.log('로그인 정보:', { email });
-    
-    // 일단 무조건 홈으로 이동시킴 (테스트용)
-    navigate('/home'); 
+    try {
+      // 1. API 호출
+      const data = await login({ email, password });
+      
+      console.log('로그인 성공!', data);
+
+      // 2. 토큰 저장 (보통 로컬 스토리지에 저장)
+      // 백엔드에서 주는 이름(accessToken 등)에 맞춰서 저장하세요.
+      localStorage.setItem('accessToken', data.accessToken); 
+
+      // 3. 홈으로 이동
+      navigate('/home'); 
+
+    } catch (error) {
+      const err = error as AxiosError;
+      console.error('로그인 실패:', err);
+      
+      // 4. 에러 처리 (alert 등)
+      // 백엔드 에러 메시지 구조에 따라 다를 수 있음 (err.response?.data.message 등)
+      alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+    }
   };
 
   // 4. 구글 로그인 버튼 로직
   const handleGoogleLogin = () => {
-      alert('구글 로그인 기능은 백엔드 연결 후 구현됩니다!');
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-login`;
   };
 
   const getInputClass = (isValid: boolean) => {

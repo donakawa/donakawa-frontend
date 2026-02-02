@@ -1,39 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { IoCheckmark } from 'react-icons/io5';
+import { sendAuthCode, verifyAuthCode } from '../../../api/auth';
+import { AxiosError } from 'axios';
 
 interface Props {
-  onNext: () => void;
+  onNext: (email: string) => void;
 }
 
 const Step1Email = ({ onNext }: Props) => {
   const [view, setView] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
-  const [authCode, setAuthCode] = useState(['', '', '', '', '']); 
+  const [authCode, setAuthCode] = useState(['', '', '', '','', '']); 
   const [showModal, setShowModal] = useState(false);
-  
-  // ⏱️ 타이머 상태
   const [timeLeft, setTimeLeft] = useState(299); 
-
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // ⏱️ 타이머 로직
+  // 타이머 로직 
   useEffect(() => {
     if (view !== 'code') return;
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0; // 0초가 되면 멈춤
-        }
+        if (prev <= 0) { clearInterval(timer); return 0; }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [view, timeLeft]); // timeLeft 의존성 추가하여 0일 때 확실히 멈추게 함
+  }, [view, timeLeft]);
 
-  // ⏱️ 시간 포맷 (MM:SS)
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -42,23 +35,39 @@ const Step1Email = ({ onNext }: Props) => {
 
   const isEmailValid = email.includes('@');
 
-  const handleSendCode = () => {
+  // 1. 인증번호 발송 API 호출
+  const handleSendCode = async () => {
     if(!isEmailValid) return;
-    alert('인증번호가 발송되었습니다.');
-    setTimeLeft(299); 
-    setView('code');
+
+    try {
+      // API 호출
+      await sendAuthCode(email);
+      
+      alert('인증번호가 발송되었습니다.');
+      setTimeLeft(299); 
+      setView('code');
+
+    } catch (error) {
+      console.error('메일 발송 실패:', error);
+      alert('인증번호 발송에 실패했습니다. 이메일을 확인해주세요.');
+    }
   };
 
-  // 🔄 재전송 핸들러 추가
-  const handleResend = () => {
-    // 1. 타이머 리셋
-    setTimeLeft(299);
-    // 2. 입력값 리셋
-    setAuthCode(['', '', '', '', '']);
-    // 3. 첫 번째 칸으로 포커스
-    inputRefs.current[0]?.focus();
-    // 4. (실제 개발 시) API 재요청 로직 추가
-    console.log('인증번호 재전송 요청');
+  // 2. 재전송 핸들러 (API 호출 추가)
+  const handleResend = async () => {
+    try {
+      // API 호출
+      await sendAuthCode(email);
+
+      alert('인증번호가 재전송되었습니다.');
+      setTimeLeft(299);
+      setAuthCode(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+
+    } catch (error) {
+      console.error('재전송 실패:', error);
+      alert('인증번호 재전송에 실패했습니다.');
+    }
   };
 
   const handleCodeChange = (index: number, value: string) => {
@@ -69,8 +78,7 @@ const Step1Email = ({ onNext }: Props) => {
     newCode[index] = sanitizedValue;
     setAuthCode(newCode);
 
-    // 2️⃣ 5자리니까 index < 4 일 때 다음 칸으로 이동
-    if (sanitizedValue !== '' && index < 4) {
+    if (sanitizedValue !== '' && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -83,17 +91,34 @@ const Step1Email = ({ onNext }: Props) => {
 
   const isCodeValid = authCode.every((num) => num !== '');
 
-  const handleVerify = () => {
+  // 3. 인증번호 확인 API 호출
+  const handleVerify = async () => {
     if (timeLeft === 0) {
       alert('인증 시간이 만료되었습니다. 재전송 버튼을 눌러주세요.');
       return;
     }
-    setShowModal(true);
+
+    try {
+      const codeString = authCode.join('');
+      
+      // API 호출
+      await verifyAuthCode(email, codeString);
+
+      // 성공 시 모달 띄움
+      setShowModal(true);
+
+    } catch (error) {
+      const err = error as AxiosError;
+      console.error('인증 실패:', err);
+      alert('인증번호가 일치하지 않습니다.');
+    }
   };
 
+  // 4. 모달 확인 클릭 시 부모에게 이메일 전달
   const handleModalConfirm = () => {
     setShowModal(false);
-    onNext();
+    // 부모 컴포넌트로 이메일 전달!
+    onNext(email);
   };
 
   return (
@@ -117,6 +142,7 @@ const Step1Email = ({ onNext }: Props) => {
             <input
               type="email"
               placeholder="이메일 아이디"
+              aria-label="이메일"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
@@ -125,6 +151,7 @@ const Step1Email = ({ onNext }: Props) => {
                   : 'border-gray-200 focus:border-primary-600'
                 }`}
             />
+            {/* handleSendCode 연결 */}
             <button
               onClick={handleSendCode}
               disabled={!isEmailValid}
@@ -137,9 +164,9 @@ const Step1Email = ({ onNext }: Props) => {
           </>
         ) : (
           <>
-            {/* 3️⃣ 구조 변경: 입력칸들과 타이머를 세로로 배치 */}
+            {/* 인증번호 입력 화면 */}
             <div>
-              {/* 입력 박스 5개 컨테이너 */}
+              {/* 입력 박스 6개 */}
               <div className="flex justify-between gap-2 mb-2">
                 {authCode.map((num, idx) => (
                   <input
@@ -148,13 +175,14 @@ const Step1Email = ({ onNext }: Props) => {
                     type="text" 
                     inputMode="numeric"
                     maxLength={1}
+                    aria-label={`인증번호 ${idx + 1}자리`}
                     value={num}
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
-                    disabled={timeLeft === 0} // 시간 만료되면 입력 불가 처리
+                    disabled={timeLeft === 0}
                     className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none transition-all shadow-sm
                       ${timeLeft === 0 
-                        ? 'bg-gray-100 border-gray-200 text-gray-400' // 만료 시 스타일
+                        ? 'bg-gray-100 border-gray-200 text-gray-400' 
                         : num 
                           ? 'border-primary-brown-300 bg-primary-brown-300 text-white' 
                           : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
@@ -163,7 +191,7 @@ const Step1Email = ({ onNext }: Props) => {
                 ))}
               </div>
 
-              {/* 4️⃣ 타이머: 입력칸 그룹 아래 오른쪽 정렬 */}
+              {/* 타이머 */}
               <div className="text-right">
                 <span className={`text-sm font-medium ${timeLeft <= 10 ? 'text-error' : 'text-primary-brown-300'}`}>
                   {timeLeft > 0 ? formatTime(timeLeft) : '시간 만료'}
@@ -171,10 +199,10 @@ const Step1Email = ({ onNext }: Props) => {
               </div>
             </div>
 
-            {/* 5️⃣ 버튼 변경 로직: 시간 남으면 [확인], 시간 없으면 [재전송] */}
+            {/* 버튼: 확인 or 재전송 */}
             {timeLeft > 0 ? (
               <button
-                onClick={handleVerify}
+                onClick={handleVerify} // API 검증 함수 연결
                 disabled={!isCodeValid}
                 className={`mt-6 w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
                   isCodeValid ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
@@ -184,7 +212,7 @@ const Step1Email = ({ onNext }: Props) => {
               </button>
             ) : (
               <button
-                onClick={handleResend}
+                onClick={handleResend} // API 재전송 함수 연결
                 className="mt-6 w-full rounded-xl py-4 text-sm font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors"
               >
                 인증번호 재전송
@@ -204,8 +232,9 @@ const Step1Email = ({ onNext }: Props) => {
             <h3 className="mb-8 text-lg font-bold text-gray-900">
               인증이 완료되었습니다.
             </h3>
+            {/* 부모에게 데이터 전달 */}
             <button
-              onClick={handleModalConfirm}
+              onClick={handleModalConfirm} 
               className="w-24 rounded-full bg-primary-brown-300 py-2.5 text-sm font-bold text-white hover:bg-primary-brown-400 transition-colors"
             >
               확인

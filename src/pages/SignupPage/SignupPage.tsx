@@ -10,6 +10,13 @@ const SignupPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    nickname: '',
+    goal: '',
+  });
+
   const handleBack = () => {
     if (step === 1) {
       navigate(-1);
@@ -18,13 +25,16 @@ const SignupPage = () => {
     }
   };
 
+  // 다음 단계로 넘어가면서 데이터를 저장하는 함수
+  const handleNext = (data: Partial<typeof formData>) => {
+    setFormData((prev) => ({ ...prev, ...data })); // 기존 데이터에 새 데이터 합치기
+    setStep((prev) => prev + 1);
+  };
+
   return (
-    // 전체 컨테이너
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-4">
-      
-      {/* 1. 상단 네비게이션 (높이와 너비 고정) */}
+      {/* 상단 네비게이션 */}
       <div className="relative mb-8 flex w-full max-w-sm items-center justify-center py-4 ">
-        {/* 뒤로가기 버튼: absolute로 왼쪽 끝에 고정 */}
         <button 
           onClick={handleBack} 
           className="absolute left-0 p-2 text-2xl text-gray-800"
@@ -32,10 +42,9 @@ const SignupPage = () => {
           <IoChevronBack />
         </button>
 
-        {/*  진행 상태 바 */}
+        {/* 진행 상태 바 (Step 4에서는 숨김) */}
         {step < 4 && (
           <div className="flex gap-1.5">
-            {/* 총 3단계 [1, 2, 3] */}
             {[1, 2, 3].map((num) => (
               <div 
                 key={num}
@@ -48,12 +57,20 @@ const SignupPage = () => {
         )}
       </div>
 
-      {/* 2. 단계별 컴포넌트 */}
-      {step === 1 && <Step1Email onNext={() => setStep(2)} />}
-      {step === 2 && <Step2Password onNext={() => setStep(3)} />}
-      {step === 3 && <Step3Nickname onNext={() => setStep(4)} />}
-      {step === 4 && <Step4Goal />}
-      
+      {/* 단계별 컴포넌트: onNext 할 때 데이터를 넘겨받음 */}
+      {step === 1 && (
+        <Step1Email onNext={(email) => handleNext({ email })} />
+      )}
+      {step === 2 && (
+        <Step2Password onNext={(password) => handleNext({ password })} />
+      )}
+      {step === 3 && (
+        <Step3Nickname onNext={(nickname) => handleNext({ nickname })} />
+      )}
+      {/* Step 4는 저장된 모든 데이터(formData)가 필요함 */}
+      {step === 4 && (
+        <Step4Goal formData={formData} />
+      )}
     </div>
   );
 };
