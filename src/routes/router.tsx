@@ -12,7 +12,10 @@ import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
-// import MyPage from '@/pages/MyPage/MyPage';
+import MyPage from '@/pages/MyPage/MyPage';
+import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
+import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
+import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -24,6 +27,7 @@ const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
+  { path: 'consumption/:type', element: <ConsumptionPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
   {
     path: 'report',
