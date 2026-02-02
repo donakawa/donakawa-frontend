@@ -43,7 +43,6 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
   const [decision, setDecision] = useState<PurchaseDecision | null>(null);
   const [memo, setMemo] = useState<string>(product.memo);
 
-  // ✅ 모달 제어용
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState<boolean>(false);
   const [pendingDecision, setPendingDecision] = useState<PurchaseDecision | null>(null);
 
@@ -51,7 +50,6 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
 
   const onClickBack = () => navigate(-1);
 
-  // ✅ "구매 결정" 클릭 시에는 바로 확정하지 말고 모달을 띄움
   const onClickDecision = (next: PurchaseDecision) => {
     if (next === 'CONFIRM') {
       setPendingDecision('CONFIRM');
@@ -59,7 +57,6 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
       return;
     }
 
-    // "구매 포기"는 바로 확정(원하면 이것도 모달로 바꿀 수 있음)
     setDecision('CANCEL');
     console.log('purchase decision:', 'CANCEL', { purchaseId: product.id });
   };
@@ -75,9 +72,6 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
 
     setDecision('CONFIRM');
     console.log('purchase decision:', 'CONFIRM', { purchaseId: product.id });
-
-    // TODO: 여기서 "구매한 아이템 플로우"로 넘길 거면 navigate 추가하면 됨
-    // navigate(`/report/purchased?purchaseId=${product.id}`);
   };
 
   const onClickStore = () => {
