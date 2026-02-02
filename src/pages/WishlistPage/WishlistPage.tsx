@@ -214,7 +214,7 @@ export default function WishlistPage() {
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={items} editMode selectedIds={selectedItemIds} onToggleSelect={toggleSelectItem} />
-              <div className="h-[96px]" />
+              <div className="h-[50px]" />
             </div>
           </>
         ) : (
@@ -225,7 +225,7 @@ export default function WishlistPage() {
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={items} />
-              <div className="h-[96px]" />
+              <div className="h-[50px]" />
             </div>
           </>
         )}

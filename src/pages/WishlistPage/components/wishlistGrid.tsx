@@ -26,7 +26,14 @@ export default function WishlistGrid({
 }: Props) {
   return (
     <div className="pb-6">
-      <div className="grid grid-cols-3 gap-x-4 gap-y-6">
+      <div
+        className={[
+          'grid grid-cols-3',
+          'gap-x-[26px] gap-y-[26px]',
+          'w-full',
+          'h-fit',
+        ].join(' ')}
+      >
         {items.map((it) => (
           <WishlistItem
             key={it.id}
