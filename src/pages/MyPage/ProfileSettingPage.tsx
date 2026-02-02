@@ -1,5 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
+
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
 import RightArrow from '@/assets/arrow_right.svg';
 import LeftArrow from '@/assets/arrow_left.svg';
@@ -13,6 +16,13 @@ type SettingProfile = {
 };
 
 export default function MyPageSettingPage() {
+  const { setTitle } = useOutletContext<HeaderControlContext>();
+
+  useEffect(() => {
+    setTitle('설정');
+    return () => setTitle('');
+  }, [setTitle]);
+
   const navigate = useNavigate();
 
   const profile: SettingProfile = useMemo(
@@ -31,20 +41,6 @@ export default function MyPageSettingPage() {
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
-      <header className="h-[64px] px-4 pt-[10px] grid grid-cols-[40px_1fr_40px] items-center">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={goBack}
-          className="w-10 h-10 grid place-items-center border-0 bg-transparent p-0 cursor-pointer">
-          <img src={LeftArrow} alt="" className="w-3 h-[22px] block" />
-        </button>
-
-        <h1 className="m-0 text-center text-[20px] font-[600]">설정</h1>
-
-        <div aria-hidden className="w-10 h-10" />
-      </header>
-
       <main className="px-4 pt-3 pb-6 flex flex-col gap-[22px]">
         {/* 내 계정 관리 */}
         <section className="flex flex-col gap-[10px]">

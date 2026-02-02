@@ -13,6 +13,9 @@ import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
+import GiveupItemsPage from '@/pages/ReportPage/GiveupPage';
+
+// 마이페이지
 import MyPage from '@/pages/MyPage/MyPage';
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
@@ -48,6 +51,7 @@ const protectedChildren: RouteObject[] = [
       { path: 'review', element: <PurchaseReviewPage /> },
       { path: 'review/write', element: <ReviewWritePage /> },
       { path: 'detail', element: <ReportDetailPage /> },
+      { path: 'giveup', element: <GiveupItemsPage /> },
     ],
   },
   {
@@ -74,6 +78,7 @@ const routes: RouteObject[] = [
     element: <RootLayout />,
     children: [
       ...publicChildren,
+
       {
         element: <ProtectedLayout />,
         children: protectedChildren,
