@@ -39,6 +39,6 @@ export type ReviewWritePurchase = {
   dayLabel: number;
   imageUrl: string;
   tags: string[];
-  dateText: string; // 예: 2026.01.10
+  dateText: string; // 2026.01.10
   timeLabel: '아침' | '낮' | '저녁';
 };

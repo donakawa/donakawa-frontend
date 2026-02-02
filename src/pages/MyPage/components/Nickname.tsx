@@ -18,7 +18,7 @@ export default function NicknameSettingPage() {
 
   const navigate = useNavigate();
 
-  // TODO: 실제 유저 닉네임으로 교체
+  //실제 유저 닉네임으로 교체
   const originalNickname = '원래';
 
   const [value, setValue] = useState('');
