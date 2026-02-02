@@ -76,22 +76,6 @@ const protectedChildren: RouteObject[] = [
       },
     ],
   },
-  {
-    path: 'mypage',
-    children: [
-      { index: true, element: <MyPage /> },
-      { path: 'goal', element: <GoalPage /> },
-      { path: 'completed', element: <ReportDetailPage enableMock /> },
-      {
-        path: 'setting',
-        children: [
-          { index: true, element: <ProfileSettingPage /> },
-          { path: 'nickname', element: <NicknameSettingPage /> },
-          { path: 'password', element: <PasswordFlowPage /> },
-        ],
-      },
-    ],
-  },
 ];
 
 const routes: RouteObject[] = [
