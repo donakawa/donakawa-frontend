@@ -27,7 +27,10 @@ export default function RecordView() {
     navigate(`/report/review`);
   };
 
-  // ✅ 요일/시간 토글 상태
+  const goToGiveupPage = () => {
+    navigate('/report/giveup');
+  };
+
   const [distMode, setDistMode] = useState<DistributionMode>('weekday');
 
   const monthlyReport: MonthlyReport = {
@@ -44,7 +47,6 @@ export default function RecordView() {
       '세일이나 품절임박 등에 휘말리지 않도록 주의해 보아요. 구매 전, ‘세일하지 않아도 구매할만한 물건일까?’를 깊이 고민해 보세요.',
   };
 
-  // ✅ 시간 분포(기존)
   const timeDistribution: TimeDistribution = {
     아침: 75,
     낮: 75,
@@ -52,7 +54,6 @@ export default function RecordView() {
     새벽: 75,
   };
 
-  // ✅ 요일 분포(추가)
   const weekdayDistribution: WeekdayDistribution = {
     월: 25,
     화: 80,
@@ -332,10 +333,14 @@ export default function RecordView() {
       </section>
 
       <section className="flex flex-col gap-2.5">
-        <div className="bg-primary-200 rounded-[10px] p-[14px] gap-3 flex flex-col">
+        <button
+          type="button"
+          onClick={goToGiveupPage}
+          className="bg-primary-200 rounded-[10px] p-[14px] gap-3 flex flex-col text-left
+                     active:scale-[0.99] transition-transform">
           <div className="text-[12px] font-normal text-primary-500">내 지갑을 지킨</div>
           <div className="text-[18px] font-semibold">구매 포기템</div>
-        </div>
+        </button>
       </section>
     </div>
   );

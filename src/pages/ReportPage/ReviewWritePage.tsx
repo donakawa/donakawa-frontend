@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom';
 
 import type { RatingValue, UsageLevel, ReviewWritePurchase } from '@/types/ReportPage/review';
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
-import LeftArrow from '@/assets/arrow_left.svg';
 import MoonIcon from '@/assets/달.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import StarIcon from '@/assets/star_rare.svg';
@@ -16,6 +16,8 @@ function cn(...classes: Array<string | false | null | undefined>) {
 export default function ReviewWritePage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+
+  const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
 
   const purchaseId: string = params.get('purchaseId') ?? '1';
 
@@ -56,46 +58,31 @@ export default function ReviewWritePage() {
   const isCompleted: boolean = rating > 0 && usage > 0;
   const usageRatio: number = usage <= 1 ? 0 : Math.min(1, (usage - 1) / 4);
 
-  const handleBack = (): void => {
+  const handleDone = (): void => {
+    if (!isCompleted) return;
     navigate(-1);
   };
 
-  const handleDone = (): void => {
-    if (!isCompleted) return;
-    // API 연결 자리
-    navigate(-1);
-  };
+  useEffect(() => {
+    setTitle('소비 후기 작성');
+
+    setRightAction({
+      rightNode: '완료',
+      onClick: handleDone,
+    });
+
+    return () => {
+      setTitle('');
+      setRightAction(null);
+    };
+  }, [setTitle, setRightAction, isCompleted]);
 
   return (
     <div className="w-full max-w-[430px] mx-auto min-h-[100dvh] bg-white overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <header className="h-[56px] grid grid-cols-[48px_1fr_64px] items-center px-2 border-b border-b-[rgba(0,0,0,0.06)]">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 border-0 bg-transparent p-0 flex items-center justify-center cursor-pointer">
-          <img src={LeftArrow} alt="뒤로가기" className="w-[13px] h-[22px] block" />
-        </button>
-
-        <h1 className="m-0 text-center text-[20px] font-semibold">소비 후기 작성</h1>
-
-        <button
-          type="button"
-          onClick={handleDone}
-          disabled={!isCompleted}
-          className={cn(
-            'border-0 bg-transparent text-[16px] font-medium',
-            isCompleted ? 'text-primary-400 cursor-pointer opacity-100' : 'text-gray-600 cursor-default opacity-80',
-          )}>
-          완료
-        </button>
-      </header>
-
       <main className="p-5">
         <section className="pb-[18px]">
           <div className="flex items-center gap-[10px] mb-[12px]">
             <div className="text-[14px] font-normal text-primary-brown-400">{purchase.dateText}</div>
-
             <img src={MoonIcon} alt="" aria-hidden className="h-[30px]" />
           </div>
 
