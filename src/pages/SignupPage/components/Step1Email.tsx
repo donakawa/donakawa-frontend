@@ -10,24 +10,33 @@ interface Props {
 const Step1Email = ({ onNext }: Props) => {
   const [view, setView] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
-  const [authCode, setAuthCode] = useState(['', '', '', '','', '']); 
+  const [authCode, setAuthCode] = useState(['', '', '', '', '', '']); 
   const [showModal, setShowModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(299); 
+  
+  // 타이머를 재시작하기 위한 스위치 (Trigger)
+  const [timerTrigger, setTimerTrigger] = useState(0);
+  
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // 타이머 로직 
+  // 타이머 로직
   useEffect(() => {
     if (view !== 'code') return;
-    if (timeLeft <= 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 0) { clearInterval(timer); return 0; }
+        if (prev <= 0) {
+          clearInterval(timer);
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [view]);
+    
+    // 'view'가 바뀌거나 'timerTrigger'가 바뀔 때만 타이머를 새로 만듦
+    // (timeLeft는 뺐으므로 1초마다 재실행되지 않음!)
+  }, [view, timerTrigger]); 
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -44,9 +53,10 @@ const Step1Email = ({ onNext }: Props) => {
     try {
       // API 호출
       await sendAuthCode(email);
-      
       alert('인증번호가 발송되었습니다.');
-      setTimeLeft(299); 
+      
+      setTimeLeft(299);
+      setTimerTrigger(prev => prev + 1);
       setView('code');
 
     } catch (error) {
@@ -60,11 +70,13 @@ const Step1Email = ({ onNext }: Props) => {
     try {
       // API 호출
       await sendAuthCode(email);
-
       alert('인증번호가 재전송되었습니다.');
+      
       setTimeLeft(299);
       setAuthCode(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
+
+      setTimerTrigger(prev => prev + 1);
 
     } catch (error) {
       console.error('재전송 실패:', error);
@@ -105,10 +117,7 @@ const Step1Email = ({ onNext }: Props) => {
       
       // API 호출
       await verifyAuthCode(email, codeString);
-
-      // 성공 시 모달 띄움
       setShowModal(true);
-
     } catch (error) {
       const err = error as AxiosError;
       console.error('인증 실패:', err);
@@ -168,7 +177,6 @@ const Step1Email = ({ onNext }: Props) => {
           <>
             {/* 인증번호 입력 화면 */}
             <div>
-              {/* 입력 박스 6개 */}
               <div className="flex justify-between gap-2 mb-2">
                 {authCode.map((num, idx) => (
                   <input
