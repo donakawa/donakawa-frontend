@@ -92,6 +92,9 @@
   body {
     font-family: 'Pretendard', sans-serif;
     background-color: var(--color-white);
+
+    -ms-overflow-style: none; /* IE/Edge legacy */
+    scrollbar-width: none;
   }
 
   *,
