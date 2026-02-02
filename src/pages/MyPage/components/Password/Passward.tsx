@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 import type { PasswordStep, VerifyCheckResult, VerifySendResult, PasswordChangeResult } from '@/types/MyPage/mypage';
-
-import LeftArrow from '@/assets/arrow_left(gray).svg';
 
 import VerifiedIcon from '@/assets/verify_check.svg';
 import EyeOpen from '@/assets/visible_eye.svg';
@@ -35,12 +34,12 @@ function isValidPassword(pw: string): boolean {
 }
 
 export default function PasswordFlowPage() {
+  const { setTitle, setCustomBack, setLayoutModal } = useOutletContext<HeaderControlContext>();
   const navigate = useNavigate();
 
   const initialEmail = useMemo(() => '', []);
 
   const [step, setStep] = useState<PasswordStep>('email');
-  const [isVerifiedOpen, setIsVerifiedOpen] = useState<boolean>(false);
 
   const [email, setEmail] = useState<string>(initialEmail);
   const [code, setCode] = useState<string>('');
@@ -94,49 +93,53 @@ export default function PasswordFlowPage() {
   const canSubmitPw = isValidPassword(pw) && pw === pw2;
   const canSubmitCurrentPw = currentPw.trim().length > 0;
 
-  const apiSendCode = async (): Promise<VerifySendResult> => {
-    return new Promise((resolve) => {
-      window.setTimeout(() => resolve({ ok: true }), 400);
-    });
-  };
+  const apiSendCode = async (): Promise<VerifySendResult> =>
+    new Promise((resolve) => window.setTimeout(() => resolve({ ok: true }), 400));
 
-  const apiVerifyCode = async (): Promise<VerifyCheckResult> => {
-    return new Promise((resolve) => {
-      window.setTimeout(() => resolve({ ok: true, token: 'mock-verify-token' }), 450);
-    });
-  };
+  const apiVerifyCode = async (): Promise<VerifyCheckResult> =>
+    new Promise((resolve) => window.setTimeout(() => resolve({ ok: true, token: 'mock-verify-token' }), 450));
 
-  const apiChangePassword = async (): Promise<PasswordChangeResult> => {
-    return new Promise((resolve) => {
-      window.setTimeout(() => resolve({ ok: true }), 450);
-    });
-  };
+  const apiChangePassword = async (): Promise<PasswordChangeResult> =>
+    new Promise((resolve) => window.setTimeout(() => resolve({ ok: true }), 450));
 
-  const onBack = () => {
-    if (isVerifiedOpen) {
-      setIsVerifiedOpen(false);
-      return;
-    }
-
+  const handleStepBack = () => {
     if (step === 'code') {
       setStep('email');
       clearTimer();
       setCode('');
       return;
     }
-
     if (step === 'currentPassword') {
       setStep('code');
       return;
     }
-
     if (step === 'newPassword') {
       setStep('currentPassword');
       return;
     }
-
     navigate(-1);
   };
+
+  const onVerifiedConfirm = () => {
+    setLayoutModal(null);
+    setCurrentPw('');
+    setShowCurrentPw(false);
+    setStep('currentPassword');
+  };
+
+  useEffect(() => {
+    setTitle('비밀번호 변경');
+
+    setCustomBack(() => {
+      setLayoutModal(null);
+      handleStepBack();
+    });
+
+    return () => {
+      setTitle('');
+      setCustomBack(null);
+    };
+  }, [setTitle, setCustomBack, setLayoutModal]);
 
   const onSend = async () => {
     if (!canSend) return;
@@ -164,21 +167,37 @@ export default function PasswordFlowPage() {
     if (!res.ok) return;
 
     setVerifyToken(res.token);
-    setIsVerifiedOpen(true);
-  };
 
-  const onVerifiedConfirm = () => {
-    setIsVerifiedOpen(false);
+    setLayoutModal(
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="인증 완료"
+        onClick={onVerifiedConfirm}
+        className="w-full h-full flex items-center justify-center">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-[335px] bg-white rounded-[20px] px-5 pt-7 pb-6 flex flex-col items-center gap-[18px]">
+          <div className="grid place-items-center">
+            <img src={VerifiedIcon} alt="" aria-hidden className="w-[98px]" />
+          </div>
 
-    setCurrentPw('');
-    setShowCurrentPw(false);
-    setStep('currentPassword');
+          <div className="text-center text-[20px] font-[600] mb-[14px]">인증이 완료되었습니다.</div>
+
+          <button
+            type="button"
+            onClick={onVerifiedConfirm}
+            className="px-5 py-2 rounded-[100px] bg-primary-brown-300 text-white text-[16px] font-[500] cursor-pointer border-0">
+            확인
+          </button>
+        </div>
+      </div>,
+    );
   };
 
   const onSubmitCurrentPw = async () => {
     if (!canSubmitCurrentPw) return;
     if (!verifyToken) return;
-
     setStep('newPassword');
   };
 
@@ -193,21 +212,7 @@ export default function PasswordFlowPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-black relative">
-      <header className="h-[64px] px-4 pt-[10px] grid grid-cols-[40px_1fr_40px] items-center">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={onBack}
-          className="w-10 h-10 grid place-items-center border-0 bg-transparent p-0 cursor-pointer">
-          <img src={LeftArrow} alt="" className="w-3 h-[22px] block" />
-        </button>
-
-        <h1 className="m-0 text-center text-[20px] font-[600]">비밀번호 변경</h1>
-
-        <div aria-hidden className="w-10 h-10" />
-      </header>
-
+    <div className="w-full min-h-screen bg-white text-black">
       <main className="pt-[84px] px-4 pb-6 flex flex-col items-center gap-[18px]">
         {step === 'email' && <StepEmail email={email} onChangeEmail={setEmail} onSend={onSend} canSend={canSend} />}
 
@@ -250,32 +255,6 @@ export default function PasswordFlowPage() {
           />
         )}
       </main>
-
-      {isVerifiedOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="인증 완료"
-          onClick={onVerifiedConfirm}
-          className="absolute inset-0 bg-[rgba(61,43,39,0.8)] z-50 flex items-center justify-center">
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-[335px] bg-white rounded-[20px] px-5 pt-7 pb-6 flex flex-col items-center gap-[18px]">
-            <div className="grid place-items-center">
-              <img src={VerifiedIcon} alt="" aria-hidden className="w-[98px]" />
-            </div>
-
-            <div className="text-center text-[20px] font-[600] mb-[14px]">인증이 완료되었습니다.</div>
-
-            <button
-              type="button"
-              onClick={onVerifiedConfirm}
-              className="px-5 py-2 rounded-[100px] bg-primary-brown-300 text-white text-[16px] font-[500] cursor-pointer border-0">
-              확인
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

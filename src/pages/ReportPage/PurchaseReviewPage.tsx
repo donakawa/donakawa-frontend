@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 import type { ReviewTabKey, PendingReviewItem, CompletedReviewItem } from '@/types/ReportPage/review';
 
 import Sample from '@/assets/sample.svg';
@@ -14,6 +16,13 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 export default function PurchaseReview() {
+  const { setTitle } = useOutletContext<HeaderControlContext>();
+
+  useEffect(() => {
+    setTitle('구매한 템');
+    return () => setTitle('');
+  }, [setTitle]);
+
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<ReviewTabKey>('pending');
@@ -67,20 +76,6 @@ export default function PurchaseReview() {
 
   return (
     <div className="w-full max-w-[430px] mx-auto bg-white min-h-[100dvh] flex flex-col">
-      <header className="h-[56px] grid grid-cols-[48px_1fr_48px] items-center px-2">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 border-0 bg-transparent p-0 flex items-center justify-center cursor-pointer">
-          <img src={LeftArrow} alt="뒤로가기" className="w-[13px] h-[22px] block" />
-        </button>
-
-        <h1 className="m-0 text-center text-[20px] font-semibold">구매한 템</h1>
-
-        <div className="w-10 h-10" />
-      </header>
-
       <div className="h-12 grid grid-cols-2 items-stretch border-b border-b-gray-100">
         <button
           type="button"

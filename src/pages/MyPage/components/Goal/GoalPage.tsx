@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
 import type { AimKeyword } from '@/types/MyPage/mypage';
 
@@ -9,6 +11,13 @@ import CloseIcon from '@/assets/close.svg';
 const MAX_LEN = 10;
 
 export default function AimPage() {
+  const { setTitle } = useOutletContext<HeaderControlContext>();
+
+  useEffect(() => {
+    setTitle('목표');
+    return () => setTitle('');
+  }, [setTitle]);
+
   const navigate = useNavigate();
 
   const keywords: AimKeyword[] = useMemo(
@@ -65,20 +74,6 @@ export default function AimPage() {
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
-      <header className="h-[64px] px-4 pt-[10px] grid grid-cols-[40px_1fr_40px] items-center">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 border-0 bg-transparent p-0 flex items-center justify-center cursor-pointer">
-          <img src={LeftArrow} alt="뒤로가기" className="w-[13px] h-[22px] block" />
-        </button>
-
-        <h1 className="m-0 text-center text-[20px] font-[600]">목표</h1>
-
-        <div className="w-[44px] h-[44px]" aria-hidden />
-      </header>
-
       <main className="px-4 pt-[18px] pb-6">
         <p className="m-0 mb-[10px] text-[16px] text-gray-600">선택한 목표를 얼마나 달성했는지 보여줘요. (선택)</p>
 

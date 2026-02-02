@@ -1,24 +1,36 @@
-import { useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
-import type { NicknameViewState } from '@/types/MyPage/mypage';
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
-import LeftArrow from '@/assets/arrow_left(gray).svg';
 import CheckIcon from '@/assets/check_blue.svg';
 import ErrorIcon from '@/assets/check_red.svg';
 
 const MAX_LEN = 10;
 
 export default function NicknameSettingPage() {
+  const { setTitle } = useOutletContext<HeaderControlContext>();
+
+  useEffect(() => {
+    setTitle('닉네임 변경');
+    return () => setTitle('');
+  }, [setTitle]);
+
   const navigate = useNavigate();
 
-  // 실제 유저 닉네임으로 교체하기!
-  const originalNickname = useMemo(() => '원래', []);
+  // TODO: 실제 유저 닉네임으로 교체
+  const originalNickname = '원래';
 
-  const [value, setValue] = useState<string>('');
-  const [viewState, setViewState] = useState<NicknameViewState>('idle');
+  const [value, setValue] = useState('');
+  const [isDone, setIsDone] = useState(false);
 
   const toastTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   const length = value.length;
   const trimmed = value.trim();
@@ -27,24 +39,18 @@ export default function NicknameSettingPage() {
   const isOver = length > MAX_LEN;
   const isSame = trimmed === originalNickname;
 
-  const derivedState: NicknameViewState = viewState === 'done' ? 'done' : isEmpty ? 'idle' : isOver ? 'over' : 'ok';
-
+  const derivedState = isDone ? 'done' : isEmpty ? 'idle' : isOver ? 'over' : 'ok';
   const canSubmit = derivedState === 'ok' && !isSame;
-
-  const onBack = () => {
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    navigate(-1);
-  };
 
   const onChange = (v: string) => {
     setValue(v);
-    if (viewState === 'done') setViewState('idle');
+    if (isDone) setIsDone(false);
   };
 
   const onSubmit = () => {
     if (!canSubmit) return;
 
-    setViewState('done');
+    setIsDone(true);
 
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => {
@@ -64,20 +70,6 @@ export default function NicknameSettingPage() {
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
-      <header className="h-[64px] px-4 pt-[10px] grid grid-cols-[40px_1fr_40px] items-center">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={onBack}
-          className="w-10 h-10 grid place-items-center border-0 bg-transparent p-0 cursor-pointer">
-          <img src={LeftArrow} alt="" className="w-3 h-[22px] block" />
-        </button>
-
-        <h1 className="m-0 text-center text-[20px] font-[600]">닉네임 변경</h1>
-
-        <div aria-hidden className="w-10 h-10" />
-      </header>
-
       <main className="pt-[84px] px-4 pb-6">
         <div
           className={[
