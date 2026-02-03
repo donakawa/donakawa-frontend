@@ -5,7 +5,7 @@ import axios, { AxiosError } from 'axios';
 import type { RatingValue, UsageLevel } from '@/types/ReportPage/review';
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
-import MoonIcon from '@/assets/달.svg';
+import MoonIcon from '@/assets/moon.svg';
 import StarFullIcon from '@/assets/star_full.svg';
 import StarIcon from '@/assets/star_rare.svg';
 
@@ -243,7 +243,7 @@ export default function ReviewWritePage() {
 
     setRightAction({
       rightNode: (
-        <span className={cn(canSubmit ? 'text-black' : 'text-gray-400', isSubmitting && 'opacity-60')}>완료</span>
+        <span className={cn(canSubmit ? 'text-primary-400' : 'text-gray-400', isSubmitting && 'opacity-60')}>완료</span>
       ),
       onClick: () => {
         if (!canSubmit) return;

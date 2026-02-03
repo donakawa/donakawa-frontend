@@ -47,3 +47,9 @@ export async function patchPassword(body: { newPassword: string }): Promise<ApiR
   const { data } = await axiosInstance.patch<ApiResponse<null>>('/auth/password', body);
   return data;
 }
+
+// 회원 탈퇴
+export async function deleteAccount(): Promise<ApiResponse<null>> {
+  const { data } = await axiosInstance.delete<ApiResponse<null>>('/auth/account');
+  return data;
+}
