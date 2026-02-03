@@ -4,7 +4,14 @@ export type ConsumptionReason = '필요해서' | '세일 중' | '품절임박';
 
 export type Star = 1 | 2 | 3 | 4 | 5;
 
+export type Period = {
+  from: string;
+  to: string;
+  days: number;
+};
+
 export type MonthlyReport = {
+  period: Period;
   totalWon: number;
   savedWon: number;
   reasons: ConsumptionReason[];
