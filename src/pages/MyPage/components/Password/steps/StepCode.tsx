@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 
-const CODE_LEN = 5;
+const CODE_LEN = 6;
 
 type Props = {
   code: string;
@@ -29,7 +29,7 @@ export default function StepCode({ code, setCode, timerText, canResend, onResend
     <>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col">
-          <div onClick={focus} role="group" aria-label="인증번호 입력" className="flex justify-center gap-[14px]">
+          <div onClick={focus} role="group" aria-label="인증번호 입력" className="flex justify-center gap-[10px]">
             {digits.map((d, idx) => {
               const filled = Boolean(d);
 
@@ -37,7 +37,7 @@ export default function StepCode({ code, setCode, timerText, canResend, onResend
                 <div
                   key={idx}
                   className={[
-                    'w-[50px] h-[52px] rounded-[10px] grid place-items-center',
+                    'w-[45px] h-[55px] rounded-[10px] grid place-items-center',
                     'text-[24px] font-[700]',
                     'shadow-[0px_0px_3px_rgba(0,0,0,0.08)]',
                     filled

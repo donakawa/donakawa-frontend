@@ -14,11 +14,9 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 function getDayLabel(dateStr: string): number {
-  // ✅ purchasedAt이 "2026-02-01T10:30:00Z" 같이 이미 ISO인 경우도 안전하게 처리
   const d = new Date(dateStr);
   if (!Number.isNaN(d.getTime())) return d.getDate();
 
-  // 혹시 "2026-02-01" 같은 날짜만 오는 케이스 fallback
   const d2 = new Date(`${dateStr}T00:00:00`);
   return Number.isNaN(d2.getTime()) ? 0 : d2.getDate();
 }
@@ -60,7 +58,6 @@ export default function PurchaseReview() {
         title: it.itemName,
         price: it.price,
         imageUrl: it.imageUrl ?? '',
-        // ✅ daylabel -> dayLabel 로 통일 (카드 컴포넌트와 맞추기)
         dayLabel: getDayLabel(it.purchasedAt),
         purchasedAt: it.purchasedAt,
         tags: it.purchaseReasons ?? [],
