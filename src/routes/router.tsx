@@ -22,7 +22,7 @@ import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
-import PasswordFlowPage from '@/pages/MyPage/components/Password/Passward';
+import PasswordFlowPage from '@/pages/MyPage/components/Password/Password';
 import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
 
 const publicChildren: RouteObject[] = [

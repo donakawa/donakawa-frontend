@@ -1,32 +1,93 @@
-import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
+import type { ApiResponse, MeData } from '@/apis/MyPage/auth';
 import type { Profile } from '@/types/MyPage/mypage';
+
+import { axiosInstance } from '@/apis/axios';
 
 import SettingIcon from '@/assets/setting.svg';
 import ProfileIcon from '@/assets/profile.svg';
 import RightArrow from '@/assets/arrow_right.svg';
 import GrayRightArrow from '@/assets/arrow_right(gray).svg';
 
+type ProfileState = {
+  nickname: string;
+  email: string;
+  goal: string;
+  giveupCount: number;
+  giveupPrice: number;
+  isLoading: boolean;
+};
+
+const DEFAULT_STATE: ProfileState = {
+  nickname: '습관성충동구매',
+  email: 'example@example.com',
+  goal: '자기개발',
+  giveupCount: 26,
+  giveupPrice: 459_200,
+  isLoading: true,
+};
+
 export default function MyPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const userProfile: Profile = useMemo(
-    () => ({
-      nickname: '습관성충동구매',
-      email: 'gamjaaaaa@gmail.com',
-      giveupCount: 26,
-      giveupPrice: 459_200,
-    }),
-    [],
-  );
-
-  const goal = useMemo(() => '자기개발', []); // 나중에 상태 연동 필요..
+  const [state, setState] = useState<ProfileState>(DEFAULT_STATE);
 
   const goToSettingPage = () => navigate('/mypage/setting');
   const goToGoalPage = () => navigate('/mypage/goal');
   const goToCompleted = () => navigate('/mypage/completed');
   const goToGiveup = () => navigate('/mypage/giveup');
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchMe = async () => {
+      try {
+        setState((prev) => ({ ...prev, isLoading: true }));
+
+        const res = await axiosInstance.get<ApiResponse<MeData>>('/auth/me');
+
+        if (!mounted) return;
+
+        if (res.data.resultType === 'SUCCESS') {
+          const me = res.data.data;
+
+          setState((prev) => ({
+            ...prev,
+            nickname: me.nickname,
+            email: me.email,
+            goal: me.goal,
+            isLoading: false,
+          }));
+        } else {
+          setState((prev) => ({ ...prev, isLoading: false }));
+        }
+      } catch {
+        if (!mounted) return;
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchMe();
+
+    return () => {
+      mounted = false;
+    };
+  }, [location.key]);
+
+  const userProfile: Profile = useMemo(
+    () => ({
+      nickname: state.nickname,
+      email: state.email,
+      giveupCount: state.giveupCount,
+      giveupPrice: state.giveupPrice,
+    }),
+    [state.nickname, state.email, state.giveupCount, state.giveupPrice],
+  );
+
+  const goal = state.goal;
 
   return (
     <div className="w-full min-h-screen bg-white text-black p-5 flex flex-col gap-4">
@@ -47,7 +108,9 @@ export default function MyPage() {
               <img src={ProfileIcon} alt="프로필" className="h-full w-full object-cover" />
             </div>
 
-            <div className="mt-[6px] text-[16px] font-[400] text-center">{userProfile.nickname}</div>
+            <div className="mt-[6px] text-[16px] font-[400] text-center">
+              {state.isLoading ? '불러오는 중…' : userProfile.nickname}
+            </div>
             <div className="text-[12px] font-[400] text-gray-600 text-center">{userProfile.email}</div>
           </div>
 

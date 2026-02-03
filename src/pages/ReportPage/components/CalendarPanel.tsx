@@ -22,7 +22,6 @@ import type {
 
 type LoadState = 'idle' | 'loading' | 'success' | 'error';
 
-// ✅ api에서 rating을 optional로 내려주도록(fetchCalendarMonth에서 넣어줬음)
 type CalendarPurchase = CalendarPurchaseItem & { rating?: number };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -107,9 +106,6 @@ export default function CalendarPanel() {
     };
   }, [sheetOpen]);
 
-  /* =========================
-   * ✅ API 연동 상태/데이터
-   * ========================= */
   const [loadState, setLoadState] = useState<LoadState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -122,7 +118,6 @@ export default function CalendarPanel() {
 
   const [itemsByDate, setItemsByDate] = useState<Record<string, CalendarPurchase[]>>({});
 
-  // ✅ 달 바뀔 때마다 캘린더 데이터 fetch
   useEffect(() => {
     let alive = true;
 
@@ -171,7 +166,6 @@ export default function CalendarPanel() {
   const selectedPurchases: CalendarPurchase[] = purchaseMap.get(selectedDate) ?? [];
   const grouped = useMemo(() => groupByTime(selectedPurchases), [selectedPurchases]);
 
-  // ✅ 월 이동
   const moveMonth = (delta: -1 | 1) => {
     const keepDay = parseISO(selectedDate)?.d ?? 1;
 
@@ -219,7 +213,6 @@ export default function CalendarPanel() {
         </button>
       </div>
 
-      {/* ✅ 로딩/에러 상태 */}
       {loadState === 'loading' && <div className="text-[12px] text-gray-600">캘린더 불러오는 중…</div>}
       {loadState === 'error' && errorMessage && (
         <div className="text-[12px] text-primary-brown-400">{errorMessage}</div>
@@ -414,9 +407,6 @@ export default function CalendarPanel() {
   );
 }
 
-/* =========================
- * util
- * ========================= */
 function formatWon(value: number): string {
   return new Intl.NumberFormat('ko-KR').format(value);
 }

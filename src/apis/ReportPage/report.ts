@@ -117,7 +117,6 @@ function toRating5(satisfaction: number): 1 | 2 | 3 | 4 | 5 {
   return clamped as 1 | 2 | 3 | 4 | 5;
 }
 
-/* -------------------- Analytics (신규) -------------------- */
 type AnalyticsMetricParam = 'time' | 'day';
 
 type AnalyticsSuccessResponse = {
@@ -127,10 +126,10 @@ type AnalyticsSuccessResponse = {
     metric: 'TIME' | 'DAY';
     totalCount: number;
     statistics: Array<{
-      label: string; // MORNING / AFTERNOON / EVENING / NIGHT or MON..SUN
-      displayName: string; // 아침/낮/저녁/새벽 or 월..일
+      label: string;
+      displayName: string;
       count: number;
-      percentage: number; // 0~100
+      percentage: number;
     }>;
   };
 };
@@ -164,7 +163,6 @@ function isDayTimeDisplayName(v: string): v is DayTime {
 }
 
 export const reportApi = {
-  /* -------------------- 최근 한 달 리포트 (기존) -------------------- */
   async fetchMonthlyReport(): Promise<MonthlyReport> {
     const res = await axiosInstance.get<ReportResponse>('/histories/report');
     const body = res.data;
@@ -209,7 +207,6 @@ export const reportApi = {
     };
   },
 
-  /* -------------------- 주로 구매하는 요일/시간대 (신규) -------------------- */
   async fetchAnalytics(metric: AnalyticsMetricParam): Promise<{
     metric: 'TIME' | 'DAY';
     totalCount: number;
@@ -241,7 +238,6 @@ export const reportApi = {
       return { metric: 'TIME', totalCount, timeDistribution: dist };
     }
 
-    // DAY
     const dist = emptyWeekdayDist();
 
     stats.forEach((s) => {
@@ -252,7 +248,6 @@ export const reportApi = {
     return { metric: 'DAY', totalCount, weekdayDistribution: dist };
   },
 
-  /* -------------------- 달력 연동 (기존) -------------------- */
   async fetchCalendarMonth(
     year: number,
     month: number,

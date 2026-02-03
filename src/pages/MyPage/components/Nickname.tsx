@@ -1,7 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
+import type { ApiResponse, MeData, NicknamePatchData, NicknameUiState } from '@/apis/auth';
+
+import { axiosInstance } from '@/apis/axios';
 
 import CheckIcon from '@/assets/check_blue.svg';
 import ErrorIcon from '@/assets/check_red.svg';
@@ -10,19 +14,19 @@ const MAX_LEN = 10;
 
 export default function NicknameSettingPage() {
   const { setTitle } = useOutletContext<HeaderControlContext>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setTitle('닉네임 변경');
     return () => setTitle('');
   }, [setTitle]);
 
-  const navigate = useNavigate();
+  const [originalNickname, setOriginalNickname] = useState<string>('');
+  const [isMeLoading, setIsMeLoading] = useState<boolean>(true);
 
-  //실제 유저 닉네임으로 교체
-  const originalNickname = '원래';
-
-  const [value, setValue] = useState('');
-  const [isDone, setIsDone] = useState(false);
+  const [value, setValue] = useState<string>('');
+  const [uiState, setUiState] = useState<NicknameUiState>('idle');
+  const [helperText, setHelperText] = useState<string>('');
 
   const toastTimer = useRef<number | null>(null);
 
@@ -32,25 +36,67 @@ export default function NicknameSettingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchMe = async () => {
+      try {
+        setIsMeLoading(true);
+
+        const res = await axiosInstance.get<ApiResponse<MeData>>('/auth/me');
+
+        if (!mounted) return;
+
+        if (res.data.resultType === 'SUCCESS') {
+          setOriginalNickname(res.data.data.nickname);
+        } else {
+          setOriginalNickname('');
+        }
+      } catch {
+        if (!mounted) return;
+        setOriginalNickname('');
+      } finally {
+        if (!mounted) return;
+        setIsMeLoading(false);
+      }
+    };
+
+    fetchMe();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const length = value.length;
   const trimmed = value.trim();
 
   const isEmpty = trimmed.length === 0;
   const isOver = length > MAX_LEN;
-  const isSame = trimmed === originalNickname;
+  const isSame = originalNickname.length > 0 && trimmed === originalNickname;
 
-  const derivedState = isDone ? 'done' : isEmpty ? 'idle' : isOver ? 'over' : 'ok';
-  const canSubmit = derivedState === 'ok' && !isSame;
+  const computedState: NicknameUiState = useMemo(() => {
+    if (uiState === 'done') return 'done';
+    if (uiState === 'dup') return 'dup';
+    if (uiState === 'auth') return 'auth';
+    if (uiState === 'server') return 'server';
+
+    if (isEmpty) return 'idle';
+    if (isOver) return 'over';
+    if (isSame) return 'same';
+    return 'ok';
+  }, [uiState, isEmpty, isOver, isSame]);
+
+  const canSubmit = computedState === 'ok';
 
   const onChange = (v: string) => {
     setValue(v);
-    if (isDone) setIsDone(false);
+
+    if (uiState !== 'idle') setUiState('idle');
+    if (helperText) setHelperText('');
   };
 
-  const onSubmit = () => {
-    if (!canSubmit) return;
-
-    setIsDone(true);
+  const showDoneToastAndGoBack = () => {
+    setUiState('done');
 
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => {
@@ -58,15 +104,81 @@ export default function NicknameSettingPage() {
     }, 2000);
   };
 
+  const onSubmit = async () => {
+    if (!canSubmit) {
+      if (computedState === 'idle') setHelperText('닉네임을 입력해주세요.');
+      if (computedState === 'over') setHelperText('닉네임은 10자 이하이어야 합니다.');
+      if (computedState === 'same') setHelperText('현재 닉네임과 동일합니다.');
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.patch<ApiResponse<NicknamePatchData>>('/auth/profile/nickname', {
+        newNickname: trimmed,
+      });
+
+      if (res.data.resultType === 'SUCCESS') {
+        setOriginalNickname(res.data.data.nickname);
+        showDoneToastAndGoBack();
+        return;
+      }
+
+      const code = res.data.error.errorCode;
+
+      if (code === 'U009') {
+        setUiState('dup');
+        setHelperText('이미 사용 중인 닉네임입니다.');
+        return;
+      }
+
+      if (code === 'U008') {
+        setHelperText('현재 닉네임과 동일합니다.');
+        return;
+      }
+
+      if (code === 'V001') {
+        setHelperText('닉네임은 10자 이하이어야 합니다.');
+        return;
+      }
+
+      if (code === 'A004' || code === 'A005' || code === 'A006') {
+        setUiState('auth');
+        setHelperText('로그인이 필요합니다. 다시 로그인해주세요.');
+        return;
+      }
+
+      setUiState('server');
+      setHelperText(res.data.error.reason || '요청 처리 중 오류가 발생했습니다.');
+    } catch (e) {
+      const err = e as AxiosError;
+
+      if (err.response?.status === 401) {
+        setUiState('auth');
+        setHelperText('로그인이 필요합니다. 다시 로그인해주세요.');
+        return;
+      }
+
+      setUiState('server');
+      setHelperText('요청 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   const inputBorderClass =
-    derivedState === 'ok'
+    computedState === 'ok'
       ? 'border-1.5 border-primary-500'
-      : derivedState === 'over'
+      : computedState === 'over' || computedState === 'dup' || computedState === 'auth' || computedState === 'server'
         ? 'border-1.5 border-error'
         : 'border border-black/10';
 
   const counterTextClass =
-    derivedState === 'ok' ? 'text-info' : derivedState === 'over' ? 'text-error' : 'text-black/35';
+    computedState === 'ok'
+      ? 'text-info'
+      : computedState === 'over' || computedState === 'dup'
+        ? 'text-error'
+        : 'text-black/35';
+
+  const showIcon = computedState === 'ok' || computedState === 'over' || computedState === 'dup';
+  const iconSrc = computedState === 'over' || computedState === 'dup' ? ErrorIcon : CheckIcon;
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
@@ -80,15 +192,15 @@ export default function NicknameSettingPage() {
           <input
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={originalNickname}
+            placeholder={isMeLoading ? '불러오는 중…' : originalNickname || '닉네임 입력'}
             aria-label="닉네임 입력"
             className="w-full border-0 outline-none bg-transparent text-[16px] font-[400] text-black placeholder:text-black/70"
           />
         </div>
 
         <div className="mt-2 flex justify-end items-center gap-2" aria-label="닉네임 글자수">
-          {derivedState === 'ok' || derivedState === 'over' ? (
-            <img src={derivedState === 'over' ? ErrorIcon : CheckIcon} alt="" aria-hidden className="w-5 h-5 block" />
+          {showIcon ? (
+            <img src={iconSrc} alt="" aria-hidden className="w-5 h-5 block" />
           ) : (
             <div aria-hidden className="w-5 h-5" />
           )}
@@ -97,6 +209,12 @@ export default function NicknameSettingPage() {
             {length}/{MAX_LEN}
           </div>
         </div>
+
+        {helperText && (
+          <div className="mt-2 text-[12px] font-[400] text-error" role="alert">
+            {helperText}
+          </div>
+        )}
 
         <button
           type="button"
@@ -110,7 +228,7 @@ export default function NicknameSettingPage() {
           닉네임 변경
         </button>
 
-        {derivedState === 'done' && (
+        {computedState === 'done' && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-6 w-[calc(100%-32px)] max-w-[335px] bg-white border-[1.5px] border-primary-brown-400 shadow-[0px_0px_4px_0px_rgba(97,69,64,1)] rounded-[50px] px-[18px] py-[10px] text-[12px] font-[400]">
             닉네임 변경이 완료되었습니다.
           </div>

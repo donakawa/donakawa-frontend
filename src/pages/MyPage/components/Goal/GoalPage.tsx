@@ -1,14 +1,22 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useOutletContext } from 'react-router-dom';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
-
 import type { AimKeyword } from '@/types/MyPage/mypage';
+import type { ApiResponse, MeData } from '@/apis/auth';
+import { axiosInstance } from '@/apis/axios';
 
-import LeftArrow from '@/assets/arrow_left.svg';
 import CloseIcon from '@/assets/close.svg';
 
 const MAX_LEN = 10;
+
+type UiState = 'idle' | 'loadingMe' | 'saving' | 'done' | 'error';
+
+type PatchGoalData = {
+  id: string;
+  goal: string;
+  updatedAt: string;
+};
 
 export default function AimPage() {
   const { setTitle } = useOutletContext<HeaderControlContext>();
@@ -36,7 +44,13 @@ export default function AimPage() {
   const [selected, setSelected] = useState<AimKeyword | null>(null);
   const [text, setText] = useState<string>('');
 
+  const [currentGoal, setCurrentGoal] = useState<string>('');
+
   const [confirmedGoal, setConfirmedGoal] = useState<string>('');
+
+  const [uiState, setUiState] = useState<UiState>('idle');
+  const [helperText, setHelperText] = useState<string>('');
+
   const isConfirmed = confirmedGoal.length > 0;
 
   const hasGoalDraft = isConfirmed || !!selected || text.trim().length > 0;
@@ -47,30 +61,126 @@ export default function AimPage() {
     return selected?.label ?? '';
   }, [selected, text]);
 
-  const canConfirm = draftGoal.length > 0 && draftGoal.length <= MAX_LEN;
-  const canComplete = confirmedGoal.length > 0;
+  const canConfirm = draftGoal.length > 0 && draftGoal.length <= MAX_LEN && uiState !== 'saving';
+  const canComplete = confirmedGoal.length > 0 && uiState !== 'saving';
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchMe = async () => {
+      try {
+        setUiState('loadingMe');
+        const res = await axiosInstance.get<ApiResponse<MeData>>('/auth/me');
+
+        if (!mounted) return;
+
+        if (res.data.resultType === 'SUCCESS') {
+          const me = res.data.data;
+          setCurrentGoal(me.goal ?? '');
+          if (me.goal && me.goal.trim().length > 0) {
+            setConfirmedGoal(me.goal);
+          }
+        } else {
+          setCurrentGoal('');
+        }
+      } catch {
+        if (!mounted) return;
+        setCurrentGoal('');
+      } finally {
+        if (!mounted) return;
+        setUiState('idle');
+      }
+    };
+
+    fetchMe();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const onChangeText = (v: string) => {
+    if (isConfirmed) return;
     if (selected) setSelected(null);
     setText(v.slice(0, MAX_LEN));
+    if (helperText) setHelperText('');
   };
 
   const toggleKeyword = (k: AimKeyword) => {
+    if (isConfirmed) return;
     setSelected((prev) => (prev?.id === k.id ? null : k));
     setText('');
+    if (helperText) setHelperText('');
   };
 
-  const removeKeyword = () => setSelected(null);
+  const removeKeyword = () => {
+    if (isConfirmed) return;
+    setSelected(null);
+  };
 
-  const onConfirm = () => {
+  const onConfirm = async () => {
     if (!canConfirm || isConfirmed) return;
-    setConfirmedGoal(draftGoal);
+
+    const newGoal = draftGoal.trim();
+
+    if (newGoal.length === 0) {
+      setHelperText('목표를 입력해주세요.');
+      return;
+    }
+    if (newGoal.length > MAX_LEN) {
+      setHelperText('목표는 10자 이하만 가능합니다.');
+      return;
+    }
+    if (currentGoal && newGoal === currentGoal) {
+      setHelperText('현재 목표와 동일합니다.');
+      return;
+    }
+
+    try {
+      setUiState('saving');
+      setHelperText('');
+
+      const res = await axiosInstance.patch<ApiResponse<PatchGoalData>>('/auth/profile/goal', {
+        newGoal,
+      });
+
+      if (res.data.resultType === 'SUCCESS') {
+        setConfirmedGoal(res.data.data.goal);
+        setCurrentGoal(res.data.data.goal);
+        setUiState('done');
+        return;
+      }
+
+      const code = res.data.error.errorCode;
+
+      if (code === 'U008') {
+        setHelperText('현재 목표와 동일합니다.');
+      } else if (code === 'U004') {
+        setHelperText('목표는 10자 이하만 가능합니다.');
+      } else if (code === 'A004' || code === 'A005' || code === 'A006') {
+        setHelperText('로그인이 필요합니다. 다시 로그인해주세요.');
+      } else if (code === 'U001') {
+        setHelperText('존재하지 않는 계정입니다.');
+      } else {
+        setHelperText(res.data.error.reason || '요청 처리 중 오류가 발생했습니다.');
+      }
+
+      setUiState('error');
+    } catch {
+      setUiState('error');
+      setHelperText('요청 처리 중 오류가 발생했습니다.');
+    } finally {
+      setUiState((prev) => (prev === 'done' ? 'done' : 'idle'));
+    }
   };
 
   const onComplete = () => {
     if (!canComplete) return;
     navigate(-1);
   };
+
+  const confirmDisabled = !canConfirm || isConfirmed || uiState === 'loadingMe';
+  const completeDisabled = !canComplete || uiState === 'loadingMe';
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
@@ -81,7 +191,7 @@ export default function AimPage() {
 
         <p className="m-0 mb-[18px] text-[16px]">(하나만 선택해 주세요.)</p>
 
-        <div className="grid grid-cols-[1fr_52px] gap-2 items-start mb-4">
+        <div className="grid grid-cols-[1fr_52px] gap-2 items-start mb-2">
           <div
             className={[
               'w-full min-h-[52px] px-3 py-[10px] rounded-[12px] bg-white border-2',
@@ -110,7 +220,7 @@ export default function AimPage() {
                 value={text}
                 placeholder={!selected ? '목표를 입력하세요...(10자 이내)' : ''}
                 onChange={(e) => onChangeText(e.target.value)}
-                disabled={isConfirmed}
+                disabled={isConfirmed || uiState === 'loadingMe'}
                 className="flex-1 min-w-[90px] h-[30px] border-0 outline-none bg-transparent p-0 m-0 text-[14px] text-black placeholder:text-gray-600 disabled:text-black"
               />
             </div>
@@ -119,10 +229,10 @@ export default function AimPage() {
           <button
             type="button"
             onClick={onConfirm}
-            disabled={!canConfirm || isConfirmed}
+            disabled={confirmDisabled}
             className={[
               'h-[52px] w-[52px] rounded-[10px] border-0 p-0 text-[16px] font-[500]',
-              canConfirm && !isConfirmed
+              !confirmDisabled
                 ? 'bg-primary-brown-300 text-white cursor-pointer'
                 : 'bg-gray-100 text-white cursor-not-allowed',
             ].join(' ')}>
@@ -130,22 +240,21 @@ export default function AimPage() {
           </button>
         </div>
 
+        {helperText && <p className="m-0 mb-3 text-[12px] text-error">{helperText}</p>}
+
         <p className="m-0 mb-[10px] text-[12px] text-gray-600">추천 키워드</p>
 
         <div className="flex flex-wrap gap-[10px]">
           {keywords.map((k) => {
             const isSelected = selected?.id === k.id;
-            const disabled = isConfirmed;
+            const disabled = isConfirmed || uiState === 'loadingMe';
 
             return (
               <button
                 key={k.id}
                 type="button"
                 disabled={disabled}
-                onClick={() => {
-                  if (isConfirmed) return;
-                  toggleKeyword(k);
-                }}
+                onClick={() => toggleKeyword(k)}
                 className={[
                   'h-[31px] max-h-[31px] rounded-[100px] px-[10px] py-[5px] flex items-center text-[14px] font-[400]',
                   'border-2',
@@ -162,10 +271,10 @@ export default function AimPage() {
           <button
             type="button"
             onClick={onComplete}
-            disabled={!canComplete}
+            disabled={completeDisabled}
             className={[
               'mt-12 w-full h-[52px] rounded-[6px] border-0 text-[16px] font-[500] transition',
-              canComplete ? 'cursor-pointer bg-primary-500 text-white' : 'cursor-default bg-gray-400 text-white',
+              !completeDisabled ? 'cursor-pointer bg-primary-500 text-white' : 'cursor-default bg-gray-400 text-white',
             ].join(' ')}>
             완료
           </button>
