@@ -7,11 +7,11 @@ export type Profile = {
 
 export type Goal = string;
 
+export type Provider = 'email' | 'google' | 'none';
+
 export type NicknameViewState = 'idle' | 'ok' | 'over' | 'done';
 
 export type PasswordStep = 'email' | 'code' | 'currentPassword' | 'newPassword';
-
-export type Provider = 'google' | 'none';
 
 export type VerifySendResult = { ok: true } | { ok: false; message: string };
 

@@ -1,11 +1,12 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useOutletContext } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
+import type { ApiResponse, MeData } from '@/apis/MyPage/auth';
+
+import { axiosInstance } from '@/apis/axios';
 
 import RightArrow from '@/assets/arrow_right.svg';
-import LeftArrow from '@/assets/arrow_left.svg';
 import CheckIcon from '@/assets/circle_check.svg';
 
 type ConnectedProvider = 'google' | 'none';
@@ -13,6 +14,11 @@ type ConnectedProvider = 'google' | 'none';
 type SettingProfile = {
   email: string;
   connectedProvider: ConnectedProvider;
+};
+
+const DEFAULT_PROFILE: SettingProfile = {
+  email: '',
+  connectedProvider: 'none',
 };
 
 export default function MyPageSettingPage() {
@@ -25,13 +31,41 @@ export default function MyPageSettingPage() {
 
   const navigate = useNavigate();
 
-  const profile: SettingProfile = useMemo(
-    () => ({
-      email: 'gamjaaaaa@gmail.com',
-      connectedProvider: 'google',
-    }),
-    [],
-  );
+  const [profile, setProfile] = useState<SettingProfile>(DEFAULT_PROFILE);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchMe = async () => {
+      try {
+        const res = await axiosInstance.get<ApiResponse<MeData>>('/auth/me');
+
+        if (!mounted) return;
+
+        if (res.data.resultType === 'SUCCESS') {
+          const me = res.data.data;
+
+          const provider: ConnectedProvider = me.provider === 'google' ? 'google' : 'none';
+
+          setProfile({
+            email: me.email,
+            connectedProvider: provider,
+          });
+        } else {
+          setProfile(DEFAULT_PROFILE);
+        }
+      } catch {
+        if (!mounted) return;
+        setProfile(DEFAULT_PROFILE);
+      }
+    };
+
+    fetchMe();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const goBack = () => navigate(-1);
 
@@ -87,7 +121,9 @@ export default function MyPageSettingPage() {
                   ) : (
                     <div aria-hidden className="w-5 h-5" />
                   )}
-                  <div className="text-[13px] font-[400] text-gray-600">{profile.email}</div>
+
+                  {/* 이메일이 없으면(비로그인/실패) 표시 안 하거나 placeholder를 둘 수 있음 */}
+                  <div className="text-[13px] font-[400] text-gray-600">{profile.email || ''}</div>
                 </div>
               </div>
 

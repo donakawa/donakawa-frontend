@@ -94,7 +94,6 @@ function emptyWeekdayDist(): WeekdayDistribution {
 }
 
 function toDayTimeFromAnalytics(label: string, displayName: string): DayTime {
-  // label 우선(서버 enum), fallback displayName
   switch (label) {
     case 'MORNING':
       return '아침';
@@ -105,7 +104,6 @@ function toDayTimeFromAnalytics(label: string, displayName: string): DayTime {
     case 'NIGHT':
       return '새벽';
     default:
-      // 혹시 displayName만 오는 경우
       if (displayName === '아침' || displayName === '낮' || displayName === '저녁' || displayName === '새벽')
         return displayName;
       return '낮';
