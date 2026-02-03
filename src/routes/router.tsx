@@ -28,6 +28,7 @@ import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Password';
 import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
+import WithdrawalPage from '@/pages/MyPage/components/WithdrawalPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -66,6 +67,7 @@ const protectedChildren: RouteObject[] = [
           { index: true, element: <ProfileSettingPage /> },
           { path: 'nickname', element: <NicknameSettingPage /> },
           { path: 'password', element: <PasswordFlowPage /> },
+          { path: 'withdrawal', element: <WithdrawalPage /> },
         ],
       },
     ],
