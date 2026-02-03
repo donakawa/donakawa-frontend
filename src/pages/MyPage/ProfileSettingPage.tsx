@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
-import type { ApiResponse, MeData } from '@/apis/MyPage/auth';
+import type { ApiResponse, MeData } from '@/apis/auth';
 
 import { axiosInstance } from '@/apis/axios';
 
@@ -72,6 +72,7 @@ export default function MyPageSettingPage() {
   const goNickname = () => navigate('/mypage/setting/nickname');
   const goPassword = () => navigate('/mypage/setting/password');
   const goGoogle = () => navigate('/mypage/setting/google');
+  const goWithdrawal = () => navigate('/mypage/setting/withdrawal');
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
@@ -165,6 +166,7 @@ export default function MyPageSettingPage() {
 
             <button
               type="button"
+              onClick={goWithdrawal}
               aria-label="회원 탈퇴"
               className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
               <div className="flex items-center gap-2">

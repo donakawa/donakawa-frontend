@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import type { ReportDetailProduct, PurchaseDecision } from '@/types/ReportPage/Detail';
+import type { ReportDetailProduct, PurchaseDecision } from '@/types/ReportPage/detail';
 
 import LeftArrow from '@/assets/arrow_left(white).svg';
 import SampleImage from '@/assets/sample2.svg';
-import DonaAI from '@/assets/안경도나.svg';
+import DonaAI from '@/assets/dona_glass.svg';
 
 type Props = {
   enableMock?: boolean;
