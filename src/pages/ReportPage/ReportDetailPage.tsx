@@ -78,7 +78,6 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
     console.log('go to store');
   };
 
-  // ✅ 모달 열리면 뒤 스크롤 막기(원래 인증번호 모달처럼)
   useEffect(() => {
     if (!isPurchaseModalOpen) return;
 

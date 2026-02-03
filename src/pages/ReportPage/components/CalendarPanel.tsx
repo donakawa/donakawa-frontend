@@ -10,6 +10,8 @@ import PlusIcon from '@/assets/view_more(brown).svg';
 import StarFilled from '@/assets/star_full.svg';
 import StarEmpty from '@/assets/star_line.svg';
 
+import { reportApi } from '@/apis/ReportPage/report';
+
 import type {
   CalendarCell,
   CalendarElement,
@@ -17,6 +19,11 @@ import type {
   ConsumptionReason,
   DayTime,
 } from '@/types/ReportPage/report';
+
+type LoadState = 'idle' | 'loading' | 'success' | 'error';
+
+// ✅ api에서 rating을 optional로 내려주도록(fetchCalendarMonth에서 넣어줬음)
+type CalendarPurchase = CalendarPurchaseItem & { rating?: number };
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -29,8 +36,8 @@ function getTimeIcon(time: DayTime): { src: string; alt: string } {
   return { src: SunIcon, alt: '해' };
 }
 
-function groupByTime(list: CalendarPurchaseItem[]): Record<DayTime, CalendarPurchaseItem[]> {
-  const grouped: Record<DayTime, CalendarPurchaseItem[]> = {
+function groupByTime(list: CalendarPurchase[]): Record<DayTime, CalendarPurchase[]> {
+  const grouped: Record<DayTime, CalendarPurchase[]> = {
     아침: [],
     낮: [],
     저녁: [],
@@ -65,13 +72,15 @@ function RatingStars({ value }: { value: number }) {
 export default function CalendarPanel() {
   const navigate = useNavigate();
 
-  const [year, setYear] = useState<number>(2026);
-  const [month, setMonth] = useState<number>(1);
-  const [selectedDate, setSelectedDate] = useState<string>(toISO(2026, 1, 10));
+  const today = useMemo(() => new Date(), []);
+  const [year, setYear] = useState<number>(today.getFullYear());
+  const [month, setMonth] = useState<number>(today.getMonth() + 1);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    toISO(today.getFullYear(), today.getMonth() + 1, today.getDate()),
+  );
 
   // 구매 목록 열림/닫힘
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
-
   const sheetScrollRef = useRef<HTMLDivElement | null>(null);
 
   const toggleSheet = () => {
@@ -98,93 +107,71 @@ export default function CalendarPanel() {
     };
   }, [sheetOpen]);
 
-  const purchases: CalendarPurchaseItem[] = useMemo(
-    () => [
-      {
-        id: '1',
-        date: toISO(2026, 1, 10),
-        timeLabel: '저녁',
-        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
-        title: '캐시미어 로제 더블 하프코트',
-        price: 238_400,
-        imageUrl: '',
-        hasReview: false,
-      },
-      {
-        id: '2',
-        date: toISO(2026, 1, 10),
-        timeLabel: '저녁',
-        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
-        title: '캐시미어 로제 더블 하프코트',
-        price: 238_400,
-        imageUrl: '',
-        hasReview: true,
-        rating: 4,
-      },
-      {
-        id: '3',
-        date: toISO(2026, 1, 10),
-        timeLabel: '저녁',
-        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
-        title: '캐시미어 로제 더블 하프코트',
-        price: 238_400,
-        imageUrl: '',
-        hasReview: true,
-        rating: 5,
-      },
-      {
-        id: '4',
-        date: toISO(2026, 1, 10),
-        timeLabel: '저녁',
-        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
-        title: '캐시미어 로제 더블 하프코트',
-        price: 238_400,
-        imageUrl: '',
-        hasReview: false,
-      },
-      {
-        id: '5',
-        date: toISO(2026, 1, 10),
-        timeLabel: '낮',
-        reason: ['세일 중', '필요해서'] satisfies ConsumptionReason[],
-        title: '캐시미어 로제 더블 하프코트',
-        price: 238_400,
-        imageUrl: '',
-        hasReview: true,
-        rating: 3,
-      },
-    ],
-    [],
-  );
+  /* =========================
+   * ✅ API 연동 상태/데이터
+   * ========================= */
+  const [loadState, setLoadState] = useState<LoadState>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [element, setElement] = useState<CalendarElement>({
+    year,
+    month,
+    totalWon: 0,
+    purchaseCount: 0,
+  });
+
+  const [itemsByDate, setItemsByDate] = useState<Record<string, CalendarPurchase[]>>({});
+
+  // ✅ 달 바뀔 때마다 캘린더 데이터 fetch
+  useEffect(() => {
+    let alive = true;
+
+    const run = async () => {
+      try {
+        setLoadState('loading');
+        setErrorMessage(null);
+
+        const res = await reportApi.fetchCalendarMonth(year, month);
+
+        if (!alive) return;
+
+        setElement(res.element);
+        setItemsByDate(res.itemsByDate ?? {});
+        setLoadState('success');
+      } catch (e) {
+        if (!alive) return;
+
+        const msg = e instanceof Error ? e.message : '캘린더 데이터를 불러오지 못했어요.';
+        setErrorMessage(msg);
+        setItemsByDate({});
+        setElement({ year, month, totalWon: 0, purchaseCount: 0 });
+        setLoadState('error');
+      }
+    };
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [year, month]);
 
   const purchaseMap = useMemo(() => {
-    const map = new Map<string, CalendarPurchaseItem[]>();
-    for (const p of purchases) {
-      const list = map.get(p.date) ?? [];
-      list.push(p);
-      map.set(p.date, list);
-    }
+    const map = new Map<string, CalendarPurchase[]>();
+    Object.entries(itemsByDate).forEach(([date, list]) => {
+      map.set(date, list ?? []);
+    });
     return map;
-  }, [purchases]);
-
-  const element: CalendarElement = useMemo(
-    () => ({
-      year,
-      month,
-      totalWon: 264_500,
-      purchaseCount: 15,
-    }),
-    [year, month],
-  );
+  }, [itemsByDate]);
 
   const days: CalendarCell[] = useMemo(
     () => MonthDaysWithLeadingBlanks(year, month, purchaseMap),
     [year, month, purchaseMap],
   );
 
-  const selectedPurchases = purchaseMap.get(selectedDate) ?? [];
+  const selectedPurchases: CalendarPurchase[] = purchaseMap.get(selectedDate) ?? [];
   const grouped = useMemo(() => groupByTime(selectedPurchases), [selectedPurchases]);
 
+  // ✅ 월 이동
   const moveMonth = (delta: -1 | 1) => {
     const keepDay = parseISO(selectedDate)?.d ?? 1;
 
@@ -231,6 +218,12 @@ export default function CalendarPanel() {
           <img src={RightArrow} alt="" />
         </button>
       </div>
+
+      {/* ✅ 로딩/에러 상태 */}
+      {loadState === 'loading' && <div className="text-[12px] text-gray-600">캘린더 불러오는 중…</div>}
+      {loadState === 'error' && errorMessage && (
+        <div className="text-[12px] text-primary-brown-400">{errorMessage}</div>
+      )}
 
       <div className="flex items-center gap-[14px] px-1">
         <div className="text-[24px] font-bold text-primary-brown-400">{formatWon(element.totalWon)}원</div>
@@ -344,7 +337,6 @@ export default function CalendarPanel() {
           ref={sheetScrollRef}
           className={cn(
             'flex flex-col gap-3',
-            // 구매 목록 닫혀있으면 스크롤 잠금
             sheetOpen ? 'overflow-y-auto' : 'overflow-hidden',
             '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           )}
@@ -384,7 +376,7 @@ export default function CalendarPanel() {
                         <div className="text-[16px] font-medium text-black mb-1">{formatWon(p.price)}</div>
 
                         <div className="flex flex-wrap gap-[8px]">
-                          {p.reason.map((r) => (
+                          {p.reason.map((r: ConsumptionReason) => (
                             <div
                               key={`${p.id}-${r}`}
                               className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-400">
@@ -394,9 +386,9 @@ export default function CalendarPanel() {
                         </div>
 
                         {/* 리뷰 작성시 -> 별점 */}
-                        {p.hasReview && typeof (p as any).rating === 'number' ? (
+                        {p.hasReview && typeof p.rating === 'number' ? (
                           <div className="mt-1 w-fit">
-                            <RatingStars value={(p as any).rating as number} />
+                            <RatingStars value={p.rating} />
                           </div>
                         ) : (
                           <button
@@ -422,7 +414,9 @@ export default function CalendarPanel() {
   );
 }
 
-// 함수 모음
+/* =========================
+ * util
+ * ========================= */
 function formatWon(value: number): string {
   return new Intl.NumberFormat('ko-KR').format(value);
 }
@@ -450,7 +444,7 @@ function formatKoreanDate(iso: string): string {
 function MonthDaysWithLeadingBlanks(
   year: number,
   month1to12: number,
-  purchaseMap: Map<string, CalendarPurchaseItem[]>,
+  purchaseMap: Map<string, CalendarPurchase[]>,
 ): CalendarCell[] {
   const first = new Date(year, month1to12 - 1, 1);
 
@@ -477,7 +471,7 @@ function MonthDaysWithLeadingBlanks(
       date: d,
       dayNumber: day,
       inCurrentMonth: true,
-      hasPurchase: purchaseMap.has(iso),
+      hasPurchase: (purchaseMap.get(iso)?.length ?? 0) > 0,
     });
   }
 
