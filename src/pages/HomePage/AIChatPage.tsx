@@ -47,7 +47,6 @@ export default function AIChatPage() {
   const deletePopoverRef = useRef<HTMLDivElement | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-
   const [selectedProduct, setSelectedProduct] = useState<SelectedProduct | null>(null);
 
   const [chatHistory, setChatHistory] = useState<{ id: string; title: string }[]>([
@@ -320,8 +319,6 @@ export default function AIChatPage() {
     handleSidebarMouseDown,
     search,
     onNewChat,
-    NewChatIcon,
-    SearchIcon,
     deleteTargetId,
     deleteTop,
     openDeleteModal,
@@ -360,6 +357,10 @@ export default function AIChatPage() {
     });
   }, []);
 
+  const clearSelectedProduct = useCallback((): void => {
+    setSelectedProduct(null);
+  }, []);
+
   const sendSelectedProduct = useCallback(() => {
     if (!selectedProduct) return;
 
@@ -392,7 +393,6 @@ export default function AIChatPage() {
         'rounded-[10px]',
         'bg-[#E6F2E3]',
       ].join(' ')}>
-      {' '}
       <span className="inline-flex items-end gap-[6px]">
         <span className="h-[6px] w-[6px] rounded-full bg-[#4E9C64] animate-bounce [animation-delay:0ms]" />
         <span className="h-[6px] w-[6px] rounded-full bg-[#4E9C64] animate-bounce [animation-delay:150ms]" />
@@ -415,7 +415,43 @@ export default function AIChatPage() {
         </div>
         <div className="pt-0 p-2.5">
           <div className="text-[12px] font-medium leading-normal text-black">{formatWon(product.price)}</div>
-          <div className=" truncate text-[14px] font-normal leading-normal text-black">{product.name}</div>
+          <div className="truncate text-[14px] font-normal leading-normal text-black">{product.name}</div>
+        </div>
+      </div>
+    );
+  };
+
+  const SelectedProductPreview = ({ product, onRemove }: { product: SelectedProduct; onRemove: () => void }) => {
+    return (
+      <div className="relative w-[109px]">
+        <button
+          type="button"
+          aria-label="선택한 상품 제거"
+          onClick={onRemove}
+          className={[
+            'absolute right-[-12px] top-[-12px] z-20',
+            'h-[21px] w-[21px] rounded-full',
+            'bg-primary-600',
+            'flex items-center justify-center',
+            'shadow-[0px_2px_6px_rgba(0,0,0,0.25)]',
+          ].join(' ')}>
+          <span className="relative block h-[14px] w-[14px]">
+            <span className="absolute left-1/2 top-1/2 h-[2px] w-[14px] -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" />
+            <span className="absolute left-1/2 top-1/2 h-[2px] w-[14px] -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-white" />
+          </span>
+        </button>
+
+        <div className={['overflow-hidden rounded-[10px] bg-white', 'shadow-[0px_0px_6px_rgba(0,0,0,0.18)]'].join(' ')}>
+          <div className="p-2.5">
+            <div className="h-[94px] w-full overflow-hidden rounded-[5px] bg-gray-100 flex items-center justify-center">
+              <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />
+            </div>
+          </div>
+
+          <div className="px-2.5 pb-2.5">
+            <div className="text-[12px] font-medium leading-normal text-black">{formatWon(product.price)}</div>
+            <div className="truncate text-[14px] font-normal leading-normal text-black">{product.name}</div>
+          </div>
         </div>
       </div>
     );
@@ -428,7 +464,7 @@ export default function AIChatPage() {
           {messages.map((msg) => {
             if (msg.role === 'user' && msg.kind === 'product') {
               return (
-                <div key={msg.id} className="mb-3 flex justify-end">
+                <div key={msg.id} className="mb-5 flex justify-end">
                   <ProductCardBubble product={msg.product} />
                 </div>
               );
@@ -448,35 +484,42 @@ export default function AIChatPage() {
           <div ref={bottomRef} />
         </main>
 
-        <footer className="px-4">
+        <footer className="flex justify-center pb-4">
           <div
             className={[
-              'h-[41px] w-[335px] rounded-[100px] bg-white',
-              'flex items-center gap-[10px] px-[14px]',
+              'w-[335px] bg-white',
+              selectedProduct ? 'rounded-[24px] px-[14px] pt-[14px] pb-[10px]' : 'h-[41px] rounded-[100px] px-[14px]',
               'shadow-[0px_0px_4px_rgba(0,0,0,0.25)]',
+              'flex flex-col',
+              selectedProduct ? 'gap-[12px]' : 'justify-center',
             ].join(' ')}>
-            <button
-              type="button"
-              aria-label="상품 추가"
-              onClick={pickProductTemp}
-              className="flex h-9 w-9 items-center justify-center p-0">
-              <img src={PlusIcon} alt="" className="block h-6 w-6" />
-            </button>
+            {selectedProduct && (
+              <div className="pt-1">
+                <SelectedProductPreview product={selectedProduct} onRemove={clearSelectedProduct} />
+              </div>
+            )}
 
-            <div className="flex-1 text-[16px] font-medium text-gray-600">상품을 추가해보세요.</div>
+            <div className="flex items-center gap-[10px]">
+              <button
+                type="button"
+                aria-label="상품 추가"
+                onClick={pickProductTemp}
+                className="flex h-9 w-9 items-center justify-center p-0">
+                <img src={PlusIcon} alt="" className="block h-6 w-6" />
+              </button>
 
-            <button
-              type="button"
-              aria-label="전송"
-              onClick={sendSelectedProduct}
-              disabled={!selectedProduct}
-              className="flex h-9 w-9 items-center justify-center p-0 disabled:opacity-50">
-              <img src={SendIcon} alt="" className="block h-6 w-6" />
-            </button>
+              <div className="flex-1 text-[16px] font-medium text-gray-600">상품을 추가해보세요.</div>
+
+              <button
+                type="button"
+                aria-label="전송"
+                onClick={sendSelectedProduct}
+                disabled={!selectedProduct}
+                className="flex h-9 w-9 items-center justify-center p-0 disabled:opacity-50">
+                <img src={SendIcon} alt="" className="block h-6 w-6" />
+              </button>
+            </div>
           </div>
-
-          {/* 임시 멘트 */}
-          {selectedProduct && <div className="mt-2 px-1 text-[12px] text-gray-500">선택됨: {selectedProduct.name}</div>}
         </footer>
       </div>
     </div>
