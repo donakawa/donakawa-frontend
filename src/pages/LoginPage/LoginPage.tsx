@@ -62,16 +62,9 @@ const LoginPage = () => {
 
     try {
       // 1. API 호출
-      const data = await login({ email, password });
+      await login({ email, password });
 
-      // 2. 토큰 저장 (보통 로컬 스토리지에 저장)
-      // 백엔드에서 주는 이름(accessToken 등)에 맞춰서 저장하세요.
-      localStorage.setItem('accessToken', data.accessToken);
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken);
-      }
-
-      // 3. 홈으로 이동
+      // 2. 홈으로 이동
       navigate('/home');
 
     } catch (error) {

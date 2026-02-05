@@ -186,6 +186,7 @@ const Step4Goal = ({ formData }: Props) => {
                 type="text"
                 maxLength={10}
                 placeholder="목표를 입력하세요...(10자 이내)"
+                aria-label="목표"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-gray-300 px-1"
