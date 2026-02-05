@@ -82,7 +82,7 @@ const Step4Goal = ({ formData }: Props) => {
 
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
-      console.error('진행 실패:', err);
+      console.error('진행 실패:', err.response?.status, err.response?.data?.error?.errorCode);
       
       const errorCode = err.response?.data?.error?.errorCode;
       const errorReason = err.response?.data?.error?.reason;

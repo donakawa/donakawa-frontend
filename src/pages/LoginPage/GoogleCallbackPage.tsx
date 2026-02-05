@@ -1,38 +1,44 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getMe } from '@/api/auth'; // 아까 만든 내 정보 조회 API
 
 const GoogleCallbackPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const success = searchParams.get('success');
-    
-    // (혹시 URL에 토큰이 있다면 저장 - 쿠키 방식이면 없을 수도 있음)
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
+    const completeGoogleLogin = async () => {
+      try {
+        // 1. URL에서 에러가 있는지 먼저 확인 (백엔드가 success=false 등을 보냈을 경우)
+        const error = searchParams.get('error');
+        const success = searchParams.get('success');
 
-    if (accessToken) {
-      localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-    }
+        if (error || success === 'false') {
+          throw new Error('Google Login Failed');
+        }
 
-    // 2. 성공했으면 홈으로 이동
-    if (success === 'true' || accessToken) {
-      // 쿠키가 세팅되었으므로 바로 홈으로 이동
-      navigate('/home', { replace: true });
-    } else {
-      // 실패했으면 다시 로그인 페이지로
-      alert('구글 로그인에 실패했습니다.');
-      navigate('/login', { replace: true });
-    }
+        // 2. 토큰을 URL에서 꺼내는 게 아니라(X), 
+        //    쿠키가 잘 들어왔는지 내 정보 조회 API로 확인(O)
+        await getMe();
+
+        // 3. 성공하면 홈으로 이동 (뒤로가기 방지 replace: true)
+        navigate('/home', { replace: true });
+        
+      } catch (error) {
+        console.error('구글 로그인 실패:', error);
+        alert('구글 로그인에 실패했습니다. 다시 시도해 주세요.');
+        navigate('/login', { replace: true });
+      }
+    };
+
+    completeGoogleLogin();
   }, [navigate, searchParams]);
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-gray-700">로그인 처리 중...</h2>
-        <p className="text-gray-500">잠시만 기다려 주세요.</p>
+        <h2 className="mb-4 text-xl font-bold text-gray-700">로그인 중입니다...</h2>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
       </div>
     </div>
   );

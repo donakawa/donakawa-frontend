@@ -25,6 +25,15 @@ interface RegisterRequest {
   goal: string;
 }
 
+interface UserResponse {
+  id: string;
+  email: string;
+  nickname: string;
+  goal: string;
+  hasPassword: boolean;
+  provider: string;
+}
+
 // --- [API 함수] ---
 
 //  API 응답을 검사해서 FAILED면 에러를 던지는 함수
@@ -63,5 +72,11 @@ export const register = async (data: RegisterRequest) => {
 export const checkNicknameDuplicate = async (nickname: string) => {
   const encodedNickname = encodeURIComponent(nickname);
   const response = await instance.get<CommonResponse<{ isAvailable: boolean }>>(`/auth/nickname/duplicate?nickname=${encodedNickname}`);
+  return handleResponse(response);
+};
+
+// 7. 내 정보 조회 (구글 로그인 확인용)
+export const getMe = async () => {
+  const response = await instance.get<CommonResponse<UserResponse>>('/auth/me');
   return handleResponse(response);
 };
