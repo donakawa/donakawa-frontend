@@ -9,6 +9,9 @@ import LoginPage from '@/pages/LoginPage/LoginPage';
 import HomePage from '@/pages/HomePage/HomePage';
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
+import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
+import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
+import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
 import MyPage from '@/pages/MyPage/MyPage';
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
@@ -28,8 +31,15 @@ const protectedChildren: RouteObject[] = [
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
-  { path: 'report', element: <ReportPage /> },
-  { path: 'mypage', element: <MyPage /> },
+  {
+    path: 'report',
+    children: [
+      { index: true, element: <ReportPage /> },
+      { path: 'review', element: <PurchaseReviewPage /> },
+      { path: 'review/write', element: <ReviewWritePage /> },
+      { path: 'detail', element: <ReportDetailPage /> },
+    ],
+  },
 ];
 
 const routes: RouteObject[] = [
