@@ -13,11 +13,13 @@ import MyPage from '@/pages/MyPage/MyPage';
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
+import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
   { path: 'signup', element: <SignupPage /> },
   { path: 'login', element: <LoginPage /> },
+  { path: 'auth/callback', element: <GoogleCallbackPage /> },
 ];
 
 const protectedChildren: RouteObject[] = [

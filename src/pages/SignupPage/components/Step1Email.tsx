@@ -3,6 +3,14 @@ import { IoCheckmark } from 'react-icons/io5';
 import { sendAuthCode, verifyAuthCode } from '../../../api/auth';
 import { AxiosError } from 'axios';
 
+// 백엔드 에러 타입 정의
+interface ErrorResponse {
+  error: {
+    errorCode: string;
+    reason: string;
+  };
+}
+
 interface Props {
   onNext: (email: string) => void;
 }
@@ -13,10 +21,12 @@ const Step1Email = ({ onNext }: Props) => {
   const [authCode, setAuthCode] = useState(['', '', '', '', '', '']); 
   const [showModal, setShowModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(299); 
-  
-  // 타이머를 재시작하기 위한 스위치 (Trigger)
   const [timerTrigger, setTimerTrigger] = useState(0);
   
+  // 에러 메시지 상태
+  const [emailError, setEmailError] = useState('');
+  const [codeError, setCodeError] = useState('');
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // 타이머 로직
@@ -34,9 +44,6 @@ const Step1Email = ({ onNext }: Props) => {
     }, 1000);
 
     return () => clearInterval(timer);
-    
-    // 'view'가 바뀌거나 'timerTrigger'가 바뀔 때만 타이머를 새로 만듦
-    // (timeLeft는 뺐으므로 1초마다 재실행되지 않음!)
   }, [view, timerTrigger]); 
 
   const formatTime = (seconds: number) => {
@@ -49,6 +56,8 @@ const Step1Email = ({ onNext }: Props) => {
 
   // 1. 인증번호 발송 API 호출
   const handleSendCode = async () => {
+    // 에러 초기화
+    setEmailError('');
     if(!isEmailValid) return;
 
     try {
@@ -61,31 +70,54 @@ const Step1Email = ({ onNext }: Props) => {
       setView('code');
 
     } catch (error) {
-      console.error('메일 발송 실패:', error);
-      alert('인증번호 발송에 실패했습니다. 이메일을 확인해주세요.');
+      const err = error as AxiosError<ErrorResponse>;
+      console.error('메일 발송 실패:', err);
+
+      const errorCode = err.response?.data?.error?.errorCode;
+      const errorReason = err.response?.data?.error?.reason;
+
+      //  에러 코드 분기 처리
+      if (errorCode === 'U003') {
+        // 이미 가입된 계정 -> 입력창 아래 에러 표시
+        setEmailError('이미 가입된 이메일입니다. 로그인을 진행해주세요.');
+      } else if (errorCode === 'A010') {
+        // 횟수 초과 -> 알림창
+        alert('인증 요청 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.');
+      } else {
+        alert(errorReason || '인증번호 발송에 실패했습니다.');
+      }
     }
   };
 
-  // 2. 재전송 핸들러 (API 호출 추가)
+  // 2. 재전송 핸들러
   const handleResend = async () => {
+    // 에러 초기화
+    setCodeError(''); 
+    
     try {
-      // API 호출
       await sendAuthCode(email);
       alert('인증번호가 재전송되었습니다.');
       
       setTimeLeft(299);
       setAuthCode(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
-
       setTimerTrigger(prev => prev + 1);
 
     } catch (error) {
-      console.error('재전송 실패:', error);
-      alert('인증번호 재전송에 실패했습니다.');
+      const err = error as AxiosError<ErrorResponse>;
+      console.error('재전송 실패:', err);
+      
+      const errorCode = err.response?.data?.error?.errorCode;
+      if (errorCode === 'A010') {
+         alert('인증 요청 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.');
+      } else {
+         alert('인증번호 재전송에 실패했습니다.');
+      }
     }
   };
 
   const handleCodeChange = (index: number, value: string) => {
+    setCodeError(''); //  입력 시 에러 메시지 초기화
     const sanitizedValue = value.replace(/[^0-9]/g, '');
     if (sanitizedValue.length > 1) return;
 
@@ -108,26 +140,30 @@ const Step1Email = ({ onNext }: Props) => {
 
   // 3. 인증번호 확인 API 호출
   const handleVerify = async () => {
-    // 시간이 0이면 동작 안 함 (버튼도 비활성화되지만 방어 코드 추가)
+    setCodeError(''); // 에러 초기화
     if (timeLeft === 0) return;
 
     try {
       const codeString = authCode.join('');
-      
-      // API 호출
       await verifyAuthCode(email, codeString);
       setShowModal(true);
     } catch (error) {
-      const err = error as AxiosError;
+      const err = error as AxiosError<ErrorResponse>;
       console.error('인증 실패:', err);
-      alert('인증번호가 일치하지 않습니다.');
+      
+      const errorCode = err.response?.data?.error?.errorCode;
+      
+      //  인증 실패 에러 처리
+      if (errorCode === 'A002') {
+        setCodeError('인증번호가 올바르지 않습니다.');
+      } else {
+        alert('인증에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   };
 
-  // 4. 모달 확인 클릭 시 부모에게 이메일 전달
   const handleModalConfirm = () => {
     setShowModal(false);
-    // 부모 컴포넌트로 이메일 전달!
     onNext(email);
   };
 
@@ -149,19 +185,33 @@ const Step1Email = ({ onNext }: Props) => {
         {view === 'email' ? (
           /* --- 이메일 입력 화면 --- */
           <>
-            <input
-              type="email"
-              placeholder="이메일 아이디"
+            <div>
+              <input
+                type="email"
+                placeholder="이메일 아이디"
               aria-label="이메일"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
-                ${isEmailValid 
-                  ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600' 
-                  : 'border-gray-200 focus:border-primary-600'
-                }`}
-            />
-            {/* handleSendCode 연결 */}
+                value={email}
+                onChange={(e) => {
+                    setEmail(e.target.value);
+                    if(emailError) setEmailError('');
+                }}
+                //  에러 있으면 빨간 테두리
+                className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
+                  ${emailError 
+                    ? 'border-red-500 bg-red-50 focus:border-red-500' // 에러 상태
+                    : isEmailValid 
+                      ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600' 
+                      : 'border-gray-200 focus:border-primary-600'
+                  }`}
+              />
+              {/*  이메일 에러 메시지 */}
+              {emailError && (
+                <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
+                  {emailError}
+                </p>
+              )}
+            </div>
+
             <button
               onClick={handleSendCode}
               disabled={!isEmailValid}
@@ -173,8 +223,8 @@ const Step1Email = ({ onNext }: Props) => {
             </button>
           </>
         ) : (
+          /* --- 인증번호 입력 화면 --- */
           <>
-            {/* 인증번호 입력 화면 */}
             <div>
               <div className="flex justify-between gap-2 mb-2">
                 {authCode.map((num, idx) => (
@@ -189,34 +239,42 @@ const Step1Email = ({ onNext }: Props) => {
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     disabled={timeLeft === 0}
+                    //  에러 있으면 빨간 테두리
                     className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none transition-all shadow-sm
                       ${timeLeft === 0 
                         ? 'bg-gray-100 border-gray-200 text-gray-400' 
-                        : num 
-                          ? 'border-primary-brown-300 bg-primary-brown-300 text-white' 
-                          : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
+                        : codeError 
+                          ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500' // 에러 상태
+                          : num 
+                            ? 'border-primary-brown-300 bg-primary-brown-300 text-white' 
+                            : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
                       }`}
                   />
                 ))}
               </div>
 
-              {/* 타이머 */}
+              {/* 우측 하단 타이머 표시 */}
               <div className="text-right">
                 <span className={`text-sm font-medium ${timeLeft <= 10 ? 'text-error' : 'text-primary-brown-300'}`}>
                   {timeLeft > 0 ? formatTime(timeLeft) : '00:00'}
                 </span>
               </div>
+              
+              {/*  인증번호 에러 메시지 (타이머 아래, 안내문구 위에 배치) */}
+              {codeError && (
+                 <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">
+                   {codeError}
+                 </p>
+              )}
             </div>
 
             {/* 가운데 안내 텍스트 영역 */}
             <div className="text-center py-4">
                 {timeLeft > 0 ? (
-                    // 시간이 남았을 때: 텍스트 표시
                     <p className="text-sm text-black font-medium">
                         {formatTime(timeLeft)} 후 재전송 가능
                     </p>
                 ) : (
-                    // 시간이 끝났을 때: 재전송 버튼(링크 스타일) 표시
                     <button 
                         onClick={handleResend}
                         className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors"
@@ -226,14 +284,13 @@ const Step1Email = ({ onNext }: Props) => {
                 )}
             </div>
 
-            {/* 시간 끝나면 비활성화 */}
             <button
               onClick={handleVerify}
               disabled={timeLeft === 0 || !isCodeValid}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
                 (timeLeft > 0 && isCodeValid)
-                  ? 'bg-primary-600 hover:bg-primary-500' // 활성 상태
-                  : 'bg-gray-200 cursor-not-allowed'      // 비활성 상태
+                  ? 'bg-primary-600 hover:bg-primary-500'
+                  : 'bg-gray-200 cursor-not-allowed'
               }`}
             >
               확인
@@ -242,7 +299,7 @@ const Step1Email = ({ onNext }: Props) => {
         )}
       </div>
 
-      {/* 3. 모달 */}
+      {/*  모달 */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="flex w-full max-w-[300px] flex-col items-center rounded-2xl bg-white p-8 text-center shadow-2xl animate-pop-up">

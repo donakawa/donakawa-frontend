@@ -5,6 +5,14 @@ import { HiCheck } from 'react-icons/hi';
 import { register, login } from '../../../api/auth';
 import { AxiosError } from 'axios';
 
+// 에러 타입 정의
+interface ErrorResponse {
+  error: {
+    errorCode: string;
+    reason: string;
+  };
+}
+
 interface Props {
   formData: {
     email: string;
@@ -43,64 +51,50 @@ const Step4Goal = ({ formData }: Props) => {
     setSelectedGoal(null);
   };
 
-  // 1. [수정] '다음' 버튼 클릭 -> 회원가입 + 자동 로그인
+  // 1. '다음' 버튼 클릭 -> 회원가입 + 자동 로그인
   const handleNext = async () => {
     if (!selectedGoal) return;
+    await processRegistration(selectedGoal);
+  };
 
+  // 2. '건너뛰기' 클릭 -> 회원가입 + 자동 로그인
+  const handleSkip = async () => {
+    await processRegistration('목표 없음');
+  };
+
+  // 3. 회원가입 및 로그인 프로세스
+  const processRegistration = async (goal: string) => {
     try {
       // 1) 보낼 데이터 합치기
       const finalData = {
         ...formData,
-        goal: selectedGoal,
+        goal: goal,
       };
 
       // 2) 회원가입 API 호출
       await register(finalData);
 
-      // 회원가입 성공 시 바로 로그인 API 호출 (토큰 받기)
-      const loginData = await login({ email: formData.email, password: formData.password });
+      // 3) 회원가입 성공 시 바로 로그인 API 호출
+      await login({ email: formData.email, password: formData.password });
       
-      //  토큰 저장
-      localStorage.setItem('accessToken', loginData.accessToken);
-      if (loginData.refreshToken) {
-        localStorage.setItem('refreshToken', loginData.refreshToken);
-      }
-
-      // 3) 완료 화면으로 전환
+      // 4) 완료 화면으로 전환
       setIsCompleteScreen(true);
 
     } catch (error) {
-      const err = error as AxiosError;
+      const err = error as AxiosError<ErrorResponse>;
       console.error('진행 실패:', err);
-      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
-    }
-  };
-
-  // 2. [수정] '건너뛰기' 클릭 -> 회원가입 + 자동 로그인
-  const handleSkip = async () => {
-    try {
-      const finalData = {
-        ...formData,
-        goal: '목표 없음',
-      };
-
-      // 1) 회원가입 API 호출
-      await register(finalData);
-
-      //  회원가입 성공 시 바로 로그인 API 호출
-      const loginData = await login({ email: formData.email, password: formData.password });
       
-      //  토큰 저장
-      localStorage.setItem('accessToken', loginData.accessToken);
-      if (loginData.refreshToken) {
-        localStorage.setItem('refreshToken', loginData.refreshToken);
+      const errorCode = err.response?.data?.error?.errorCode;
+      const errorReason = err.response?.data?.error?.reason;
+
+      // 에러 코드별 처리 (혹시 모를 예외 상황)
+      if (errorCode === 'U004') {
+        alert('목표는 10자 이하만 가능합니다.');
+      } else if (errorCode === 'U009') { // 닉네임 중복 (Step3에서 막았지만 혹시나)
+        alert('이미 사용 중인 닉네임입니다. 이전 단계로 돌아가 확인해주세요.');
+      } else {
+        alert(errorReason || '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
-
-      setIsCompleteScreen(true);
-
-    } catch (error) {
-      console.error('진행 실패:', error);
-      alert('회원가입 중 오류가 발생했습니다.');
     }
   };
 
@@ -111,7 +105,8 @@ const Step4Goal = ({ formData }: Props) => {
 
   // 시작하기 버튼 클릭 -> 홈 화면(로그인 상태) 이동
   const handleStart = () => {
-    navigate('/home'); 
+    // replace: true를 써서 뒤로가기 시 가입 완료 화면이 안 나오게 함
+    navigate('/home', { replace: true }); 
   };
 
   // --- 화면 2: 가입 완료 화면 ---
