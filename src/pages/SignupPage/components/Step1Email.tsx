@@ -22,7 +22,7 @@ const Step1Email = ({ onNext }: Props) => {
   // 타이머 로직
   useEffect(() => {
     if (view !== 'code') return;
-
+    
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
@@ -32,6 +32,7 @@ const Step1Email = ({ onNext }: Props) => {
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(timer);
     
     // 'view'가 바뀌거나 'timerTrigger'가 바뀔 때만 타이머를 새로 만듦
@@ -107,10 +108,8 @@ const Step1Email = ({ onNext }: Props) => {
 
   // 3. 인증번호 확인 API 호출
   const handleVerify = async () => {
-    if (timeLeft === 0) {
-      alert('인증 시간이 만료되었습니다. 재전송 버튼을 눌러주세요.');
-      return;
-    }
+    // 시간이 0이면 동작 안 함 (버튼도 비활성화되지만 방어 코드 추가)
+    if (timeLeft === 0) return;
 
     try {
       const codeString = authCode.join('');
@@ -204,30 +203,41 @@ const Step1Email = ({ onNext }: Props) => {
               {/* 타이머 */}
               <div className="text-right">
                 <span className={`text-sm font-medium ${timeLeft <= 10 ? 'text-error' : 'text-primary-brown-300'}`}>
-                  {timeLeft > 0 ? formatTime(timeLeft) : '시간 만료'}
+                  {timeLeft > 0 ? formatTime(timeLeft) : '00:00'}
                 </span>
               </div>
             </div>
 
-            {/* 버튼: 확인 or 재전송 */}
-            {timeLeft > 0 ? (
-              <button
-                onClick={handleVerify} // API 검증 함수 연결
-                disabled={!isCodeValid}
-                className={`mt-6 w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                  isCodeValid ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
-                }`}
-              >
-                확인
-              </button>
-            ) : (
-              <button
-                onClick={handleResend} // API 재전송 함수 연결
-                className="mt-6 w-full rounded-xl py-4 text-sm font-bold text-white bg-primary-600 hover:bg-primary-500 transition-colors"
-              >
-                인증번호 재전송
-              </button>
-            )}
+            {/* 가운데 안내 텍스트 영역 */}
+            <div className="text-center py-4">
+                {timeLeft > 0 ? (
+                    // 시간이 남았을 때: 텍스트 표시
+                    <p className="text-sm text-black font-medium">
+                        {formatTime(timeLeft)} 후 재전송 가능
+                    </p>
+                ) : (
+                    // 시간이 끝났을 때: 재전송 버튼(링크 스타일) 표시
+                    <button 
+                        onClick={handleResend}
+                        className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors"
+                    >
+                        인증번호 재전송
+                    </button>
+                )}
+            </div>
+
+            {/* 시간 끝나면 비활성화 */}
+            <button
+              onClick={handleVerify}
+              disabled={timeLeft === 0 || !isCodeValid}
+              className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
+                (timeLeft > 0 && isCodeValid)
+                  ? 'bg-primary-600 hover:bg-primary-500' // 활성 상태
+                  : 'bg-gray-200 cursor-not-allowed'      // 비활성 상태
+              }`}
+            >
+              확인
+            </button>
           </>
         )}
       </div>
