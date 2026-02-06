@@ -274,7 +274,7 @@ export default function CalendarPanel() {
                 <div
                   className={cn(
                     'w-[28px] h-[28px] rounded-full grid place-items-center font-normal',
-                    selected ? 'bg-primary-500 text-white' : 'bg-transparent text-gray-600',
+                    selected ? 'bg-primary-600 text-white' : 'bg-transparent text-gray-600',
                   )}>
                   {cell.dayNumber}
                 </div>
