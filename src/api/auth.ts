@@ -34,12 +34,18 @@ interface UserResponse {
   provider: string;
 }
 
+// 비밀번호 재설정 요청 타입
+interface ResetPasswordRequest {
+  email: string;
+  newPassword: string;
+}
+
 // --- [API 함수] ---
 
 //  API 응답을 검사해서 FAILED면 에러를 던지는 함수
 const handleResponse = <T>(response: AxiosResponse<CommonResponse<T>>): T => {
   if (response.data.resultType === 'FAILED') {
-    throw { response }; 
+    throw { response };
   }
   return response.data.data;
 };
@@ -50,15 +56,15 @@ export const login = async (data: LoginRequest) => {
   return handleResponse(response);
 };
 
-// 2. 이메일 인증번호 발송
-export const sendAuthCode = async (email: string) => {
-  const response = await instance.post<CommonResponse<null>>('/auth/email/send-code', { email, type: 'REGISTER' });
+// 2. 이메일 인증번호 발송 (type 매개변수 추가, 기본값은 'REGISTER')
+export const sendAuthCode = async (email: string, type: 'REGISTER' | 'RESET_PASSWORD' = 'REGISTER') => {
+  const response = await instance.post<CommonResponse<null>>('/auth/email/send-code', { email, type });
   return handleResponse(response);
 };
 
-// 3. 이메일 인증번호 검증
-export const verifyAuthCode = async (email: string, code: string) => {
-  const response = await instance.post<CommonResponse<null>>('/auth/email/verify-code', { email, code, type: 'REGISTER' });
+// 3. 이메일 인증번호 검증 (type 매개변수 추가, 기본값은 'REGISTER')
+export const verifyAuthCode = async (email: string, code: string, type: 'REGISTER' | 'RESET_PASSWORD' = 'REGISTER') => {
+  const response = await instance.post<CommonResponse<null>>('/auth/email/verify-code', { email, code, type });
   return handleResponse(response);
 };
 
@@ -75,7 +81,13 @@ export const checkNicknameDuplicate = async (nickname: string) => {
   return handleResponse(response);
 };
 
-// 7. 내 정보 조회 (구글 로그인 확인용)
+// 6. 비밀번호 재설정
+export const resetPassword = async (data: ResetPasswordRequest) => {
+  const response = await instance.post<CommonResponse<null>>('/auth/account-recovery/password', data);
+  return handleResponse(response);
+};
+
+// 7. 내 정보 조회
 export const getMe = async () => {
   const response = await instance.get<CommonResponse<UserResponse>>('/auth/me');
   return handleResponse(response);

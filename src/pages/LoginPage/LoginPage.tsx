@@ -175,11 +175,14 @@ const LoginPage = () => {
           )}
         </div>
 
-        {/* 아이디/비밀번호 찾기 */}
+        {/* 비밀번호 재설정 */}
         <div className="flex justify-end">
-          <button type="button" className="text-xs text-gray-400 hover:underline">
-            아이디/ 비밀번호 찾기
-          </button>
+          <Link 
+            to="/find-password" 
+            className="text-xs text-gray-400 hover:underline"
+          >
+            비밀번호 재설정
+          </Link>
         </div>
 
         {/* 로그인 버튼 */}
