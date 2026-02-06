@@ -51,7 +51,6 @@ function isConsumptionReason(v: string): v is ConsumptionReason {
   return v === '필요해서' || v === '세일 중' || v === '품절임박';
 }
 
-/* -------------------- Calendar (기존) -------------------- */
 type CalendarSuccessResponse = {
   resultType: 'SUCCESS';
   error: null;
