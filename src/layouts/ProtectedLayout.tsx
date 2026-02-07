@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
+import { getMe } from '@/api/auth';
 
 import House from '@/assets/house.svg?react';
 import Cart from '@/assets/cart.svg?react';
@@ -13,14 +14,50 @@ export interface HeaderControlContext {
 }
 
 export default function ProtectedLayout() {
-  const isAuthenticated = true;
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
+  const [isLoading, setIsLoading] = useState(true);
 
   // 뒤로가기 함수 & 오른쪽 버튼 액션 관리 상태
   const [customBack, setCustomBack] = useState<(() => void) | null>(null);
   const [rightAction, setRightAction] = useState<{ label: string; onClick: () => void } | null>(null);
+
+  //  페이지 진입 시 로그인 검사 (안전장치 추가)
+  useEffect(() => {
+    let isMounted = true; // 1. 컴포넌트가 살아있는지 확인하는 플래그
+
+    const checkAuth = async () => {
+      try {
+        // 쿠키 들고 백엔드에 확인
+        await getMe();
+        
+        // (성공 시 별도 처리 없음, finally에서 로딩 끔)
+      } catch (error) {
+        // 2. 실패 시 로그인 페이지로 이동
+        console.error('인증 실패:', error);
+        alert('로그인이 필요한 서비스입니다.');
+        
+        // 컴포넌트가 살아있을 때만 페이지 이동 시도
+        if (isMounted) {
+          navigate('/login', { replace: true });
+        }
+      } finally {
+        // 3. 성공하든 실패하든, 컴포넌트가 살아있다면 로딩 상태 끄기
+        // (봇이 지적한 "무한 로딩" 방지)
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    checkAuth();
+
+    // 4. 클린업 함수: 페이지를 나가면 isMounted를 false로 변경
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
 
   // 페이지 이동 시 상태 초기화
   const handleSetCustomBack = useCallback((fn: (() => void) | null) => {
@@ -46,8 +83,6 @@ export default function ProtectedLayout() {
   // 헤더가 숨겨져야 하는 곳
   const hideHeader = ['/home', '/wishlist', '/report', '/mypage'].some((p) => path === p);
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-
   // 네비바 아이콘 색상 결정
   const getNavColor = (targetPath: string) => {
     if (targetPath === '/home') {
@@ -58,6 +93,15 @@ export default function ProtectedLayout() {
 
     return location.pathname.startsWith(targetPath) ? 'text-primary-600' : 'text-gray-600';
   };
+
+  // 검사 중일 때는 로딩 화면 (혹은 빈 화면) 보여주기
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen">

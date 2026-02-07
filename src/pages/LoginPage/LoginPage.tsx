@@ -1,3 +1,223 @@
-export default function LoginPage() {
-  return <div>Login 페이지입니다.</div>;
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FcGoogle } from 'react-icons/fc';
+import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
+import logo from '../../assets/seed.svg';
+import { login } from '../../api/auth';
+import { AxiosError } from 'axios';
+
+// 백엔드 에러 응답 타입 정의 (API 명세서 기준)
+interface ErrorResponse {
+  error: {
+    errorCode: string;
+    reason: string;
+  };
 }
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // 에러 메시지 상태 관리
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // 구글 로그인 토큰 처리
+  useEffect(() => {
+    // 1. 주소창의 쿼리 파라미터(?accessToken=...)를 가져옴
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+
+    // 2. 토큰이 있다면 로그인 처리
+    if (accessToken) {
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+
+      // 3. 홈으로 이동 (replace: true는 뒤로가기 했을 때 로그인 페이지로 다시 안 오게 함)
+      navigate('/home', { replace: true });
+    }
+  }, [location, navigate]);
+
+  // 유효성 검사
+  const isEmailValid = email.length > 0;
+  const isPasswordValid = password.length > 0;
+  const isFormValid = isEmailValid && isPasswordValid;
+
+  // 3. 로그인 핸들러: 에러 코드 분기 처리
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // 요청 전 에러 초기화
+    setEmailError('');
+    setPasswordError('');
+
+    if (!isFormValid) return;
+
+    try {
+      // 1. API 호출
+      await login({ email, password });
+
+      // 2. 홈으로 이동
+      navigate('/home');
+
+    } catch (error) {
+      const err = error as AxiosError<ErrorResponse>;
+      console.error('로그인 실패:', err.response?.data?.error?.reason ?? err.message);
+
+      // 백엔드 에러 코드 추출
+      const errorCode = err.response?.data?.error?.errorCode;
+      const errorReason = err.response?.data?.error?.reason;
+
+      //  에러 코드에 따른 메시지 매핑
+      if (errorCode === 'U001') {
+        // U001: 존재하지 않는 계정
+        setEmailError('존재하지 않는 계정입니다.');
+      } else if (errorCode === 'U002') {
+        // U002: 비밀번호 불일치 (또는 소셜 로그인 계정)
+        setPasswordError('비밀번호가 일치하지 않습니다.');
+      } else {
+        // 그 외 에러 (서버 오류 등)
+        alert(errorReason || '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
+    }
+  };
+
+  // 4. 구글 로그인 버튼 로직
+  const handleGoogleLogin = () => {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-login`;
+  };
+
+  //  입력창 스타일: 에러 시 빨간 테두리
+  const getInputClass = (isValid: boolean, hasError: boolean) => {
+    const baseClass =
+      'w-full rounded-lg border px-4 py-3.5 text-sm outline-none placeholder:text-gray-400 transition-colors';
+    
+    // 1순위: 에러 있음 (빨간색)
+    if (hasError) {
+      return `${baseClass} border-red-500 bg-red-50 focus:border-red-500`;
+    }
+    // 2순위: 유효함 (초록색)
+    if (isValid) {
+      return `${baseClass} border-primary-600 bg-primary-50 focus:border-primary-600`;
+    }
+    // 3순위: 기본 (회색)
+    return `${baseClass} border-gray-200 focus:border-primary-600`;
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-24">
+      {/* 1. 로고 */}
+      <div className="mb-12 flex items-center justify-center">
+        <img src={logo} alt="donakawa logo" className="w-8" />
+        <h1 className="font-['Galmuri11'] text-[27px] font-bold text-primary-600 pt-2">onakawa</h1>
+      </div>
+
+      {/* 2. 로그인 폼 */}
+      <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
+        
+        {/* 이메일 입력 */}
+        <div>
+          <input
+            type="email"
+            placeholder="이메일"
+            aria-label="이메일"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailError) setEmailError(''); // 타이핑 시작하면 에러 삭제 (UX 향상)
+            }}
+            className={getInputClass(isEmailValid, !!emailError)}
+          />
+          {/* 🔥 이메일 에러 메시지 */}
+          {emailError && (
+            <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
+              {emailError}
+            </p>
+          )}
+        </div>
+
+        {/* 비밀번호 입력 */}
+        <div>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="비밀번호"
+            aria-label="비밀번호"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) setPasswordError(''); // 타이핑 시작하면 에러 삭제
+              }}
+              className={`${getInputClass(isPasswordValid, !!passwordError)} pr-12`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+            </button>
+          </div>
+          {/* 비밀번호 에러 메시지 */}
+          {passwordError && (
+            <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
+              {passwordError}
+            </p>
+          )}
+        </div>
+
+        {/* 비밀번호 재설정 */}
+        <div className="flex justify-end">
+          <Link 
+            to="/find-password" 
+            className="text-xs text-gray-400 hover:underline"
+          >
+            비밀번호 재설정
+          </Link>
+        </div>
+
+        {/* 로그인 버튼 */}
+        <button
+          type="submit"
+          disabled={!isFormValid}
+          className={`mt-4 w-full rounded-lg py-3.5 font-bold text-white transition-colors ${
+            isFormValid ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
+          }`}
+        >
+          로그인
+        </button>
+      </form>
+
+      {/* 3. 소셜 로그인 및 회원가입 */}
+      <div className="mt-8 w-full max-w-sm space-y-4">
+        {/* 4. 구글 로그인 */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium transition-colors hover:bg-gray-50"
+        >
+          <FcGoogle size={20} />
+          구글 로그인
+        </button>
+
+        {/* 5. 회원가입 링크 */}
+        <div className="text-center">
+          <Link to="/signup" className="text-sm font-medium text-primary-brown-300 hover:underline">
+            회원가입
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;
