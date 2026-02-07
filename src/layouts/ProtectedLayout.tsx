@@ -23,24 +23,40 @@ export default function ProtectedLayout() {
   const [customBack, setCustomBack] = useState<(() => void) | null>(null);
   const [rightAction, setRightAction] = useState<{ label: string; onClick: () => void } | null>(null);
 
-  //  페이지 진입 시 로그인 검사
+  //  페이지 진입 시 로그인 검사 (안전장치 추가)
   useEffect(() => {
+    let isMounted = true; // 1. 컴포넌트가 살아있는지 확인하는 플래그
+
     const checkAuth = async () => {
       try {
-        // 1. 쿠키 들고 백엔드에 노크 (나 누구야?)
+        // 쿠키 들고 백엔드에 확인
         await getMe();
         
-        // 2. 성공하면 로딩 끝! 화면 보여줌
-        setIsLoading(false);
+        // (성공 시 별도 처리 없음, finally에서 로딩 끔)
       } catch (error) {
-        // 3. 실패하면 로그인 페이지로 쫓아냄
+        // 2. 실패 시 로그인 페이지로 이동
         console.error('인증 실패:', error);
         alert('로그인이 필요한 서비스입니다.');
-        navigate('/login', { replace: true });
+        
+        // 컴포넌트가 살아있을 때만 페이지 이동 시도
+        if (isMounted) {
+          navigate('/login', { replace: true });
+        }
+      } finally {
+        // 3. 성공하든 실패하든, 컴포넌트가 살아있다면 로딩 상태 끄기
+        // (봇이 지적한 "무한 로딩" 방지)
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     checkAuth();
+
+    // 4. 클린업 함수: 페이지를 나가면 isMounted를 false로 변경
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   // 페이지 이동 시 상태 초기화
