@@ -69,7 +69,7 @@ const LoginPage = () => {
 
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
-      console.error('로그인 실패:', err);
+      console.error('로그인 실패:', err.response?.data?.error?.reason ?? err.message);
 
       // 백엔드 에러 코드 추출
       const errorCode = err.response?.data?.error?.errorCode;

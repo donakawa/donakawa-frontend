@@ -25,7 +25,7 @@ const GoogleCallbackPage = () => {
         navigate('/home', { replace: true });
         
       } catch (error) {
-        console.error('구글 로그인 실패:', error);
+        console.error('구글 로그인 실패:', error instanceof Error ? error.message : 'Unknown error');
         alert('구글 로그인에 실패했습니다. 다시 시도해 주세요.');
         navigate('/login', { replace: true });
       }
