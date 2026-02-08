@@ -7,6 +7,7 @@ import ProtectedLayout from '@/layouts/ProtectedLayout';
 import SignupPage from '@/pages/SignupPage/SignupPage';
 import LoginPage from '@/pages/LoginPage/LoginPage';
 import HomePage from '@/pages/HomePage/HomePage';
+import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
 import AIChatPage from '@/pages/HomePage/AIChatPage';
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
 import ReportPage from '@/pages/ReportPage/ReportPage';
@@ -39,11 +40,17 @@ const publicChildren: RouteObject[] = [
 ];
 
 const protectedChildren: RouteObject[] = [
-  { path: 'home', element: <HomePage /> },
-  { path: 'budget/setting', element: <BudgetSettingPage /> },
-  { path: 'budget/result', element: <BudgetSummaryPage /> },
-  { path: 'consumption/:type', element: <ConsumptionPage /> },
-  { path: 'ai-chat', element: <AIChatPage /> },
+  {
+    path: 'home',
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: 'items/select', element: <ItemSelectionPage /> },
+      { path: 'ai-chat', element: <AIChatPage /> },
+      { path: 'budget/setting', element: <BudgetSettingPage /> },
+      { path: 'budget/result', element: <BudgetSummaryPage /> },
+      { path: 'consumption/:type', element: <ConsumptionPage /> },
+    ],
+  },
   { path: 'wishlist', element: <WishlistPage /> },
   {
     path: 'report',

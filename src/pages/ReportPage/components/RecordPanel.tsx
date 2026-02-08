@@ -1,187 +1,45 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import StarIcon from '@/assets/star_line.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import RightArrow from '@/assets/arrow_right.svg';
 
-import { axiosInstance } from '@/apis/axios';
-
 import type {
   ConsumptionReason,
-  MonthlyReport,
-  Star,
   DayTime,
+  DistributionMode,
+  Star,
   TimeDistribution,
   Weekday,
   WeekdayDistribution,
-  DistributionMode,
 } from '@/types/ReportPage/report';
+
+import { clampPercent, formatWon } from '@/utils/ReportPage/report';
+
+import { useMonthlyReport } from '@/pages/ReportPage/hooks/useMonthlyReport';
+import { usePurchaseAnalytics } from '@/pages/ReportPage/hooks/usePurchaseAnalytics';
+import { useNoReviewItems } from '@/pages/ReportPage/hooks/useNoReviewItems';
+import type { ReviewItemCard } from '@/pages/ReportPage/hooks/useNoReviewItems';
 
 const WEEKDAYS: Weekday[] = ['월', '화', '수', '목', '금', '토', '일'];
 const TIMES: DayTime[] = ['아침', '낮', '저녁', '새벽'];
 
-type ReviewStatus = 'ALL' | 'WRITTEN' | 'NOT_WRITTEN';
-
-type ReportSuccessResponse = {
-  resultType: 'SUCCESS';
-  error: null;
-  data: {
-    period: { from: string; to: string; days: number };
-    summary: {
-      totalSpent: number;
-      savedAmount: number;
-      averageSatisfaction: number;
-    };
-    topReasons: Array<{
-      reason: string;
-      count: number;
-      averageSatisfaction: number;
-    }>;
-  };
-};
-
-type ReportFailResponse = {
-  resultType: 'FAIL';
-  error: { errorCode: string; reason: string; data?: unknown };
-  success: null;
-};
-
-type ReportResponse = ReportSuccessResponse | ReportFailResponse;
-
-function toStar(n: number): Star {
-  const rounded = Math.round(n);
-  const clamped = Math.max(1, Math.min(5, rounded));
-  return clamped as Star;
-}
-
-function isConsumptionReason(v: string): v is ConsumptionReason {
-  return v === '필요해서' || v === '세일 중' || v === '품절임박';
-}
-
-type AnalyticsMetricParam = 'day' | 'time';
-type AnalyticsMetric = 'DAY' | 'TIME';
-
-type AnalyticsSuccessResponse = {
-  resultType: 'SUCCESS';
-  error: null;
-  data: {
-    metric: AnalyticsMetric;
-    totalCount: number;
-    statistics: Array<{
-      label: string;
-      displayName: string;
-      count: number;
-      percentage: number;
-    }>;
-  };
-};
-
-type AnalyticsFailResponse = {
-  resultType: 'FAIL';
-  error: { errorCode: string; reason: string; data?: unknown };
-  success: null;
-};
-
-type AnalyticsResponse = AnalyticsSuccessResponse | AnalyticsFailResponse;
-
-function emptyTimeDist(): TimeDistribution {
-  return { 아침: 0, 낮: 0, 저녁: 0, 새벽: 0 };
-}
-
-function emptyWeekdayDist(): WeekdayDistribution {
-  return { 월: 0, 화: 0, 수: 0, 목: 0, 금: 0, 토: 0, 일: 0 };
-}
-
-function toDayTimeFromAnalytics(label: string, displayName: string): DayTime {
-  switch (label) {
-    case 'MORNING':
-      return '아침';
-    case 'AFTERNOON':
-      return '낮';
-    case 'EVENING':
-      return '저녁';
-    case 'NIGHT':
-      return '새벽';
-    default:
-      if (displayName === '아침' || displayName === '낮' || displayName === '저녁' || displayName === '새벽')
-        return displayName;
-      return '낮';
-  }
-}
-
-function toWeekdayFromAnalytics(label: string, displayName: string): Weekday {
-  switch (label) {
-    case 'MON':
-      return '월';
-    case 'TUE':
-      return '화';
-    case 'WED':
-      return '수';
-    case 'THU':
-      return '목';
-    case 'FRI':
-      return '금';
-    case 'SAT':
-      return '토';
-    case 'SUN':
-      return '일';
-    default:
-      if (
-        displayName === '월' ||
-        displayName === '화' ||
-        displayName === '수' ||
-        displayName === '목' ||
-        displayName === '금' ||
-        displayName === '토' ||
-        displayName === '일'
-      )
-        return displayName;
-      return '월';
-  }
-}
-
-type HistoryItemsSuccessResponse = {
-  resultType: 'SUCCESS';
-  error: null;
-  data: {
-    items: Array<{
-      reviewId?: number;
-      itemId: number;
-      itemName: string;
-      price: number;
-      imageUrl: string;
-      purchaseReasons: string[];
-      purchasedAt: string;
-    }>;
-  };
-};
-
-type HistoryItemsFailResponse = {
-  resultType: 'FAIL';
-  error: {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
-  success: null;
-};
-
-type HistoryItemsResponse = HistoryItemsSuccessResponse | HistoryItemsFailResponse;
-
-type ReviewItemCard = {
-  reviewId?: number;
-  itemId: number;
-  itemName: string;
-  price: number;
-  imageUrl: string;
-  purchaseReasons: string[];
-  purchasedAt: string;
-  dayLabel: string;
-};
-
 export default function RecordView() {
   const navigate = useNavigate();
+
+  const { monthlyReport, loading: monthlyLoading, error: monthlyError } = useMonthlyReport();
+
+  const {
+    distMode,
+    setDistMode,
+    timeDistribution,
+    weekdayDistribution,
+    loading: analyticsLoading,
+    error: analyticsError,
+  } = usePurchaseAnalytics();
+
+  const { items: reviewItems, loading: reviewLoading, error: reviewError } = useNoReviewItems();
 
   const goToWritePage = () => {
     navigate(`/report/review`);
@@ -190,206 +48,6 @@ export default function RecordView() {
   const goToGiveupPage = () => {
     navigate('/report/giveup');
   };
-
-  const [distMode, setDistMode] = useState<DistributionMode>('weekday');
-
-  const [monthlyReport, setMonthlyReport] = useState<MonthlyReport | null>(null);
-  const [monthlyLoading, setMonthlyLoading] = useState<boolean>(false);
-  const [monthlyError, setMonthlyError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-
-    const fetchMonthly = async () => {
-      try {
-        setMonthlyLoading(true);
-        setMonthlyError(null);
-
-        const res = await axiosInstance.get<ReportResponse>('/histories/report');
-        const body = res.data;
-
-        if (body.resultType !== 'SUCCESS' || !body.data) {
-          const msg = body.resultType === 'FAIL' ? body.error.reason : 'Unknown error';
-          throw new Error(msg);
-        }
-
-        const { period, summary, topReasons } = body.data;
-
-        const reasons: ConsumptionReason[] = (topReasons ?? [])
-          .map((r) => r.reason)
-          .filter((r): r is ConsumptionReason => isConsumptionReason(r));
-
-        const baseStar = toStar(summary.averageSatisfaction);
-
-        const reasonSatisfaction: Record<ConsumptionReason, Star> = {
-          필요해서: baseStar,
-          '세일 중': baseStar,
-          품절임박: baseStar,
-        };
-
-        (topReasons ?? []).forEach((r) => {
-          if (isConsumptionReason(r.reason)) {
-            reasonSatisfaction[r.reason] = toStar(r.averageSatisfaction);
-          }
-        });
-
-        const insight =
-          reasons.length > 0
-            ? `최근 한 달 동안 "${reasons.join(', ')}" 등의 이유로 소비가 많았어요. 구매 전 한 번만 더 고민해보면 지갑을 더 지킬 수 있어요!`
-            : '최근 한 달 소비 패턴을 점검해보며, 구매 전 “정말 필요한가?”를 한 번 더 체크해보세요.';
-
-        const mapped: MonthlyReport = {
-          period,
-          totalWon: summary.totalSpent,
-          savedWon: summary.savedAmount,
-          reasons,
-          averageSatisfaction: baseStar,
-          reasonSatisfaction,
-          insight,
-        };
-
-        if (!alive) return;
-        setMonthlyReport(mapped);
-      } catch (e) {
-        if (!alive) return;
-        const msg = e instanceof Error ? e.message : '리포트를 불러오지 못했어요.';
-        setMonthlyError(msg);
-        setMonthlyReport(null);
-      } finally {
-        if (!alive) return;
-        setMonthlyLoading(false);
-      }
-    };
-
-    fetchMonthly();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const [timeDistribution, setTimeDistribution] = useState<TimeDistribution>(emptyTimeDist());
-  const [weekdayDistribution, setWeekdayDistribution] = useState<WeekdayDistribution>(emptyWeekdayDist());
-  const [analyticsLoading, setAnalyticsLoading] = useState<boolean>(false);
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-
-    const fetchAnalytics = async () => {
-      try {
-        setAnalyticsLoading(true);
-        setAnalyticsError(null);
-
-        const [timeRes, dayRes] = await Promise.all([
-          axiosInstance.get<AnalyticsResponse>('/histories/analytics', {
-            params: { metric: 'time' satisfies AnalyticsMetricParam },
-          }),
-          axiosInstance.get<AnalyticsResponse>('/histories/analytics', {
-            params: { metric: 'day' satisfies AnalyticsMetricParam },
-          }),
-        ]);
-
-        const timeBody = timeRes.data;
-        const dayBody = dayRes.data;
-
-        if (timeBody.resultType !== 'SUCCESS' || !timeBody.data) {
-          const msg = timeBody.resultType === 'FAIL' ? timeBody.error.reason : 'Unknown error';
-          throw new Error(msg);
-        }
-        if (dayBody.resultType !== 'SUCCESS' || !dayBody.data) {
-          const msg = dayBody.resultType === 'FAIL' ? dayBody.error.reason : 'Unknown error';
-          throw new Error(msg);
-        }
-
-        const nextTime = emptyTimeDist();
-        (timeBody.data.statistics ?? []).forEach((s) => {
-          const key = toDayTimeFromAnalytics(s.label, s.displayName);
-          nextTime[key] = typeof s.percentage === 'number' ? s.percentage : 0;
-        });
-
-        const nextDay = emptyWeekdayDist();
-        (dayBody.data.statistics ?? []).forEach((s) => {
-          const key = toWeekdayFromAnalytics(s.label, s.displayName);
-          nextDay[key] = typeof s.percentage === 'number' ? s.percentage : 0;
-        });
-
-        if (!alive) return;
-        setTimeDistribution(nextTime);
-        setWeekdayDistribution(nextDay);
-      } catch (e) {
-        if (!alive) return;
-        const msg = e instanceof Error ? e.message : '통계를 불러오지 못했어요.';
-        setAnalyticsError(msg);
-        setTimeDistribution(emptyTimeDist());
-        setWeekdayDistribution(emptyWeekdayDist());
-      } finally {
-        if (!alive) return;
-        setAnalyticsLoading(false);
-      }
-    };
-
-    fetchAnalytics();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const [reviewItems, setReviewItems] = useState<ReviewItemCard[]>([]);
-  const [reviewLoading, setReviewLoading] = useState<boolean>(false);
-  const [reviewError, setReviewError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-
-    const fetchNoReviewItems = async () => {
-      try {
-        setReviewLoading(true);
-        setReviewError(null);
-
-        const reviewStatus: ReviewStatus = 'NOT_WRITTEN';
-
-        const res = await axiosInstance.get<HistoryItemsResponse>('/histories/items', {
-          params: { reviewStatus },
-        });
-
-        const body = res.data;
-
-        if (body.resultType !== 'SUCCESS' || !body.data) {
-          const msg = body.resultType === 'FAIL' ? body.error.reason : 'Unknown error';
-          throw new Error(msg);
-        }
-
-        const items = (body.data.items ?? []).filter((it) => it.reviewId == null);
-
-        const mapped: ReviewItemCard[] = items.map((it) => ({
-          reviewId: it.reviewId,
-          itemId: it.itemId,
-          itemName: it.itemName,
-          price: it.price,
-          imageUrl: it.imageUrl ?? '',
-          purchaseReasons: it.purchaseReasons ?? [],
-          purchasedAt: it.purchasedAt,
-          dayLabel: makeDayLabel(it.purchasedAt),
-        }));
-
-        if (!alive) return;
-        setReviewItems(mapped);
-      } catch (e) {
-        if (!alive) return;
-        const msg = e instanceof Error ? e.message : '소비 후기 목록을 불러오지 못했어요.';
-        setReviewError(msg);
-        setReviewItems([]);
-      } finally {
-        if (!alive) return;
-        setReviewLoading(false);
-      }
-    };
-
-    fetchNoReviewItems();
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   const onClickReviewItem = (item: ReviewItemCard) => {
     navigate('/report/review', {
@@ -404,7 +62,7 @@ export default function RecordView() {
     });
   };
 
-  const currentReasons = monthlyReport?.reasons ?? [];
+  const currentReasons: ConsumptionReason[] = monthlyReport?.reasons ?? [];
   const currentReasonSatisfaction = monthlyReport?.reasonSatisfaction;
 
   return (
@@ -490,7 +148,7 @@ export default function RecordView() {
                       데이터 없음
                     </div>
                   ) : (
-                    currentReasons.map((reason: ConsumptionReason) => (
+                    currentReasons.map((reason) => (
                       <div
                         key={reason}
                         className="
@@ -663,7 +321,6 @@ export default function RecordView() {
                 <div className="relative z-[1] flex items-end justify-between pr-1.5 gap-1">
                   {distMode === 'weekday' &&
                     WEEKDAYS.map((k) => <Bar key={k} label={k} value={weekdayDistribution[k]} />)}
-
                   {distMode === 'time' && TIMES.map((k) => <Bar key={k} label={k} value={timeDistribution[k]} />)}
                 </div>
               </div>
@@ -780,7 +437,7 @@ function Bar({ label, value }: { label: string; value: number }) {
             transition-[height] duration-200 ease-out
           "
           style={{
-            height: `${TimePercent(value)}%`,
+            height: `${clampPercent(value)}%`,
             background: 'var(--color-primary-600)',
           }}
         />
@@ -793,10 +450,6 @@ function Bar({ label, value }: { label: string; value: number }) {
   );
 }
 
-function formatWon(value: number): string {
-  return new Intl.NumberFormat('ko-KR').format(value);
-}
-
 function StarLine({ value }: { value: Star }) {
   return (
     <div className="inline-flex items-center gap-1" aria-hidden>
@@ -805,32 +458,4 @@ function StarLine({ value }: { value: Star }) {
       ))}
     </div>
   );
-}
-
-function TimePercent(n: number): number {
-  if (Number.isNaN(n)) return 0;
-  return Math.max(0, Math.min(100, n));
-}
-
-function makeDayLabel(purchasedAtISO: string): string {
-  const p = parseDate(purchasedAtISO);
-  if (!p) return 'Day+';
-
-  const today = new Date();
-  const start = new Date(p.y, p.m - 1, p.d);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  end.setHours(0, 0, 0, 0);
-
-  const diffMs = end.getTime() - start.getTime();
-  const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-
-  return `${diffDays} Day+`;
-}
-
-function parseDate(iso: string): { y: number; m: number; d: number } | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return null;
-  return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) };
 }
