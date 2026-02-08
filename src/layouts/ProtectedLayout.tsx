@@ -1,3 +1,4 @@
+// src/layouts/ProtectedLayout.tsx
 import React, { useCallback, useMemo, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
@@ -43,6 +44,17 @@ export default function ProtectedLayout() {
     setLayoutModal(node);
   }, []);
 
+  // ✅ 핵심: Outlet context 객체를 useMemo로 고정 (매 렌더 새 객체 생성 방지)
+  const outletContext = useMemo<HeaderControlContext>(
+    () => ({
+      setTitle: handleSetTitle,
+      setCustomBack: handleSetCustomBack,
+      setRightAction: handleSetRightAction,
+      setLayoutModal: handleSetLayoutModal,
+    }),
+    [handleSetTitle, handleSetCustomBack, handleSetRightAction, handleSetLayoutModal],
+  );
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
@@ -57,16 +69,7 @@ export default function ProtectedLayout() {
       )}
 
       <main className="flex-1 overflow-y-auto">
-        <Outlet
-          context={
-            {
-              setTitle: handleSetTitle,
-              setCustomBack: handleSetCustomBack,
-              setRightAction: handleSetRightAction,
-              setLayoutModal: handleSetLayoutModal,
-            } satisfies HeaderControlContext
-          }
-        />
+        <Outlet context={outletContext} />
       </main>
 
       <BottomNav />

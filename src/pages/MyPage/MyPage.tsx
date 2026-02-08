@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import type { ApiResponse, MeData } from '@/apis/MyPage/auth';
+import type { ApiResponse, MeData } from '@/apis/auth';
 import type { Profile } from '@/types/MyPage/mypage';
 
 import { axiosInstance } from '@/apis/axios';

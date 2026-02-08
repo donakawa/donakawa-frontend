@@ -10,6 +10,7 @@ import LoginPage from '@/pages/LoginPage/LoginPage';
 
 // 홈
 import HomePage from '@/pages/HomePage/HomePage';
+import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
 import AIChatPage from '@/pages/HomePage/AIChatPage';
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
@@ -43,6 +44,7 @@ const protectedChildren: RouteObject[] = [
     path: 'home',
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'items/select', element: <ItemSelectionPage /> },
       { path: 'ai-chat', element: <AIChatPage /> },
       { path: 'budget/setting', element: <BudgetSettingPage /> },
       { path: 'budget/result', element: <BudgetSummaryPage /> },
