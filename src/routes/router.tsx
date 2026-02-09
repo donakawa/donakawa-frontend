@@ -12,12 +12,13 @@ import ReportPage from '@/pages/ReportPage/ReportPage';
 import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
-import MyPage from '@/pages/MyPage/MyPage';
+
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
+import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -33,6 +34,7 @@ const protectedChildren: RouteObject[] = [
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
+  { path: 'item_selection', element: <ItemSelectionPage /> },
   {
     path: 'report',
     children: [

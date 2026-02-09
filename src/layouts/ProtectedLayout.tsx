@@ -31,13 +31,13 @@ export default function ProtectedLayout() {
       try {
         // 쿠키 들고 백엔드에 확인
         await getMe();
-        
+
         // (성공 시 별도 처리 없음, finally에서 로딩 끔)
       } catch (error) {
         // 2. 실패 시 로그인 페이지로 이동
         console.error('인증 실패:', error);
         alert('로그인이 필요한 서비스입니다.');
-        
+
         // 컴포넌트가 살아있을 때만 페이지 이동 시도
         if (isMounted) {
           navigate('/login', { replace: true });
@@ -74,6 +74,8 @@ export default function ProtectedLayout() {
     if (path.startsWith('/budget/result')) return '목표 예산 설정';
     if (path.startsWith('/consumption/satisfaction')) return '만족 소비';
     if (path.startsWith('/consumption/regret')) return '후회 소비';
+    if (path.startsWith('/item_selection')) return '고민템을 선택해주세요!';
+
     return '';
   };
 
