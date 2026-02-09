@@ -31,11 +31,15 @@ import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Passward';
 import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
+import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
+import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
   { path: 'signup', element: <SignupPage /> },
   { path: 'login', element: <LoginPage /> },
+  { path: 'auth/callback', element: <GoogleCallbackPage /> },
+  { path: 'find-password', element: <FindPasswordPage /> },
 ];
 
 const protectedChildren: RouteObject[] = [

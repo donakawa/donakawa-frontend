@@ -38,7 +38,7 @@ const ConsumptionPage = () => {
   }, [currentType]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-screen">
       <section className="px-[20px] pt-[43px] pb-[26px]">
         <h2 className="text-[18px] leading-[150%] font-semibold mb-[12px]">평균 구매 결정 시간: {stats.avgDays}일</h2>
         <p className="text-gray-600 text-[14px]">
@@ -46,7 +46,7 @@ const ConsumptionPage = () => {
         </p>
       </section>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <WishlistPanel editMode={false} bottomPaddingPx={0}>
           <div className="flex-1 overflow-y-auto no-scrollbar pb-[90px]">
             <WishlistGrid items={products} editMode={false} onItemClick={(id) => console.log('상품 클릭:', id)} />

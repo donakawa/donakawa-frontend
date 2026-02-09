@@ -12,7 +12,6 @@ export interface HeaderControlContext {
 }
 
 export default function ProtectedLayout() {
-  const isAuthenticated = true;
   const location = useLocation();
 
   const [title, setTitle] = useState('');
@@ -44,6 +43,15 @@ export default function ProtectedLayout() {
   }, []);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // 검사 중일 때는 로딩 화면 (혹은 빈 화면) 보여주기
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="AppContainer relative flex min-h-screen flex-col">
