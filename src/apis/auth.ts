@@ -31,7 +31,7 @@ interface UserResponse {
   nickname: string;
   goal: string;
   hasPassword: boolean;
-  provider: string;
+  providers: string[];
 }
 
 // 비밀번호 재설정 요청 타입
