@@ -1,4 +1,3 @@
-// src/apis/HomePage/aichat.ts
 import { axiosInstance } from '@/apis/axios';
 
 export type ChatItemType = 'AUTO' | 'MANUAL';
@@ -31,20 +30,17 @@ export type ChatQuestionDone = {
 
 export type ChatQuestionResponse = ChatQuestionInProgress | ChatQuestionDone;
 
-// ✅ 노션 캡처: { decision: "구매 보류", message: "..." }
 export type ChatResult = {
-  decision: string; // "구매 보류" | "구매 추천" 등
+  decision: string;
   message: string;
 };
 
-// ✅ 채팅방 목록 아이템 (GET /chats)
 export type ChatRoomListItem = {
   id: number;
   title: string;
   createdAt: string;
 };
 
-// ✅ 채팅방 상세 (GET /chats/{id}) - 명세서 기반
 export type ChatRoomDetail = {
   id: number;
   wishItem: {
@@ -56,8 +52,8 @@ export type ChatRoomDetail = {
     step: number;
     selectedOption: string;
   }>;
-  result: string; // "구매 보류" | "구매 추천"
-  currentStep: number; // 4면 완료(질문 3개)
+  result: string;
+  currentStep: number;
 };
 
 type ApiWrappedSuccess<T> = { resultType: 'SUCCESS'; error: null; data: T };
@@ -82,14 +78,16 @@ function isWrappedFail(x: unknown): x is ApiWrappedFail {
 
 function failMessage(x: unknown, fallback: string): string {
   if (!isObject(x)) return fallback;
+
   if (isWrappedFail(x)) {
     return x.error?.reason ?? x.error?.message ?? fallback;
   }
+
   const msg = x.message;
   return typeof msg === 'string' && msg.trim() ? msg : fallback;
 }
 
-// ✅ POST /chats
+// 채팅방 생성
 export async function createChat(payload: CreateChatRequest): Promise<ChatRoom> {
   const res = await axiosInstance.post<ChatRoom | ApiWrappedSuccess<ChatRoom> | ApiWrappedFail>('/chats', payload, {
     withCredentials: true,
@@ -104,6 +102,7 @@ export async function createChat(payload: CreateChatRequest): Promise<ChatRoom> 
     const id = body.id;
     const currentStep = body.currentStep;
     const createdAt = body.createdAt;
+
     if (typeof id === 'number' && typeof currentStep === 'number' && typeof createdAt === 'string') {
       return { id, currentStep, createdAt };
     }
@@ -112,66 +111,7 @@ export async function createChat(payload: CreateChatRequest): Promise<ChatRoom> 
   throw new Error('채팅방 생성 응답을 해석할 수 없어요.');
 }
 
-// ✅ GET /chats/{id}/question
-export async function getChatQuestion(chatId: number): Promise<ChatQuestionResponse> {
-  const res = await axiosInstance.get<ChatQuestionResponse | ApiWrappedSuccess<ChatQuestionResponse> | ApiWrappedFail>(
-    `/chats/${chatId}/question`,
-    { withCredentials: true },
-  );
-
-  const body = res.data;
-
-  if (isWrappedSuccess<ChatQuestionResponse>(body)) return body.data;
-  if (isWrappedFail(body)) throw new Error(failMessage(body, '질문을 불러오지 못했어요.'));
-  if (isObject(body)) return body as ChatQuestionResponse;
-
-  throw new Error('질문을 불러오지 못했어요.');
-}
-
-// ✅ POST /chats/{id}/select
-export async function postChatSelect(
-  chatId: number,
-  payload: { step: number; selectedOptionId: number },
-): Promise<void> {
-  const res = await axiosInstance.post<ApiWrappedSuccess<unknown> | ApiWrappedFail | unknown>(
-    `/chats/${chatId}/select`,
-    payload,
-    {
-      withCredentials: true,
-    },
-  );
-
-  const body = res.data;
-  if (isWrappedFail(body)) throw new Error(failMessage(body, '선택 저장에 실패했어요.'));
-}
-
-// ✅ GET /chats/{id}/result
-export async function getChatResult(chatId: number): Promise<ChatResult> {
-  const res = await axiosInstance.get<ChatResult | ApiWrappedSuccess<ChatResult> | ApiWrappedFail>(
-    `/chats/${chatId}/result`,
-    {
-      withCredentials: true,
-    },
-  );
-
-  const body = res.data;
-
-  if (isWrappedSuccess<ChatResult>(body)) return body.data;
-  if (isWrappedFail(body)) throw new Error(failMessage(body, '최종 판단을 불러오지 못했어요.'));
-  if (isObject(body)) {
-    const decision = body.decision;
-    const message = body.message;
-    if (typeof decision === 'string' && typeof message === 'string') return { decision, message };
-  }
-
-  throw new Error('최종 판단 응답을 해석할 수 없어요.');
-}
-
-/* ------------------------------------------------------ */
-/* ✅ 연동 추가: 목록 / 상세 / 삭제 */
-/* ------------------------------------------------------ */
-
-// ✅ GET /chats
+// 채팅방 목록 조회
 export async function getChatRooms(): Promise<ChatRoomListItem[]> {
   const res = await axiosInstance.get<unknown>('/chats', { withCredentials: true });
   const body = res.data;
@@ -185,10 +125,13 @@ export async function getChatRooms(): Promise<ChatRoomListItem[]> {
   return list
     .map((x): ChatRoomListItem | null => {
       if (!isObject(x)) return null;
+
       const id = x.id;
       const title = x.title ?? x.name ?? x.wishItemName;
       const createdAt = x.createdAt ?? x.created_at;
+
       if (typeof id !== 'number') return null;
+
       return {
         id,
         title: typeof title === 'string' && title.trim() ? title : `채팅 ${id}`,
@@ -198,7 +141,7 @@ export async function getChatRooms(): Promise<ChatRoomListItem[]> {
     .filter((v): v is ChatRoomListItem => v !== null);
 }
 
-// ✅ GET /chats/{id}
+// 채팅방 상세 조회
 export async function getChatRoomDetail(chatId: number): Promise<ChatRoomDetail> {
   const res = await axiosInstance.get<ChatRoomDetail | ApiWrappedSuccess<ChatRoomDetail> | ApiWrappedFail>(
     `/chats/${chatId}`,
@@ -213,9 +156,9 @@ export async function getChatRoomDetail(chatId: number): Promise<ChatRoomDetail>
   if (isWrappedFail(body)) throw new Error(failMessage(body, '채팅방 상세를 불러오지 못했어요.'));
 
   if (isObject(body)) {
-    // 최소 필드 체크
     const id = body.id;
     const wishItem = body.wishItem;
+
     if (typeof id === 'number' && isObject(wishItem)) {
       return body as ChatRoomDetail;
     }
@@ -224,7 +167,66 @@ export async function getChatRoomDetail(chatId: number): Promise<ChatRoomDetail>
   throw new Error('채팅방 상세 응답을 해석할 수 없어요.');
 }
 
-// ✅ DELETE /chats/{id}
+// 고정 질문 조회
+export async function getChatQuestion(chatId: number): Promise<ChatQuestionResponse> {
+  const res = await axiosInstance.get<ChatQuestionResponse | ApiWrappedSuccess<ChatQuestionResponse> | ApiWrappedFail>(
+    `/chats/${chatId}/question`,
+    { withCredentials: true },
+  );
+
+  const body = res.data;
+
+  if (isWrappedSuccess<ChatQuestionResponse>(body)) return body.data;
+  if (isWrappedFail(body)) throw new Error(failMessage(body, '질문을 불러오지 못했어요.'));
+
+  if (isObject(body)) return body as ChatQuestionResponse;
+
+  throw new Error('질문을 불러오지 못했어요.');
+}
+
+// 버튼 선택 저장
+export async function postChatSelect(
+  chatId: number,
+  payload: { step: number; selectedOptionId: number },
+): Promise<void> {
+  const res = await axiosInstance.post<ApiWrappedSuccess<unknown> | ApiWrappedFail | unknown>(
+    `/chats/${chatId}/select`,
+    payload,
+    {
+      withCredentials: true,
+    },
+  );
+
+  const body = res.data;
+
+  if (isWrappedFail(body)) throw new Error(failMessage(body, '선택 저장에 실패했어요.'));
+}
+
+// 최종 판단 조회
+export async function getChatResult(chatId: number): Promise<ChatResult> {
+  const res = await axiosInstance.get<ChatResult | ApiWrappedSuccess<ChatResult> | ApiWrappedFail>(
+    `/chats/${chatId}/result`,
+    {
+      withCredentials: true,
+    },
+  );
+
+  const body = res.data;
+
+  if (isWrappedSuccess<ChatResult>(body)) return body.data;
+  if (isWrappedFail(body)) throw new Error(failMessage(body, '최종 판단을 불러오지 못했어요.'));
+
+  if (isObject(body)) {
+    const decision = body.decision;
+    const message = body.message;
+
+    if (typeof decision === 'string' && typeof message === 'string') return { decision, message };
+  }
+
+  throw new Error('최종 판단 응답을 해석할 수 없어요.');
+}
+
+// 채팅방 삭제
 export async function deleteChatRoom(chatId: number): Promise<void> {
   const res = await axiosInstance.delete<unknown>(`/chats/${chatId}`, { withCredentials: true });
   const body = res.data;
