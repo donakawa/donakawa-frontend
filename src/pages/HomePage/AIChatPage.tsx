@@ -241,7 +241,7 @@ export default function AIChatPage() {
   };
 
   const UserTextBubble = ({ text }: { text: string }) => (
-    <div className="max-w-[80%] rounded-[18px] bg-primary-brown-200 px-4 py-2 text-[14px] font-medium text-black">
+    <div className="max-w-[80%] rounded-[10px] bg-primary-brown-200 px-4 py-2 text-[14px] font-normal text-white">
       {text}
     </div>
   );

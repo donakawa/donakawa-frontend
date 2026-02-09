@@ -1,4 +1,3 @@
-// src/layouts/ProtectedLayout.tsx
 import React, { useCallback, useMemo, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
