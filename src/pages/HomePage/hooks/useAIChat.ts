@@ -8,7 +8,7 @@ import {
   getChatRooms,
   type ChatItemType,
   type ChatRoomListItem,
-} from '@/apis/HomePage/aichat';
+} from '@/apis/AIChatPage/aichat';
 
 const DELETE_BUTTON_H = 40;
 

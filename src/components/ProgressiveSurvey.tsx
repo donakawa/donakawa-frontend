@@ -176,7 +176,7 @@ import {
   type ChatQuestionOption,
   type ChatQuestionResponse,
   type ChatResult,
-} from '@/apis/HomePage/aichat';
+} from '@/apis/AIChatPage/aichat';
 
 type ChatQuestionShown = {
   step: number;
