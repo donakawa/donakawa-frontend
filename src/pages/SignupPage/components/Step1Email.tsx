@@ -20,7 +20,11 @@ const Step1Email = ({ onNext }: Props) => {
   const [email, setEmail] = useState('');
   const [authCode, setAuthCode] = useState(['', '', '', '', '', '']);
   const [showModal, setShowModal] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(299);
+
+  // 타이머 상태 분리 (입력 유효시간 5분 / 재전송 쿨타임 30초)
+  const [inputTimeLeft, setInputTimeLeft] = useState(300); // 5분 (300초)
+  const [resendCooldown, setResendCooldown] = useState(30); // 30초
+  
   const [timerTrigger, setTimerTrigger] = useState(0);
 
   // 에러 메시지 상태
@@ -29,18 +33,16 @@ const Step1Email = ({ onNext }: Props) => {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // 타이머 로직
+  //  타이머 로직 변경 (두 개의 타이머가 각각 줄어듦)
   useEffect(() => {
     if (view !== 'code') return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      // 1. 입력 유효 시간 감소 (0이 되면 멈춤)
+      setInputTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+
+      // 2. 재전송 쿨타임 감소 (0이 되면 멈춤)
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -64,8 +66,13 @@ const Step1Email = ({ onNext }: Props) => {
       // API 호출
       await sendAuthCode(email);
       alert('인증번호가 발송되었습니다.');
+      
+      //  타이머 초기화 (입력 5분, 재전송 30초)
+      setInputTimeLeft(300);
+      setResendCooldown(30);
+      setTimerTrigger(prev => prev + 1);
+      setView('code');
 
-      setTimeLeft(299);
       setTimerTrigger((prev) => prev + 1);
       setView('code');
     } catch (error) {
@@ -81,7 +88,7 @@ const Step1Email = ({ onNext }: Props) => {
         setEmailError('이미 가입된 이메일입니다. 로그인을 진행해주세요.');
       } else if (errorCode === 'A010') {
         // 횟수 초과 -> 알림창
-        alert('인증 요청 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.');
+        alert('인증 요청 횟수를 초과했습니다. 30분 후 다시 시도해주세요.');
       } else {
         alert(errorReason || '인증번호 발송에 실패했습니다.');
       }
@@ -96,8 +103,11 @@ const Step1Email = ({ onNext }: Props) => {
     try {
       await sendAuthCode(email);
       alert('인증번호가 재전송되었습니다.');
-
-      setTimeLeft(299);
+      
+      //  재전송 시 타이머 리셋 (입력 5분, 재전송 30초)
+      setInputTimeLeft(300);
+      setResendCooldown(30);
+      
       setAuthCode(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
       setTimerTrigger((prev) => prev + 1);
@@ -107,7 +117,7 @@ const Step1Email = ({ onNext }: Props) => {
 
       const errorCode = err.response?.data?.error?.errorCode;
       if (errorCode === 'A010') {
-        alert('인증 요청 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.');
+         alert('인증 요청 횟수를 초과했습니다. 30분 후 다시 시도해주세요.');
       } else {
         alert('인증번호 재전송에 실패했습니다.');
       }
@@ -115,7 +125,10 @@ const Step1Email = ({ onNext }: Props) => {
   };
 
   const handleCodeChange = (index: number, value: string) => {
-    setCodeError(''); //  입력 시 에러 메시지 초기화
+    setCodeError(''); 
+    //  시간이 만료되면 입력 불가 처리
+    if (inputTimeLeft === 0) return;
+
     const sanitizedValue = value.replace(/[^0-9]/g, '');
     if (sanitizedValue.length > 1) return;
 
@@ -138,8 +151,12 @@ const Step1Email = ({ onNext }: Props) => {
 
   // 3. 인증번호 확인 API 호출
   const handleVerify = async () => {
-    setCodeError(''); // 에러 초기화
-    if (timeLeft === 0) return;
+    setCodeError(''); 
+    //  입력 시간(5분) 만료 체크
+    if (inputTimeLeft === 0) {
+        alert('입력 시간이 만료되었습니다. 재전송 버튼을 눌러주세요.');
+        return;
+    }
 
     try {
       const codeString = authCode.join('');
@@ -190,18 +207,19 @@ const Step1Email = ({ onNext }: Props) => {
                   setEmail(e.target.value);
                   if (emailError) setEmailError('');
                 }}
-                //  에러 있으면 빨간 테두리
                 className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
-                  ${
-                    emailError
-                      ? 'border-red-500 bg-red-50 focus:border-red-500' // 에러 상태
-                      : isEmailValid
-                        ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
-                        : 'border-gray-200 focus:border-primary-600'
+                  ${emailError 
+                    ? 'border-red-500 bg-red-50 focus:border-red-500' 
+                    : isEmailValid 
+                      ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600' 
+                      : 'border-gray-200 focus:border-primary-600'
                   }`}
               />
-              {/*  이메일 에러 메시지 */}
-              {emailError && <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">{emailError}</p>}
+              {emailError && (
+                <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             <button
@@ -231,67 +249,80 @@ const Step1Email = ({ onNext }: Props) => {
                     value={num}
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
-                    disabled={timeLeft === 0}
-                    //  에러 있으면 빨간 테두리
+                    // 입력 시간(5분)이 끝나면 비활성화
+                    disabled={inputTimeLeft === 0}
                     className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none transition-all shadow-sm
-                      ${
-                        timeLeft === 0
-                          ? 'bg-gray-100 border-gray-200 text-gray-400'
-                          : codeError
-                            ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500' // 에러 상태
-                            : num
-                              ? 'border-primary-brown-300 bg-primary-brown-300 text-white'
-                              : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
+                      ${inputTimeLeft === 0 
+                        ? 'bg-gray-100 border-gray-200 text-gray-400' 
+                        : codeError 
+                          ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500'
+                          : num 
+                            ? 'border-primary-brown-300 bg-primary-brown-300 text-white' 
+                            : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
                       }`}
                   />
                 ))}
               </div>
 
-              {/* 우측 하단 타이머 표시 */}
+              {/* 우측 하단 타이머 표시 (입력 유효 시간 5분 표시) */}
               <div className="text-right">
-                <span className={`text-sm font-medium ${timeLeft <= 10 ? 'text-error' : 'text-primary-brown-300'}`}>
-                  {timeLeft > 0 ? formatTime(timeLeft) : '00:00'}
+                <span className={`text-sm font-medium ${inputTimeLeft <= 60 ? 'text-red-500' : 'text-primary-brown-300'}`}>
+                  {/*  inputTimeLeft를 표시 */}
+                  {inputTimeLeft > 0 ? formatTime(inputTimeLeft) : '00:00'}
                 </span>
               </div>
-
-              {/*  인증번호 에러 메시지 (타이머 아래, 안내문구 위에 배치) */}
-              {codeError && <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">{codeError}</p>}
+              
+              {codeError && (
+                 <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">
+                   {codeError}
+                 </p>
+              )}
             </div>
 
-            {/* 가운데 안내 텍스트 영역 */}
+            {/* 가운데 안내 텍스트 영역 (재전송 관련) */}
             <div className="text-center py-4">
-              {timeLeft > 0 ? (
-                <p className="text-sm text-black font-medium">{formatTime(timeLeft)} 후 재전송 가능</p>
-              ) : (
-                <button
-                  onClick={handleResend}
-                  className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors">
-                  인증번호 재전송
-                </button>
-              )}
+                {/* 재전송 쿨타임(30초)에 따른 분기 처리 */}
+                {resendCooldown > 0 ? (
+                    <p className="text-sm text-gray-500 font-medium">
+                        {/* 쿨타임 중일 때 */}
+                        {resendCooldown}초 후 재전송 가능
+                    </p>
+                ) : (
+                    <button 
+                        onClick={handleResend}
+                        className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors"
+                    >
+                        인증번호 재전송
+                    </button>
+                )}
             </div>
 
             <button
               onClick={handleVerify}
-              disabled={timeLeft === 0 || !isCodeValid}
+              //  입력 시간이 만료되면 버튼 비활성화
+              disabled={inputTimeLeft === 0 || !isCodeValid}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                timeLeft > 0 && isCodeValid ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200 cursor-not-allowed'
-              }`}>
+                (inputTimeLeft > 0 && isCodeValid)
+                  ? 'bg-primary-600 hover:bg-primary-500'
+                  : 'bg-gray-200 cursor-not-allowed'
+              }`}
+            >
               확인
             </button>
           </>
         )}
       </div>
 
-      {/*  모달 */}
+      {/* 모달 */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="flex w-full max-w-[300px] flex-col items-center rounded-2xl bg-white p-8 text-center shadow-2xl animate-pop-up">
             <div className="mb-4 text-5xl text-primary-brown-300">
               <IoCheckmark />
             </div>
-            <h3 className="mb-8 text-lg font-bold text-gray-900">인증이 완료되었습니다.</h3>
-            {/* 부모에게 데이터 전달 */}
+            <h3 className="mb-8 text-lg font-bold text-gray-900">
+              인증이 완료되었습니다.
+            </h3>
             <button
               onClick={handleModalConfirm}
               className="w-24 rounded-full bg-primary-brown-300 py-2.5 text-sm font-bold text-white hover:bg-primary-brown-400 transition-colors">
