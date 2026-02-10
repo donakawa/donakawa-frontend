@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoCheckmark, IoEyeOutline, IoEyeOffOutline, IoChevronBack } from 'react-icons/io5';
-import { sendAuthCode, verifyAuthCode, resetPassword } from '@/api/auth';
+import { sendAuthCode, verifyAuthCode, resetPassword } from '@/apis/auth';
 import type { AxiosError } from 'axios';
 
 // 백엔드 에러 타입
@@ -28,7 +28,7 @@ const FindPasswordPage = () => {
 
   const [emailError, setEmailError] = useState('');
   const [codeError, setCodeError] = useState('');
-  
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // --- Step 3 상태 (비밀번호) ---
@@ -166,11 +166,11 @@ const FindPasswordPage = () => {
       const err = error as AxiosError<ErrorResponse>;
       const errorCode = err.response?.data?.error?.errorCode;
       const errorReason = err.response?.data?.error?.reason;
-      
+
       if (errorCode === 'U007') {
-         alert('소셜 로그인 계정은 비밀번호를 재설정할 수 없습니다.');
+        alert('소셜 로그인 계정은 비밀번호를 재설정할 수 없습니다.');
       } else {
-         alert(errorReason || '비밀번호 변경에 실패했습니다.');
+        alert(errorReason || '비밀번호 변경에 실패했습니다.');
       }
     } finally {
       setLoading(false);
@@ -191,14 +191,12 @@ const FindPasswordPage = () => {
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-4">
       {/* 모바일 뷰에 최적화된 최대 너비 컨테이너 */}
       <div className="w-full max-w-sm">
-        
         {/* 1. 상단 뒤로가기 버튼 */}
         <div className="mb-6 flex items-center justify-start h-12">
-          <button 
+          <button
             onClick={handleBack}
             className="p-2 -ml-2 text-gray-900 transition-colors hover:text-gray-600"
-            aria-label="뒤로가기"
-          >
+            aria-label="뒤로가기">
             <IoChevronBack size={24} />
           </button>
         </div>
@@ -206,24 +204,25 @@ const FindPasswordPage = () => {
         {/* 2. 단계별 프로그래스 바 (끊어진 형태) */}
         <div className="mb-8 flex w-full gap-2">
           {/* Step 1 Bar */}
-          <div className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
-            ${step >= 1 ? 'bg-primary-600' : 'bg-gray-200'}`} 
+          <div
+            className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
+            ${step >= 1 ? 'bg-primary-600' : 'bg-gray-200'}`}
           />
           {/* Step 2 Bar */}
-          <div className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
-            ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`} 
+          <div
+            className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
+            ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`}
           />
           {/* Step 3 Bar */}
-          <div className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
-            ${step >= 3 ? 'bg-primary-600' : 'bg-gray-200'}`} 
+          <div
+            className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
+            ${step >= 3 ? 'bg-primary-600' : 'bg-gray-200'}`}
           />
         </div>
 
         {/* 3. STEP 텍스트 & 타이틀 */}
         <div className="mb-10 animate-fade-in">
-          <span className="text-xs text-[#999999]">
-            비밀번호 재설정 STEP {step}
-          </span>
+          <span className="text-xs text-[#999999]">비밀번호 재설정 STEP {step}</span>
           <h2 className="mt-2 text-2xl font-bold text-gray-900 leading-tight whitespace-pre-wrap">
             {step === 1 && '가입한 이메일을 입력해 주세요.'}
             {step === 2 && '인증번호를 입력해 주세요.'}
@@ -244,18 +243,15 @@ const FindPasswordPage = () => {
                   if (emailError) setEmailError('');
                 }}
                 className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
-                  ${emailError 
-                    ? 'border-red-500 bg-red-50 focus:border-red-500' 
-                    : email.includes('@')
-                      ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
-                      : 'border-gray-200 focus:border-primary-600'
+                  ${
+                    emailError
+                      ? 'border-red-500 bg-red-50 focus:border-red-500'
+                      : email.includes('@')
+                        ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
+                        : 'border-gray-200 focus:border-primary-600'
                   }`}
               />
-              {emailError && (
-                <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
-                  {emailError}
-                </p>
-              )}
+              {emailError && <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">{emailError}</p>}
             </div>
 
             <button
@@ -263,8 +259,7 @@ const FindPasswordPage = () => {
               disabled={!email.includes('@') || loading}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
                 email.includes('@') ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
-              }`}
-            >
+              }`}>
               {loading ? '전송 중...' : '인증번호 발송'}
             </button>
           </div>
@@ -278,7 +273,9 @@ const FindPasswordPage = () => {
                 {authCode.map((num, idx) => (
                   <input
                     key={idx}
-                    ref={(el) => { inputRefs.current[idx] = el; }}
+                    ref={(el) => {
+                      inputRefs.current[idx] = el;
+                    }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -287,13 +284,14 @@ const FindPasswordPage = () => {
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     disabled={timeLeft === 0}
                     className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none transition-all shadow-sm
-                      ${timeLeft === 0
-                        ? 'bg-gray-100 border-gray-200 text-gray-400'
-                        : codeError
-                          ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500'
-                          : num
-                            ? 'border-primary-brown-300 bg-primary-brown-300 text-white'
-                            : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
+                      ${
+                        timeLeft === 0
+                          ? 'bg-gray-100 border-gray-200 text-gray-400'
+                          : codeError
+                            ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500'
+                            : num
+                              ? 'border-primary-brown-300 bg-primary-brown-300 text-white'
+                              : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
                       }`}
                   />
                 ))}
@@ -304,24 +302,17 @@ const FindPasswordPage = () => {
                   {timeLeft > 0 ? formatTime(timeLeft) : '00:00'}
                 </span>
               </div>
-              
-              {codeError && (
-                <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">
-                  {codeError}
-                </p>
-              )}
+
+              {codeError && <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">{codeError}</p>}
             </div>
 
             <div className="text-center py-4">
               {timeLeft > 0 ? (
-                <p className="text-sm text-black font-medium">
-                  {formatTime(timeLeft)} 후 재전송 가능
-                </p>
+                <p className="text-sm text-black font-medium">{formatTime(timeLeft)} 후 재전송 가능</p>
               ) : (
                 <button
                   onClick={handleResend}
-                  className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors"
-                >
+                  className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors">
                   인증번호 재전송
                 </button>
               )}
@@ -329,13 +320,12 @@ const FindPasswordPage = () => {
 
             <button
               onClick={handleVerify}
-              disabled={timeLeft === 0 || authCode.some(c => c === '') || loading}
+              disabled={timeLeft === 0 || authCode.some((c) => c === '') || loading}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                (timeLeft > 0 && !authCode.some(c => c === ''))
+                timeLeft > 0 && !authCode.some((c) => c === '')
                   ? 'bg-primary-600 hover:bg-primary-500'
                   : 'bg-gray-200 cursor-not-allowed'
-              }`}
-            >
+              }`}>
               {loading ? '확인 중...' : '확인'}
             </button>
           </div>
@@ -351,9 +341,12 @@ const FindPasswordPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none transition-all
-                  ${password 
-                    ? (isValidFormat ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50') 
-                    : 'border-gray-200 focus:border-primary-600'
+                  ${
+                    password
+                      ? isValidFormat
+                        ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50'
+                        : 'border-red-500 bg-red-50'
+                      : 'border-gray-200 focus:border-primary-600'
                   }`}
               />
               <button
@@ -361,8 +354,7 @@ const FindPasswordPage = () => {
                 onClick={() => setShowPw(!showPw)}
                 className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
-                }`}
-              >
+                }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
               </button>
             </div>
@@ -381,9 +373,12 @@ const FindPasswordPage = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none transition-all
-                    ${confirmPassword
-                      ? (isMatch ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
-                      : 'border-gray-200 focus:border-primary-600'
+                    ${
+                      confirmPassword
+                        ? isMatch
+                          ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50'
+                          : 'border-red-500 bg-red-50'
+                        : 'border-gray-200 focus:border-primary-600'
                     }`}
                 />
                 <button
@@ -391,15 +386,12 @@ const FindPasswordPage = () => {
                   onClick={() => setShowConfirmPw(!showConfirmPw)}
                   className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
                     isMatch ? 'text-primary-600' : 'text-gray-400'
-                  }`}
-                >
+                  }`}>
                   {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
-                
+
                 {confirmPassword && !isMatch && (
-                  <div className="mt-1 text-right text-xs text-red-500">
-                    비밀번호가 일치하지 않습니다.
-                  </div>
+                  <div className="mt-1 text-right text-xs text-red-500">비밀번호가 일치하지 않습니다.</div>
                 )}
               </div>
             )}
@@ -409,8 +401,7 @@ const FindPasswordPage = () => {
               disabled={!canSubmitPassword || loading}
               className={`mt-10 w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
                 canSubmitPassword ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
-              }`}
-            >
+              }`}>
               {loading ? '변경 중...' : '비밀번호 변경하기'}
             </button>
           </div>
@@ -424,13 +415,10 @@ const FindPasswordPage = () => {
             <div className="mb-4 text-5xl text-primary-brown-300">
               <IoCheckmark />
             </div>
-            <h3 className="mb-8 text-lg font-bold text-gray-900">
-              인증이 완료되었습니다.
-            </h3>
+            <h3 className="mb-8 text-lg font-bold text-gray-900">인증이 완료되었습니다.</h3>
             <button
               onClick={handleModalConfirm}
-              className="w-24 rounded-full bg-primary-brown-300 py-2.5 text-sm font-bold text-white hover:bg-primary-brown-400 transition-colors"
-            >
+              className="w-24 rounded-full bg-primary-brown-300 py-2.5 text-sm font-bold text-white hover:bg-primary-brown-400 transition-colors">
               확인
             </button>
           </div>

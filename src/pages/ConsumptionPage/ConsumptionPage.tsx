@@ -1,60 +1,84 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useInView } from 'react-intersection-observer';
 
-import WishlistGrid, { type WishlistItemType } from '../../pages/WishlistPage/components/wishlistGrid';
+import WishlistGrid from '../../pages/WishlistPage/components/wishlistGrid';
 import WishlistPanel from '../../pages/WishlistPage/components/wishlistPanel';
+import { useConsumptionQuery } from './hooks/useConsumptionQuery';
 
-// 타입 설정 (만족 소비 / 후회 소비)
-type ConsumptionType = 'satisfaction' | 'regret';
+import { type HeaderControlContext } from '@/layouts/ProtectedLayout';
 
-const PAGE_CONFIG: Record<string, { title: string; desc: string }> = {
+const PAGE_CONFIG = {
   satisfaction: { title: '만족 소비', desc: '만족 소비' },
   regret: { title: '후회 소비', desc: '후회 소비' },
-};
+} as const;
 
 const ConsumptionPage = () => {
+  const navigate = useNavigate();
   const { type } = useParams<{ type: string }>();
 
-  // 타입 결정
-  const currentType = (type === 'regret' ? 'regret' : 'satisfaction') as ConsumptionType;
+  const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
+
+  const currentType = type === 'regret' ? 'regret' : 'satisfaction';
   const config = PAGE_CONFIG[currentType];
 
-  const [stats, setStats] = useState({ avgDays: 0, count: 0 });
+  const { ref, inView } = useInView();
+  const { products, stats, fetchNextPage, hasNextPage, isFetchingNextPage } = useConsumptionQuery(currentType);
 
-  const [products, setProducts] = useState<WishlistItemType[]>([]);
+  const handleItemClick = (id: string) => {
+    navigate(`/report/review/write/${id}`);
+  };
 
   useEffect(() => {
-    if (currentType === 'satisfaction') {
-      setStats({ avgDays: 7, count: 3 });
-      setProducts([
-        { id: '1', title: '캐시미어 로제...', price: 238400, imageUrl: 'https://placehold.co/150' },
-        { id: '2', title: '캐시미어 로제...', price: 105000, imageUrl: 'https://placehold.co/150' },
-        { id: '3', title: '캐시미어 로제...', price: 320000, imageUrl: 'https://placehold.co/150' },
-      ]);
-    } else {
-      setStats({ avgDays: 2, count: 1 });
-      setProducts([{ id: '4', title: '코트...', price: 50000, imageUrl: 'https://placehold.co/150' }]);
+    setTitle(config.title);
+
+    return () => {
+      setTitle('');
+      setRightAction(null);
+    };
+  }, [config.title, setTitle, setRightAction]);
+
+  //무한 스크롤
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [currentType]);
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="flex flex-col h-screen">
-      <section className="px-[20px] pt-[43px] pb-[26px]">
-        <h2 className="text-[18px] leading-[150%] font-semibold mb-[12px]">평균 구매 결정 시간: {stats.avgDays}일</h2>
-        <p className="text-gray-600 text-[14px]">
+      {/* 헤더 */}
+      <header className="px-5 pt-11 pb-6">
+        <h2 className="text-lg font-semibold mb-3">평균 구매 결정 시간: {stats.avgDays}일</h2>
+        <p className="text-gray-600 text-sm">
           최근 한 달 내 {config.desc} {stats.count}건
         </p>
-      </section>
-
+      </header>
+      {/* 메인 */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <WishlistPanel editMode={false} bottomPaddingPx={0}>
           <div className="flex-1 overflow-y-auto no-scrollbar pb-[90px]">
-            <WishlistGrid items={products} editMode={false} onItemClick={(id) => console.log('상품 클릭:', id)} />
+            {products.length > 0 ? (
+              <>
+                <WishlistGrid items={products} editMode={false} onItemClick={handleItemClick} />
+                <div ref={ref} className="h-1 flex items-center justify-center w-full mt-4">
+                  {isFetchingNextPage && <span className="text-gray-400 text-sm">더 불러오는 중... ⏳</span>}
+                </div>
+              </>
+            ) : (
+              <EmptyState message={`아직 ${config.desc} 내역이 없어요.`} />
+            )}
           </div>
         </WishlistPanel>
       </div>
     </div>
   );
 };
+
+const EmptyState = ({ message }: { message: string }) => (
+  <div className="flex flex-col h-full items-center justify-center pb-20 text-center text-gray-400">
+    <p className="mt-4 text-sm">{message}</p>
+  </div>
+);
 
 export default ConsumptionPage;

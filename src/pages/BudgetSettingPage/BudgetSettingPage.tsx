@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+
+import { postBudget, type SetBudgetRequest } from '@/apis/BudgetPage/budget';
 
 import Step1 from './components/Step1';
 import Step2 from './components/Step2';
@@ -18,23 +21,50 @@ const BudgetSettingPage = () => {
   const TOTAL_STEPS = 6;
   const [direction, setDirection] = useState(0);
 
-  const { setCustomBack, setRightAction } = useOutletContext<HeaderControlContext>();
+  const { setCustomBack, setRightAction, setTitle } = useOutletContext<HeaderControlContext>();
+
+  const [budgetData, setBudgetData] = useState<SetBudgetRequest>({
+    monthlyIncome: 0,
+    incomeDate: 1,
+    fixedExpense: 0,
+    monthlySaving: 0,
+    spendStrategy: 1,
+    shoppingBudget: 0,
+  });
+
+  const updateData = (key: keyof SetBudgetRequest, value: number) => {
+    setBudgetData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const { mutate: submitBudget } = useMutation({
+    mutationFn: postBudget,
+    onSuccess: () => {
+      navigate('/budget/result');
+    },
+    onError: (error) => {
+      console.error(error);
+      alert('예산 설정 중 오류가 발생했습니다. (이미 등록된 예산인지 확인해주세요)');
+    },
+  });
 
   useEffect(() => {
-    setCustomBack(prevStep);
+    setTitle('목표 예산 설정');
 
-    if (1 === step || step > 4) {
+    setCustomBack(() => prevStep);
+
+    if (step === 1 || step > 4) {
       setRightAction(null);
-    } else if (step) {
+    } else {
       setRightAction({
-        label: '건너뛰기',
+        rightNode: '건너뛰기',
         onClick: nextStep,
       });
     }
-  }, [step]);
+  });
 
   const nextStep = () => {
     if (step === TOTAL_STEPS) {
+      submitBudget(budgetData);
       navigate('/budget/result');
       return;
     }
@@ -79,17 +109,68 @@ const BudgetSettingPage = () => {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{
-              x: { type: 'spring', stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
+            transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
             className="absolute w-full h-full">
-            {step === 1 && <Step1 onNext={nextStep} />}
-            {step === 2 && <Step2 onNext={nextStep} />}
-            {step === 3 && <Step3 onNext={nextStep} />}
-            {step === 4 && <Step4 onNext={nextStep} />}
-            {step === 5 && <Step5 onNext={nextStep} />}
-            {step === 6 && <Step6 onNext={nextStep} />}
+            {step === 1 && (
+              <Step1
+                onNext={(val) => {
+                  updateData('monthlyIncome', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.monthlyIncome}
+              />
+            )}
+            {step === 2 && (
+              <Step2
+                onNext={(val) => {
+                  updateData('fixedExpense', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.fixedExpense || 0}
+              />
+            )}
+            {step === 3 && (
+              <Step3
+                onNext={(val) => {
+                  updateData('monthlySaving', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.monthlySaving}
+              />
+            )}
+            {step === 4 && (
+              <Step4
+                onNext={(val) => {
+                  updateData('incomeDate', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.incomeDate}
+              />
+            )}
+            {step === 5 && (
+              <Step5
+                onNext={(val) => {
+                  updateData('spendStrategy', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.spendStrategy}
+              />
+            )}
+            {step === 6 && (
+              <Step6
+                onNext={(val) => {
+                  updateData('shoppingBudget', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.shoppingBudget}
+                prevData={{
+                  monthlyIncome: budgetData.monthlyIncome,
+                  fixedExpense: budgetData.fixedExpense,
+                  monthlySaving: budgetData.monthlySaving,
+                  spendStrategy: budgetData.spendStrategy,
+                }}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

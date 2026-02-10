@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import logo from '../../assets/seed.svg';
-import { login } from '../../api/auth';
+import { login } from '../../apis/auth';
 import { AxiosError } from 'axios';
 
 // 백엔드 에러 응답 타입 정의 (API 명세서 기준)
@@ -53,7 +53,7 @@ const LoginPage = () => {
   // 3. 로그인 핸들러: 에러 코드 분기 처리
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // 요청 전 에러 초기화
     setEmailError('');
     setPasswordError('');
@@ -66,7 +66,6 @@ const LoginPage = () => {
 
       // 2. 홈으로 이동
       navigate('/home');
-
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
       console.error('로그인 실패:', err.response?.data?.error?.reason ?? err.message);
@@ -91,14 +90,14 @@ const LoginPage = () => {
 
   // 4. 구글 로그인 버튼 로직
   const handleGoogleLogin = () => {
-      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-login`;
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-login`;
   };
 
   //  입력창 스타일: 에러 시 빨간 테두리
   const getInputClass = (isValid: boolean, hasError: boolean) => {
     const baseClass =
       'w-full rounded-lg border px-4 py-3.5 text-sm outline-none placeholder:text-gray-400 transition-colors';
-    
+
     // 1순위: 에러 있음 (빨간색)
     if (hasError) {
       return `${baseClass} border-red-500 bg-red-50 focus:border-red-500`;
@@ -121,7 +120,6 @@ const LoginPage = () => {
 
       {/* 2. 로그인 폼 */}
       <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
-        
         {/* 이메일 입력 */}
         <div>
           <input
@@ -136,11 +134,7 @@ const LoginPage = () => {
             className={getInputClass(isEmailValid, !!emailError)}
           />
           {/* 🔥 이메일 에러 메시지 */}
-          {emailError && (
-            <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
-              {emailError}
-            </p>
-          )}
+          {emailError && <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">{emailError}</p>}
         </div>
 
         {/* 비밀번호 입력 */}
@@ -149,7 +143,7 @@ const LoginPage = () => {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="비밀번호"
-            aria-label="비밀번호"
+              aria-label="비밀번호"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -162,25 +156,17 @@ const LoginPage = () => {
               onClick={() => setShowPassword(!showPassword)}
               className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
                 isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
+              }`}>
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>
           </div>
           {/* 비밀번호 에러 메시지 */}
-          {passwordError && (
-            <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">
-              {passwordError}
-            </p>
-          )}
+          {passwordError && <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">{passwordError}</p>}
         </div>
 
         {/* 비밀번호 재설정 */}
         <div className="flex justify-end">
-          <Link 
-            to="/find-password" 
-            className="text-xs text-gray-400 hover:underline"
-          >
+          <Link to="/find-password" className="text-xs text-gray-400 hover:underline">
             비밀번호 재설정
           </Link>
         </div>
@@ -191,8 +177,7 @@ const LoginPage = () => {
           disabled={!isFormValid}
           className={`mt-4 w-full rounded-lg py-3.5 font-bold text-white transition-colors ${
             isFormValid ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
-          }`}
-        >
+          }`}>
           로그인
         </button>
       </form>
@@ -203,8 +188,7 @@ const LoginPage = () => {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium transition-colors hover:bg-gray-50"
-        >
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium transition-colors hover:bg-gray-50">
           <FcGoogle size={20} />
           구글 로그인
         </button>
