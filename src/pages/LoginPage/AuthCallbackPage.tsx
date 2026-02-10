@@ -18,11 +18,18 @@ const AuthCallbackPage = () => {
           throw new Error('Social Login Failed');
         }
 
-        // 2. 쿠키(토큰)가 잘 들어왔는지 '내 정보 조회'로 확인
-        await getMe();
+        // 2. 내 정보 조회
+        const user = await getMe();
 
-        // 3. 성공하면 홈으로 이동
-        navigate('/home', { replace: true });
+        // 3. 목표(goal)가 비어있으면 설정 페이지로 보냄!
+        // (주의: 백엔드가 목표 없을 때 null을 주는지, 빈 문자열 ""을 주는지 확인 필요)
+        if (!user.goal || user.goal.trim() === null) {
+          navigate('/social/goal', { replace: true });
+        } else {
+          // 목표가 이미 있으면 홈으로
+          navigate('/home', { replace: true });
+        }
+        
       } catch (error) {
         console.error('소셜 로그인 실패:', error instanceof Error ? error.message : 'Unknown error');
         alert('로그인에 실패했습니다. 다시 시도해 주세요.');
@@ -36,7 +43,7 @@ const AuthCallbackPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white">
       <div className="text-center">
-        <h2 className="mb-4 text-xl font-bold text-gray-700">로그인 중입니다...</h2>
+        <h2 className="mb-4 text-xl font-bold text-gray-700">로그인 정보를 확인 중입니다...</h2>
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
       </div>
     </div>

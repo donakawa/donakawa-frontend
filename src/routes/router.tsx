@@ -19,6 +19,7 @@ import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import AuthCallbackPage from '@/pages/LoginPage/AuthCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
 import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
+import SocialGoalPage from '@/pages/LoginPage/SocialGoalPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -30,6 +31,7 @@ const publicChildren: RouteObject[] = [
 
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
+  { path: 'social/goal', element: <SocialGoalPage />},
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },

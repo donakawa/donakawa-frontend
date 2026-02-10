@@ -40,6 +40,12 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
+// 목표 수정 응답 데이터 타입
+interface UpdateGoalResponse {
+  id: string;
+  goal: string;
+  updatedAt: string;
+}
 // --- [API 함수] ---
 
 //  API 응답을 검사해서 FAILED면 에러를 던지는 함수
@@ -90,5 +96,13 @@ export const resetPassword = async (data: ResetPasswordRequest) => {
 // 7. 내 정보 조회
 export const getMe = async () => {
   const response = await instance.get<CommonResponse<UserResponse>>('/auth/me');
+  return handleResponse(response);
+};
+
+// 8. 목표 수정 (소셜 로그인 후 설정 / 마이페이지 수정 공용)
+export const updateGoal = async (goal: string) => {
+  const response = await instance.patch<CommonResponse<UpdateGoalResponse>>('/auth/profile/goal', { 
+    newGoal: goal 
+  });
   return handleResponse(response);
 };
