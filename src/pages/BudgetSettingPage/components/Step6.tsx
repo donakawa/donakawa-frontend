@@ -1,10 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import StepLayout from './StepLayout';
+import { useQuery } from '@tanstack/react-query';
 
-const Step6 = ({ onNext }: { onNext: (data: { budget: number }) => void }) => {
-  const [budget, setBudget] = useState<string>('300,000');
+import { getRecommendBudget, type RecommendBudgetRequest } from '@/apis/BudgetPage/budget';
+import { getMe } from '@/apis/auth';
 
+interface StepProps {
+  onNext: (value: number) => void;
+  defaultValue?: number;
+  prevData: RecommendBudgetRequest;
+}
+
+const Step6 = ({ onNext, defaultValue, prevData }: StepProps) => {
+  const [budget, setBudget] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data } = useQuery({
+    queryKey: ['budget', 'recommend', prevData],
+    queryFn: () => getRecommendBudget(prevData),
+
+    staleTime: 1000 * 60,
+  });
+
+  const { data: userData } = useQuery({
+    queryKey: ['user', 'me'],
+    queryFn: getMe,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: budgetData } = useQuery({
+    queryKey: ['budget', 'recommend', prevData],
+    queryFn: () => getRecommendBudget(prevData),
+    enabled: !defaultValue,
+    staleTime: 1000 * 60,
+  });
+
+  useEffect(() => {
+    if (defaultValue) {
+      setBudget(defaultValue.toLocaleString());
+    } else if (budgetData) {
+      setBudget(budgetData.shoppingBudget.toLocaleString());
+    }
+  }, [budgetData, defaultValue]);
+
   // 0.5초 뒤에 포커스
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -23,19 +61,21 @@ const Step6 = ({ onNext }: { onNext: (data: { budget: number }) => void }) => {
 
   const numericBudget = Number(budget.replace(/,/g, ''));
 
+  const nickname = userData?.nickname || '고객';
+
   return (
     <StepLayout
       stepText="자산 형성 전략"
       title={
-        <>
-          0000000님에게 딱 맞는
+        <div className="text-center leading-[1.6] whitespace-pre-wrap">
+          <span className="text-primary-600">{nickname}</span>님에게 딱 맞는
           <br />
           온라인 쇼핑 목표액은
-        </>
+        </div>
       }
       titleAlign="center"
       isNextDisabled={numericBudget === 0}
-      onNext={() => onNext({ budget: numericBudget })}
+      onNext={() => onNext(numericBudget)}
       nextButtonText="완료">
       <div className="flex items-center gap-[18px] w-full">
         <input
