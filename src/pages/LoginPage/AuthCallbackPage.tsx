@@ -23,7 +23,7 @@ const AuthCallbackPage = () => {
 
         // 3. 목표(goal)가 비어있으면 설정 페이지로 보냄!
         // (주의: 백엔드가 목표 없을 때 null을 주는지, 빈 문자열 ""을 주는지 확인 필요)
-        if (!user.goal || user.goal.trim() === null) {
+        if (!user.goal || user.goal.trim() === '') {
           navigate('/social/goal', { replace: true });
         } else {
           // 목표가 이미 있으면 홈으로
