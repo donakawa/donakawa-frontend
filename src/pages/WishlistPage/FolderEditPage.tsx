@@ -3,6 +3,7 @@ import BackIcon from '@/assets/back.svg?react';
 import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal';
 import FolderList from './components/FolderList';
 import type { FolderItem } from './components/MoveFolderSheet';
+import { useDeleteWishlistFolder } from '@/queries/WishlistPage/useDeleteWishlistFolder';
 
 interface Props {
   folders: FolderItem[];
@@ -16,17 +17,30 @@ export default function FolderEditPage({ folders, onBack, onAddFolder, onDeleteC
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [targetFolder, setTargetFolder] = useState<FolderItem | null>(null);
 
+  const { mutateAsync: deleteFolder } = useDeleteWishlistFolder();
+
   const handleDeleteClick = (folder: FolderItem) => {
     setTargetFolder(folder);
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (targetFolder) {
+  const handleConfirmDelete = async () => {
+  if (!targetFolder) return;
+
+  try {
+    await deleteFolder(targetFolder.id);
+    
+    setDeleteModalOpen(false);
+    onDeleteComplete(targetFolder.name);
+  } catch (error: any) {
+    if (error.response?.status === 404) {
       setDeleteModalOpen(false);
       onDeleteComplete(targetFolder.name);
+    } else {
+      alert("폴더 삭제에 실패했습니다.");
     }
-  };
+  }
+};
 
   return (
     <div className="absolute inset-0 z-[100] bg-white flex flex-col">

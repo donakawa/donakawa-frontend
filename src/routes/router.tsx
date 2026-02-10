@@ -19,6 +19,7 @@ import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
 import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
+import WishItemDetailPage from '@/pages/WishlistPage/WishItemDetailPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
@@ -35,6 +36,12 @@ const protectedChildren: RouteObject[] = [
   { path: 'consumption/:type', element: <ConsumptionPage /> },
   { path: 'wishlist', element: <WishlistPage /> },
   { path: 'item_selection', element: <ItemSelectionPage /> },
+  { path: 'wishlist',
+    children: [
+      { index: true, element: <WishlistPage /> },
+      { path: '/wishlist/detail/:itemId', element: <WishItemDetailPage />,}
+    ],
+  },
   {
     path: 'report',
     children: [

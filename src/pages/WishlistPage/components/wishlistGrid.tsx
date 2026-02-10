@@ -5,6 +5,7 @@ export type WishlistItemType = {
   imageUrl: string;
   price: number;
   title: string;
+  type: 'AUTO' | 'MANUAL';
 };
 
 type Props = {

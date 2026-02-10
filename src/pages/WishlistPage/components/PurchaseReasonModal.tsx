@@ -11,27 +11,26 @@ import CalendarStrip from './CalendarStrip';
 interface PurchaseReasonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete: (data: any) => void;
+  itemType: 'AUTO' | 'MANUAL';
 }
 
-const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModalProps) => {
+const PurchaseReasonModal = ({ isOpen, onClose, onComplete, itemType }: PurchaseReasonModalProps) => {
   const [step, setStep] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // --- Step 1 상태 ---
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [customInput, setCustomInput] = useState<string>("");
   const [isCustomSelected, setIsCustomSelected] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // --- Step 2 상태 ---
   const [viewDate, setViewDate] = useState(new Date()); 
   const [selectedFullDate, setSelectedFullDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
   const resetState = () => {
     setStep(1);
-    setSelectedItems([]);
+    setSelectedReason(null);
     setCustomInput("");
     setIsCustomSelected(false);
     setIsEditing(false);
@@ -46,8 +45,16 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
   };
   
   const handleComplete = () => {
+    const payload: any = {
+      type: itemType,
+      date: selectedFullDate.toISOString().split('T')[0],
+      purchasedAt: selectedTime === 'day' ? 'MORNING' : selectedTime === 'evening' ? 'EVENING' : 'NIGHT',
+      // 직접 입력이 선택되었으면 customInput을, 아니면 선택된 프리셋 텍스트
+      reason: isCustomSelected ? customInput : (selectedReason || ""),
+    };
+
+    onComplete(payload);
     resetState();
-    onComplete();
   };
 
   // 캘린더 관련 useMemo
@@ -92,7 +99,7 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
 
   if (!isOpen) return null;
 
-  const isStep1Active = selectedItems.length > 0 || (isCustomSelected && customInput.trim() !== "");
+  const isStep1Active = !!selectedReason || (isCustomSelected && customInput.trim() !== "");
   const options = ["필요해서", "세일 중이라", "기분 전환", "보상으로", "품절될 것 같아서", "선물용으로"];
 
   return (
@@ -116,12 +123,17 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
                 <h2 className="text-[18px] font-semibold text-black text-center whitespace-nowrap">
                   구매를 결정한 이유는 무엇인가요?
                 </h2>
-                <p className="text-[color:var(--color-gray-600)] text-[14px] text-center shrink-0">(복수 선택 가능)</p>
+                <p className="text-[color:var(--color-gray-600)] text-[14px] text-center shrink-0">하나만 선택해주세요.</p>
               </div>
 
               <div className="flex flex-col gap-[10px] w-full overflow-y-auto no-scrollbar pb-2 px-[31px] py-2">
                 {options.map((option) => {
-                  const isSelected = selectedItems.includes(option);
+                  const isSelected = selectedReason === option;
+                  const handleToggle = () => {
+                    setSelectedReason(isSelected ? null : option);
+                    setIsCustomSelected(false);
+                  };
+
                   return (
                     <ChecklistItem
                       key={option}
@@ -129,19 +141,9 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
                       isSelected={isSelected}
                       onCheckClick={(e) => {
                         e.stopPropagation();
-                        if (isSelected) {
-                          setSelectedItems(selectedItems.filter(i => i !== option));
-                        } else {
-                          setSelectedItems([...selectedItems, option]);
-                        }
+                        handleToggle();
                       }}
-                      onTextClick={() => {
-                        if (isSelected) {
-                          setSelectedItems(selectedItems.filter(i => i !== option));
-                        } else {
-                          setSelectedItems([...selectedItems, option]);
-                        }
-                      }}
+                      onTextClick={handleToggle}
                     />
                   );
                 })}
@@ -154,9 +156,15 @@ const PurchaseReasonModal = ({ isOpen, onClose, onComplete }: PurchaseReasonModa
                   customInput={customInput}
                   onCheckClick={(e) => {
                     e.stopPropagation();
-                    setIsCustomSelected(!isCustomSelected);
+                    const next = !isCustomSelected;
+                    setIsCustomSelected(next);
+                    if (next) setSelectedReason(null);
                   }}
-                  onTextClick={() => setIsEditing(true)}
+                  onTextClick={() => {
+                    setIsEditing(true);
+                    setIsCustomSelected(true);
+                    setSelectedReason(null);
+                  }}
                   onInputChange={(e) => setCustomInput(e.target.value)}
                   onInputBlur={() => setIsEditing(false)}
                   onInputKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
