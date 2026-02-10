@@ -30,8 +30,8 @@ const HomePage = () => {
 
   // 드래그 종료 핸들러
   const handleDragEnd = (_: Event, { offset, velocity }: PanInfo) => {
-    if ((velocity.y < -500 || offset.y < -120) && velocity.y < 500) {
-      sheetControls.start({ y: -240 });
+    if ((velocity.y < -500 || offset.y < -90) && velocity.y < 500) {
+      sheetControls.start({ y: -200 });
     } else {
       sheetControls.start({ y: 0 });
     }
@@ -45,7 +45,7 @@ const HomePage = () => {
       {/* 헤더 */}
       <header className="px-[20px] py-[6px] w-full flex gap-1 bg-white border-gray-50 shadow-[0_0_3px_rgba(0,0,0,0.25)] sticky top-0 z-10 items-end">
         <SeedIcon className="w-[26px] h-[37px]" />
-        <span className="text-primary-600 leading-none font-galmuri">onakawa</span>
+        <span className="text-primary-600 font-galmuri">onakawa</span>
         <Link to="/budget/setting" className="ml-auto">
           <Trophy className="cursor-pointer" />
         </Link>
@@ -154,8 +154,8 @@ const HomePage = () => {
                     </div>
 
                     {/* 가격 및 이름 */}
-                    <div className="flex flex-col gap-[6px] px-[2px]">
-                      <span className="text-[12px] leading-none">{item.price}</span>
+                    <div className="flex flex-col gap-[6px] px-[2px] ">
+                      <span className="text-[12px] leading-none font-medium">{item.price}</span>
                       <span className="text-[12px] leading-none truncate w-full">{item.name}</span>
                     </div>
                   </div>

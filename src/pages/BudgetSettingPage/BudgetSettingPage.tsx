@@ -21,7 +21,7 @@ const BudgetSettingPage = () => {
   const { setCustomBack, setRightAction } = useOutletContext<HeaderControlContext>();
 
   useEffect(() => {
-    setCustomBack(() => prevStep);
+    setCustomBack(prevStep);
 
     if (1 === step || step > 4) {
       setRightAction(null);

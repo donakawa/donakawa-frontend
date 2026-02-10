@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { type HeaderControlContext } from '@/layouts/ProtectedLayout';
 
 import InfoItem from './components/InfoItem';
@@ -28,17 +28,20 @@ const MOCK_DATA: BudgetData = {
 
 const BudgetSummaryPage = () => {
   // 헤더 컨트롤 가져오기
-  const { setRightAction } = useOutletContext<HeaderControlContext>();
-
+  const { setRightAction, setCustomBack } = useOutletContext<HeaderControlContext>();
   // 상태 관리
   const [isEdit, setIsEdit] = useState(false);
   const [data, setData] = useState<BudgetData>(MOCK_DATA);
 
+  const navigate = useNavigate();
+
   // 헤더 버튼 제어
   useEffect(() => {
     if (isEdit) {
+      setCustomBack(() => () => setIsEdit(false));
       setRightAction(null);
     } else {
+      setCustomBack(() => navigate('/home', { replace: true }));
       setRightAction({
         label: '수정하기',
         onClick: () => setIsEdit(true),
