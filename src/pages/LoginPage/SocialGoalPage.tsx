@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoClose } from 'react-icons/io5';
-import { updateGoal } from '@/api/auth';
+import { updateGoal } from '@/apis/auth';
 import type { AxiosError } from 'axios';
 
 // 백엔드 에러 응답 타입

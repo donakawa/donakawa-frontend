@@ -284,6 +284,7 @@ const FindPasswordPage = () => {
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
+                    aria-label={`인증번호 ${idx + 1}자리`}
                     value={num}
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
