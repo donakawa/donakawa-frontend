@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { RiKakaoTalkFill } from 'react-icons/ri';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
@@ -17,7 +17,6 @@ interface ErrorResponse {
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -27,24 +26,6 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // 구글 로그인 토큰 처리
-  useEffect(() => {
-    // 1. 주소창의 쿼리 파라미터(?accessToken=...)를 가져옴
-    const params = new URLSearchParams(location.search);
-    const accessToken = params.get('accessToken');
-    const refreshToken = params.get('refreshToken');
-
-    // 2. 토큰이 있다면 로그인 처리
-    if (accessToken) {
-      localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-
-      // 3. 홈으로 이동 (replace: true는 뒤로가기 했을 때 로그인 페이지로 다시 안 오게 함)
-      navigate('/home', { replace: true });
-    }
-  }, [location, navigate]);
 
   // 유효성 검사
   const isEmailValid = email.length > 0;

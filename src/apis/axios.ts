@@ -9,6 +9,18 @@ export const instance = axios.create({
   },
 });
 
+//  재발급 진행 중인지 체크하는 플래그
+let isRefreshing = false;
+
+//  재발급을 기다리는 요청들을 담아둘 대기열 (큐)
+let refreshSubscribers: ((success: boolean) => void)[] = [];
+
+// 대기열에 있는 요청들을 처리하는 함수
+const onRefreshed = (success: boolean) => {
+  refreshSubscribers.forEach((callback) => callback(success));
+  refreshSubscribers = []; // 처리 후 초기화
+};
+
 // 2. 응답 인터셉터 (Response Interceptor)
 instance.interceptors.response.use(
   (response) => response,
@@ -36,28 +48,48 @@ instance.interceptors.response.use(
     // 401 에러 또는 A005(만료)이면서, 리프레시 요청 자체가 아닐 때만 진입
     if ((status === 401 || errorCode === 'A005') && !isRefreshRequest) {
       
+      //  이미 재발급이 진행 중이면 -> 대기열에 넣고 기다림
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          refreshSubscribers.push((success: boolean) => {
+            if (success) {
+              // 재발급 성공 시 원래 요청 재시도
+              resolve(instance(originalRequest));
+            } else {
+              // 재발급 실패 시 에러 리턴
+              reject(error);
+            }
+          });
+        });
+      }
+
+      // 아무도 재발급 안 하고 있다면 -> 내가 대표로 재발급 시작
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        // A. 토큰 재발급 요청
+        // A. 토큰 재발급 요청 (대표자 1명만 실행)
         await instance.post('/auth/refresh');
 
-        // B. 성공 시 원래 요청 다시 시도
+        // B. 성공했음을 대기열에 알림
+        isRefreshing = false;
+        onRefreshed(true); // "얘들아 키 받아왔다! 출발해!"
+
+        // C. 원래 요청 재시도
         return instance(originalRequest);
       } catch (refreshError) {
-        // C. 재발급 실패 시 (리프레시 토큰도 만료됨)
+        // D. 실패 처리
+        isRefreshing = false;
+        onRefreshed(false); // "실패했다... 다들 해산(에러 처리)해."
+
         console.error('토큰 재발급 실패:', refreshError);
-        
-        // alert가 연속으로 뜨는 것을 방지하기 위해 한 번만 띄우거나, 바로 이동
         alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
-        
         window.location.href = '/login';
 
         return Promise.reject(refreshError);
       }
     }
 
-    // 리프레시 토큰 요청 자체가 401이 나면 여기서 그냥 에러를 던져서 끝냄 (무한루프 방지)
     return Promise.reject(error);
   },
 );

@@ -4,8 +4,8 @@ import { IoClose } from 'react-icons/io5';
 import { updateGoal } from '@/apis/auth';
 import type { AxiosError } from 'axios';
 
-// 백엔드 에러 응답 타입
-interface ErrorResponse {
+// 타입 이름 변경
+interface GoalErrorResponse {
   error: {
     errorCode: string;
     reason: string;
@@ -62,11 +62,11 @@ const SocialGoalPage = () => {
       // 1. 목표 수정 API 호출
       await updateGoal(goal);
       
-      // 2. 성공 시 홈으로 이동 (로그인 프로세스 완료)
+      // 2. 성공 시 홈으로 이동
       navigate('/home', { replace: true });
       
     } catch (error) {
-      const err = error as AxiosError<ErrorResponse>;
+      const err = error as AxiosError<GoalErrorResponse>;
       const errorCode = err.response?.data?.error?.errorCode;
       const errorReason = err.response?.data?.error?.reason;
 
