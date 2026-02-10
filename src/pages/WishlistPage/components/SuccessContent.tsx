@@ -10,11 +10,10 @@ interface SuccessModalProps {
 
 const SuccessModal = ({ 
   isOpen, 
-  onClose, 
-  //임시값
-  productImage = "/path-to-image.png", 
-  price = "238,400", 
-  productName = "캐시미어 로제 더블 하프코트" 
+  onClose,
+  productImage, 
+  price, 
+  productName
 }: SuccessModalProps) => {
   if (!isOpen) return null;
 
@@ -31,7 +30,6 @@ const SuccessModal = ({
             <h2 className="text-[20px] font-semibold text-[color:var(--color-black)] leading-[150%] text-center">기록이 완료되었습니다!</h2>
             <p className="text-[color:var(--color-gray-600)] text-[14px] leading-[150%] text-center">기록은 소비 피드백에 반영됩니다.</p>
           </div>
-          {/* 해당 상품 정보는 나중에 wish랑 합치면 item 컴포넌트로 사용할 예정입니다 */}
           <div className="flex flex-col items-start gap-[4px] w-[94px] h-[141px] mb-[20px]">
             <div className="w-[94px] h-[94px] bg-[color:var(--color-gray-100)] rounded-[5px] overflow-hidden">
               <img src={productImage} alt={productName} className="w-full h-full object-cover" />

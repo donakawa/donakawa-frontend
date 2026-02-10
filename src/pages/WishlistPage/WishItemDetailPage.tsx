@@ -6,6 +6,7 @@ import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal';
 import { getWishlistItemDetail, buyWishlistItem, dropWishlistItem } from '@/apis/WishlistPage/wishlistItems';
 import WishRegistrationPage from './WishRegistrationPage';
 import DefaultPhotoBig from '@/assets/default_item_photo_big.svg';
+import DefaultPhoto from '@/assets/default_item_photo.svg';
 
 export default function WishItemDetailPage() {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ if (isEditing) {
       await dropWishlistItem(itemId, type); 
       
       setIsDropModalOpen(false);
-      navigate('/wishlist'); // 성공 시 목록으로 이동
+      navigate('/wishlist');
     } catch (error: any) {
       console.error("구매 포기 실패:", error);
       alert(error.response?.data?.error?.message || "구매 포기 처리 중 오류가 발생했습니다.");
@@ -106,7 +107,7 @@ if (isEditing) {
 
   const handleFinalComplete = () => {
     setIsSuccessOpen(false);
-    navigate('/wishlist');
+    navigate('/report/review'); //구매 상세페이지로 수정
   };
 
   if (!item) return null;
@@ -178,7 +179,7 @@ if (isEditing) {
         onComplete={handleRecordComplete} 
         itemType={type}
       />
-      <SuccessModal isOpen={isSuccessOpen} onClose={handleFinalComplete} productImage={item.photoUrl} productName={item.name} price={item.price.toLocaleString()} />
+      <SuccessModal isOpen={isSuccessOpen} onClose={handleFinalComplete} productImage={item.photoUrl || DefaultPhoto} productName={item.name} price={item.price.toLocaleString()} />
       
       <ConfirmDeleteModal 
         open={isDropModalOpen}
