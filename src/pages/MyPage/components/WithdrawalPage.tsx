@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+// src/pages/MyPage/WithdrawalPage.tsx
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 import type { WithdrawalUiState } from '@/types/MyPage/withdrawal';
 
 import { LOCAL_STORAGE_KEY } from '@/constants/key';
-import { getAuthMe, verifyCurrentPassword, deleteAccount } from '@/apis/MyPage/auth';
+import { deleteAccount, getAuthMe, verifyCurrentPassword } from '@/apis/MyPage/auth';
 import type { ApiResponse } from '@/apis/auth';
 
 import EyeOpen from '@/assets/visible_eye.svg';
@@ -33,19 +34,27 @@ function isFailed<T>(res: ApiResponse<T>): res is {
   return res.resultType === 'FAILED';
 }
 
-type ToastKind = 'wrong' | 'locked';
+type ToastKind = 'wrong' | 'locked' | 'reauthFailed' | 'systemError';
 
 const TOAST_MESSAGE: Record<ToastKind, string> = {
   wrong: '비밀번호를 다시 확인해 주세요.',
   locked: '비밀번호 5회 오류로 인증이 30분간 제한됩니다.',
+  reauthFailed: '구글 인증에 실패했어요. 다시 시도해 주세요.',
+  systemError: '서버 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
 };
+
+type ReauthStatus = 'none' | 'success';
 
 export default function WithdrawalPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setTitle } = useOutletContext<HeaderControlContext>();
 
   const [email, setEmail] = useState<string>('');
   const [step, setStep] = useState<WithdrawStep>('idle');
+
+  // ✅ 구글 재인증 성공 여부(성공이면 비밀번호 검증 스킵 → 탈퇴 API만 호출)
+  const [reauthStatus, setReauthStatus] = useState<ReauthStatus>('none');
 
   const [ui, setUi] = useState<WithdrawalUiState>({
     password: '',
@@ -78,6 +87,7 @@ export default function WithdrawalPage() {
     return () => setTitle('');
   }, [setTitle]);
 
+  // ✅ 내 정보 조회(이메일 마스킹용)
   useEffect(() => {
     let mounted = true;
 
@@ -111,6 +121,48 @@ export default function WithdrawalPage() {
 
   const maskedEmail = useMemo(() => (email ? maskEmail(email) : ''), [email]);
 
+  const clearAuthAndGoLogin = useCallback(() => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
+    localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
+    navigate('/login', { replace: true });
+  }, [navigate]);
+
+  // ✅ 구글 재인증(302)으로 돌아왔을 때:
+  // - /mypage/withdrawal?reauth=success | failed
+  // - /mypage/withdrawal?system_error=true
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.toString()) return;
+
+    const reauth = (params.get('reauth') ?? '').trim();
+    const systemError = (params.get('system_error') ?? '').trim();
+
+    if (systemError === 'true') {
+      showToast('systemError');
+      navigate(location.pathname, { replace: true });
+      return;
+    }
+
+    if (reauth === 'success') {
+      setReauthStatus('success');
+      setUi((prev) => ({ ...prev, password: '', isModalOpen: true }));
+
+      // ✅ 쿼리 정리 (새로고침/뒤로가기 때 모달 무한 오픈 방지)
+      navigate(location.pathname, { replace: true });
+      return;
+    }
+
+    if (reauth === 'failed') {
+      showToast('reauthFailed');
+      navigate(location.pathname, { replace: true });
+      return;
+    }
+
+    // 알 수 없는 쿼리도 정리
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.search, navigate, showToast]);
+
+  // ✅ 비밀번호 확인 버튼 활성 조건
   const isConfirmEnabled = ui.password.trim().length > 0 && !isSubmitting;
 
   const openModal = () => {
@@ -124,29 +176,59 @@ export default function WithdrawalPage() {
 
   const onChangePassword = (value: string) => setUi((prev) => ({ ...prev, password: value }));
 
-  const clearAuthAndGoLogin = useCallback(() => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
-    localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
-    navigate('/login', { replace: true });
-  }, [navigate]);
-
-  const pickToastKindFromError = useCallback((errorCode: string, reason?: string) => {
+  const pickToastKindFromReason = useCallback((reason?: string): ToastKind => {
     const r = (reason ?? '').trim();
 
     const lockedHint = /5회|다섯|30분|삼십|제한|잠금|locked|limit/i.test(r);
-
     if (lockedHint) return 'locked';
 
     const wrongHint = /비밀번호|password|불일치|틀렸|다시\s*확인|오류/i.test(r);
-
     return wrongHint ? 'wrong' : 'wrong';
   }, []);
 
+  // ✅ (1) 구글 인증 버튼 → GET /auth/google/reauth 로 "이동"
+  const handleGoogleVerify = useCallback(() => {
+    if (isSubmitting) return;
+
+    const base = (import.meta.env.VITE_API_URL ?? '').trim();
+
+    // 엔드포인트: /auth/google/reauth
+    const url = base ? `${base}/auth/google/reauth` : `/auth/google/reauth`;
+
+    window.location.assign(url);
+  }, [isSubmitting]);
+
+  // ✅ (2) 모달에서 "탈퇴" 누르면:
+  // - 구글 재인증 성공이면 → DELETE /auth/account
+  // - 아니면 비번 재검증(POST /auth/verify-password) → DELETE /auth/account
   const handleWithdraw = useCallback(async () => {
-    const password = ui.password.trim();
-    if (!password || isSubmitting) return;
+    if (isSubmitting) return;
 
     try {
+      // ✅ 구글 재인증 성공 플로우: 비밀번호 확인 스킵
+      if (reauthStatus === 'success') {
+        setStep('deleting');
+
+        const delRes = await deleteAccount();
+
+        if (isFailed(delRes)) {
+          if (delRes.error.errorCode === 'A004') {
+            clearAuthAndGoLogin();
+            return;
+          }
+
+          showToast('wrong');
+          return;
+        }
+
+        clearAuthAndGoLogin();
+        return;
+      }
+
+      // ✅ 비밀번호 재인증 플로우
+      const password = ui.password.trim();
+      if (!password) return;
+
       setStep('verifying');
 
       const verifyRes = await verifyCurrentPassword({ currentPassword: password });
@@ -157,8 +239,7 @@ export default function WithdrawalPage() {
           return;
         }
 
-        const kind = pickToastKindFromError(verifyRes.error.errorCode, verifyRes.error.reason);
-        showToast(kind);
+        showToast(pickToastKindFromReason(verifyRes.error.reason));
         return;
       }
 
@@ -172,16 +253,6 @@ export default function WithdrawalPage() {
           return;
         }
 
-        if (delRes.error.errorCode === 'A105') {
-          showToast('wrong');
-          return;
-        }
-
-        if (delRes.error.errorCode === 'U001') {
-          showToast('wrong');
-          return;
-        }
-
         showToast('wrong');
         return;
       }
@@ -192,11 +263,7 @@ export default function WithdrawalPage() {
     } finally {
       setStep('idle');
     }
-  }, [ui.password, isSubmitting, clearAuthAndGoLogin, pickToastKindFromError, showToast]);
-
-  const handleGoogleVerify = async () => {
-    alert('구글 재인증 플로우가 확정되면 연결할게요.');
-  };
+  }, [clearAuthAndGoLogin, isSubmitting, pickToastKindFromReason, reauthStatus, showToast, ui.password]);
 
   return (
     <div className="w-full max-w-[375px] mx-auto min-h-[100dvh] bg-white relative">
@@ -265,8 +332,10 @@ export default function WithdrawalPage() {
           <button
             type="button"
             onClick={handleGoogleVerify}
-            disabled={true}
-            className="w-full h-[52px] rounded-[5px] border-0 bg-gray-400 text-white text-[16px] font-medium cursor-not-allowed">
+            disabled={isSubmitting}
+            className={`w-full h-[52px] rounded-[5px] border-0 text-white text-[16px] font-medium ${
+              isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-brown-300 cursor-pointer'
+            }`}>
             구글 계정으로 인증
           </button>
         </div>

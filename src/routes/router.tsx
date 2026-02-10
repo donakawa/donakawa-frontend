@@ -32,7 +32,7 @@ import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
 import WithdrawalPage from '@/pages/MyPage/components/WithdrawalPage';
 
 const publicChildren: RouteObject[] = [
-  { index: true, element: <SignupPage /> },
+  { index: true, element: <LoginPage /> },
   { path: 'signup', element: <SignupPage /> },
   { path: 'login', element: <LoginPage /> },
   { path: 'auth/callback', element: <GoogleCallbackPage /> },

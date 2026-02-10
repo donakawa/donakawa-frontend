@@ -23,7 +23,7 @@ import { useNoReviewItems } from '@/pages/ReportPage/hooks/useNoReviewItems';
 import type { ReviewItemCard } from '@/pages/ReportPage/hooks/useNoReviewItems';
 
 const WEEKDAYS: Weekday[] = ['월', '화', '수', '목', '금', '토', '일'];
-const TIMES: DayTime[] = ['아침', '낮', '저녁', '새벽'];
+const TIMES: DayTime[] = ['낮', '저녁', '새벽'];
 
 export default function RecordView() {
   const navigate = useNavigate();

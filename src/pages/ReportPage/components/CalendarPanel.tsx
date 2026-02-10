@@ -21,7 +21,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 
 // 별점 표시
 function RatingStars({ value }: { value: number }) {
-  const clamped = Math.max(0, Math.min(5, Math.floor(value))); // 0~5 정수 clamp
+  const clamped = Math.max(0, Math.min(5, Math.floor(value)));
   return (
     <div className="mt-1 inline-flex items-center gap-[6px]" aria-label={`별점 ${clamped}점`}>
       {Array.from({ length: 5 }).map((_, i) => {

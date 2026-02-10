@@ -2,6 +2,7 @@ import type { CalendarCell, CalendarPurchaseItem, DayTime } from '@/types/Report
 
 import SunIcon from '@/assets/sun.svg';
 import MoonIcon from '@/assets/moon_dawn.svg';
+import MoonDawnIcon from '@/assets/moon_dawn.svg';
 
 export type CalendarPurchase = CalendarPurchaseItem & { rating?: number };
 
@@ -28,7 +29,8 @@ export function formatKoreanDate(iso: string): string {
 }
 
 export function getTimeIcon(time: DayTime): { src: string; alt: string } {
-  if (time === '저녁' || time === '새벽') return { src: MoonIcon, alt: '달' };
+  if (time === '새벽') return { src: MoonDawnIcon, alt: '새벽 달' };
+  if (time === '저녁') return { src: MoonIcon, alt: '달' };
   return { src: SunIcon, alt: '해' };
 }
 
