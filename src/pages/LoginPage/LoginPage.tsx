@@ -91,12 +91,12 @@ const LoginPage = () => {
 
   // 4. 구글 로그인 버튼 로직
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-login`;
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/login`;
   };
 
   // 5. 카카오 로그인 버튼 로직 (기존 주소 사용)
   const handleKakaoLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao-login`;
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login`;
   };
 
   // 입력창 스타일 함수
