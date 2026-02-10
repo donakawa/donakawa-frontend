@@ -1,4 +1,3 @@
-// src/pages/MyPage/WithdrawalPage.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
@@ -7,7 +6,7 @@ import type { WithdrawalUiState } from '@/types/MyPage/withdrawal';
 
 import { LOCAL_STORAGE_KEY } from '@/constants/key';
 import { deleteAccount, getAuthMe, verifyCurrentPassword } from '@/apis/MyPage/auth';
-import type { ApiResponse } from '@/apis/auth';
+import type { ApiResponse, MeData } from '@/apis/auth';
 
 import EyeOpen from '@/assets/visible_eye.svg';
 import EyeClosed from '@/assets/invisible_eye.svg';
@@ -37,13 +36,33 @@ function isFailed<T>(res: ApiResponse<T>): res is {
 type ToastKind = 'wrong' | 'locked' | 'reauthFailed' | 'systemError';
 
 const TOAST_MESSAGE: Record<ToastKind, string> = {
-  wrong: '비밀번호를 다시 확인해 주세요.',
-  locked: '비밀번호 5회 오류로 인증이 30분간 제한됩니다.',
-  reauthFailed: '구글 인증에 실패했어요. 다시 시도해 주세요.',
+  wrong: '인증 정보를 다시 확인해 주세요.',
+  locked: '인증 시도 횟수 초과로 잠시 제한됩니다.',
+  reauthFailed: '소셜 인증에 실패했어요. 다시 시도해 주세요.',
   systemError: '서버 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
 };
 
 type ReauthStatus = 'none' | 'success';
+type Provider = 'GOOGLE' | 'KAKAO' | 'LOCAL' | 'UNKNOWN';
+
+function pickProviderFromMe(me: MeData): Provider {
+  const raw =
+    (me as unknown as { provider?: unknown }).provider ??
+    (me as unknown as { socialProvider?: unknown }).socialProvider ??
+    (me as unknown as { loginProvider?: unknown }).loginProvider ??
+    (me as unknown as { loginType?: unknown }).loginType ??
+    (me as unknown as { authProvider?: unknown }).authProvider ??
+    (me as unknown as { oauthProvider?: unknown }).oauthProvider ??
+    (me as unknown as { oauthType?: unknown }).oauthType ??
+    null;
+
+  const v = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+  if (!v) return 'UNKNOWN';
+  if (v.includes('GOOGLE')) return 'GOOGLE';
+  if (v.includes('KAKAO')) return 'KAKAO';
+  if (v.includes('LOCAL') || v.includes('EMAIL') || v.includes('PASSWORD') || v.includes('BASIC')) return 'LOCAL';
+  return 'UNKNOWN';
+}
 
 export default function WithdrawalPage() {
   const navigate = useNavigate();
@@ -53,7 +72,9 @@ export default function WithdrawalPage() {
   const [email, setEmail] = useState<string>('');
   const [step, setStep] = useState<WithdrawStep>('idle');
 
-  // ✅ 구글 재인증 성공 여부(성공이면 비밀번호 검증 스킵 → 탈퇴 API만 호출)
+  const [hasPassword, setHasPassword] = useState<boolean>(true);
+  const [provider, setProvider] = useState<Provider>('UNKNOWN');
+
   const [reauthStatus, setReauthStatus] = useState<ReauthStatus>('none');
 
   const [ui, setUi] = useState<WithdrawalUiState>({
@@ -87,7 +108,13 @@ export default function WithdrawalPage() {
     return () => setTitle('');
   }, [setTitle]);
 
-  // ✅ 내 정보 조회(이메일 마스킹용)
+  const clearAuthAndGoLogin = useCallback(() => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
+    localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
+    navigate('/login', { replace: true });
+  }, [navigate]);
+
+  // 내 정보 조회
   useEffect(() => {
     let mounted = true;
 
@@ -98,38 +125,33 @@ export default function WithdrawalPage() {
 
         if (isFailed(me)) {
           if (me.error.errorCode === 'A004') {
-            localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
-            localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
-            navigate('/login', { replace: true });
+            clearAuthAndGoLogin();
             return;
           }
-
           setEmail('');
+          setHasPassword(true);
+          setProvider('UNKNOWN');
           return;
         }
 
         setEmail(me.data.email);
+        setHasPassword(Boolean(me.data.hasPassword));
+        setProvider(pickProviderFromMe(me.data));
       } catch {
         setEmail('');
+        setHasPassword(true);
+        setProvider('UNKNOWN');
       }
     })();
 
     return () => {
       mounted = false;
     };
-  }, [navigate]);
+  }, [clearAuthAndGoLogin]);
 
   const maskedEmail = useMemo(() => (email ? maskEmail(email) : ''), [email]);
 
-  const clearAuthAndGoLogin = useCallback(() => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
-    localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
-    navigate('/login', { replace: true });
-  }, [navigate]);
-
-  // ✅ 구글 재인증(302)으로 돌아왔을 때:
-  // - /mypage/withdrawal?reauth=success | failed
-  // - /mypage/withdrawal?system_error=true
+  // 소셜 재인증 복귀
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (!params.toString()) return;
@@ -146,8 +168,6 @@ export default function WithdrawalPage() {
     if (reauth === 'success') {
       setReauthStatus('success');
       setUi((prev) => ({ ...prev, password: '', isModalOpen: true }));
-
-      // ✅ 쿼리 정리 (새로고침/뒤로가기 때 모달 무한 오픈 방지)
       navigate(location.pathname, { replace: true });
       return;
     }
@@ -158,57 +178,62 @@ export default function WithdrawalPage() {
       return;
     }
 
-    // 알 수 없는 쿼리도 정리
     navigate(location.pathname, { replace: true });
   }, [location.pathname, location.search, navigate, showToast]);
 
-  // ✅ 비밀번호 확인 버튼 활성 조건
-  const isConfirmEnabled = ui.password.trim().length > 0 && !isSubmitting;
+  const showPasswordReauth = hasPassword;
+
+  const showGoogleReauth = !hasPassword || provider === 'GOOGLE' || provider === 'UNKNOWN';
+  const showKakaoReauth = provider === 'KAKAO';
+
+  const showSocialDivider = showGoogleReauth || showKakaoReauth;
+
+  const canOpenModal = !isSubmitting && (hasPassword ? ui.password.trim().length > 0 : reauthStatus === 'success');
 
   const openModal = () => {
-    if (!isConfirmEnabled) return;
+    if (!canOpenModal) return;
     setUi((prev) => ({ ...prev, isModalOpen: true }));
   };
 
   const closeModal = () => setUi((prev) => ({ ...prev, isModalOpen: false }));
 
   const togglePasswordVisible = () => setUi((prev) => ({ ...prev, isPasswordVisible: !prev.isPasswordVisible }));
-
   const onChangePassword = (value: string) => setUi((prev) => ({ ...prev, password: value }));
 
   const pickToastKindFromReason = useCallback((reason?: string): ToastKind => {
     const r = (reason ?? '').trim();
-
     const lockedHint = /5회|다섯|30분|삼십|제한|잠금|locked|limit/i.test(r);
     if (lockedHint) return 'locked';
-
-    const wrongHint = /비밀번호|password|불일치|틀렸|다시\s*확인|오류/i.test(r);
-    return wrongHint ? 'wrong' : 'wrong';
+    return 'wrong';
   }, []);
 
-  // ✅ (1) 구글 인증 버튼 → GET /auth/google/reauth 로 "이동"
   const handleGoogleVerify = useCallback(() => {
     if (isSubmitting) return;
 
     const base = (import.meta.env.VITE_API_URL ?? '').trim();
-
-    // 엔드포인트: /auth/google/reauth
     const url = base ? `${base}/auth/google/reauth` : `/auth/google/reauth`;
-
     window.location.assign(url);
   }, [isSubmitting]);
 
-  // ✅ (2) 모달에서 "탈퇴" 누르면:
-  // - 구글 재인증 성공이면 → DELETE /auth/account
-  // - 아니면 비번 재검증(POST /auth/verify-password) → DELETE /auth/account
+  const handleKakaoVerify = useCallback(() => {
+    if (isSubmitting) return;
+
+    const base = (import.meta.env.VITE_API_URL ?? '').trim();
+    const url = base ? `${base}/auth/kakao/reauth` : `/auth/kakao/reauth`;
+    window.location.assign(url);
+  }, [isSubmitting]);
+
   const handleWithdraw = useCallback(async () => {
     if (isSubmitting) return;
 
     try {
-      // ✅ 구글 재인증 성공 플로우: 비밀번호 확인 스킵
-      if (reauthStatus === 'success') {
-        setStep('deleting');
+      if (!hasPassword) {
+        if (reauthStatus !== 'success') {
+          showToast('wrong');
+          return;
+        }
 
+        setStep('deleting');
         const delRes = await deleteAccount();
 
         if (isFailed(delRes)) {
@@ -216,7 +241,6 @@ export default function WithdrawalPage() {
             clearAuthAndGoLogin();
             return;
           }
-
           showToast('wrong');
           return;
         }
@@ -225,20 +249,17 @@ export default function WithdrawalPage() {
         return;
       }
 
-      // ✅ 비밀번호 재인증 플로우
       const password = ui.password.trim();
       if (!password) return;
 
       setStep('verifying');
 
-      const verifyRes = await verifyCurrentPassword({ currentPassword: password });
-
+      const verifyRes = await verifyCurrentPassword({ password, type: 'CHANGE_PASSWORD' });
       if (isFailed(verifyRes)) {
         if (verifyRes.error.errorCode === 'A004') {
           clearAuthAndGoLogin();
           return;
         }
-
         showToast(pickToastKindFromReason(verifyRes.error.reason));
         return;
       }
@@ -246,13 +267,11 @@ export default function WithdrawalPage() {
       setStep('deleting');
 
       const delRes = await deleteAccount();
-
       if (isFailed(delRes)) {
         if (delRes.error.errorCode === 'A004') {
           clearAuthAndGoLogin();
           return;
         }
-
         showToast('wrong');
         return;
       }
@@ -263,7 +282,7 @@ export default function WithdrawalPage() {
     } finally {
       setStep('idle');
     }
-  }, [clearAuthAndGoLogin, isSubmitting, pickToastKindFromReason, reauthStatus, showToast, ui.password]);
+  }, [clearAuthAndGoLogin, hasPassword, isSubmitting, pickToastKindFromReason, reauthStatus, showToast, ui.password]);
 
   return (
     <div className="w-full max-w-[375px] mx-auto min-h-[100dvh] bg-white relative">
@@ -279,6 +298,14 @@ export default function WithdrawalPage() {
           </div>
 
           <p className="m-0 text-[20px] font-semibold text-black">로그인 계정으로 재인증해 주세요.</p>
+
+          {!hasPassword && reauthStatus !== 'success' && (
+            <p className="m-0 text-[13px] text-gray-600 leading-[1.5]">
+              소셜 로그인 계정은 비밀번호가 없어요.
+              <br />
+              아래 버튼으로 재인증 후 탈퇴를 진행해 주세요.
+            </p>
+          )}
         </div>
 
         <div className="mt-[18px] flex flex-col gap-3">
@@ -289,55 +316,75 @@ export default function WithdrawalPage() {
             className="w-full h-12 rounded-[6px] border-2 px-[14px] text-[15px] outline-none text-black bg-white placeholder:text-gray-600 disabled:bg-white disabled:text-gray-600 border-primary-400"
           />
 
-          <div className="relative">
-            <input
-              type={ui.isPasswordVisible ? 'text' : 'password'}
-              value={ui.password}
-              onChange={(e) => onChangePassword(e.target.value)}
-              placeholder="비밀번호"
-              autoComplete="current-password"
-              inputMode="text"
-              className={`w-full h-12 rounded-[6px] border-2 px-[14px] pr-[46px] text-[15px] outline-none text-black bg-white placeholder:text-gray-600 ${
-                ui.password.trim().length > 0 ? 'border-primary-400' : 'border-gray-100'
-              }`}
-            />
+          {showPasswordReauth && (
+            <div className="relative">
+              <input
+                type={ui.isPasswordVisible ? 'text' : 'password'}
+                value={ui.password}
+                onChange={(e) => onChangePassword(e.target.value)}
+                placeholder="비밀번호"
+                autoComplete="current-password"
+                inputMode="text"
+                className={`w-full h-12 rounded-[6px] border-2 px-[14px] pr-[46px] text-[15px] outline-none text-black bg-white placeholder:text-gray-600 ${
+                  ui.password.trim().length > 0 ? 'border-primary-400' : 'border-gray-100'
+                }`}
+              />
 
-            {ui.password.trim().length > 0 && (
-              <button
-                type="button"
-                onClick={togglePasswordVisible}
-                aria-label="비밀번호 표시 전환"
-                className="absolute top-1/2 right-[10px] -translate-y-1/2 w-[34px] h-[34px] rounded-[10px] bg-transparent inline-flex items-center justify-center">
-                <img src={ui.isPasswordVisible ? EyeOpen : EyeClosed} alt="" />
-              </button>
-            )}
-          </div>
+              {ui.password.trim().length > 0 && (
+                <button
+                  type="button"
+                  onClick={togglePasswordVisible}
+                  aria-label="비밀번호 표시 전환"
+                  className="absolute top-1/2 right-[10px] -translate-y-1/2 w-[34px] h-[34px] rounded-[10px] bg-transparent inline-flex items-center justify-center">
+                  <img src={ui.isPasswordVisible ? EyeOpen : EyeClosed} alt="" />
+                </button>
+              )}
+            </div>
+          )}
 
           <button
             type="button"
             onClick={openModal}
-            disabled={!isConfirmEnabled}
+            disabled={!canOpenModal}
             className={`mt-[30px] w-full h-[52px] rounded-[5px] border-0 text-[16px] font-medium text-white ${
-              isConfirmEnabled ? 'bg-primary-400 cursor-pointer' : 'bg-gray-400 cursor-not-allowed'
+              canOpenModal ? 'bg-primary-400 cursor-pointer' : 'bg-gray-400 cursor-not-allowed'
             }`}>
             확인
           </button>
 
-          <div className="my-[18px] grid grid-cols-[1fr_auto_1fr] items-center gap-[10px] text-[12px] text-primary-brown-300">
-            <div className="h-px bg-primary-brown-300" />
-            <div>다른 방법으로 인증</div>
-            <div className="h-px bg-primary-brown-300" />
-          </div>
+          {showSocialDivider && (
+            <>
+              <div className="my-[18px] grid grid-cols-[1fr_auto_1fr] items-center gap-[10px] text-[12px] text-primary-brown-300">
+                <div className="h-px bg-primary-brown-300" />
+                <div>다른 방법으로 인증</div>
+                <div className="h-px bg-primary-brown-300" />
+              </div>
 
-          <button
-            type="button"
-            onClick={handleGoogleVerify}
-            disabled={isSubmitting}
-            className={`w-full h-[52px] rounded-[5px] border-0 text-white text-[16px] font-medium ${
-              isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-brown-300 cursor-pointer'
-            }`}>
-            구글 계정으로 인증
-          </button>
+              {showGoogleReauth && (
+                <button
+                  type="button"
+                  onClick={handleGoogleVerify}
+                  disabled={isSubmitting}
+                  className={`w-full h-[52px] rounded-[5px] border-0 text-white text-[16px] font-medium ${
+                    isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-brown-300 cursor-pointer'
+                  }`}>
+                  구글 계정으로 인증
+                </button>
+              )}
+
+              {showKakaoReauth && (
+                <button
+                  type="button"
+                  onClick={handleKakaoVerify}
+                  disabled={isSubmitting}
+                  className={`w-full h-[52px] rounded-[5px] border-0 text-white text-[16px] font-medium ${
+                    isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-brown-300 cursor-pointer'
+                  }`}>
+                  카카오 계정으로 인증
+                </button>
+              )}
+            </>
+          )}
         </div>
       </main>
 

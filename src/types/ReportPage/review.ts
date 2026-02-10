@@ -25,6 +25,7 @@ export type CompletedReviewItem = {
 };
 
 export type RatingValue = 0 | Rating;
+
 export type UsageLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type ReviewWritePurchase = {

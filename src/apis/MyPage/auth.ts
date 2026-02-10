@@ -3,6 +3,8 @@ import type { ApiResponse, MeData } from '@/apis/auth';
 
 export type EmailCodeType = 'REGISTER' | 'RESET_PASSWORD';
 
+export type VerifyPasswordType = 'CHANGE_PASSWORD' | 'RESET_PASSWORD';
+
 // 내 정보 조회
 export async function getAuthMe(): Promise<ApiResponse<MeData>> {
   const { data } = await axiosInstance.get<ApiResponse<MeData>>('/auth/me');
@@ -37,7 +39,10 @@ export async function verifyEmailCode(body: {
 }
 
 // 현재 비밀번호 확인
-export async function verifyCurrentPassword(body: { currentPassword: string }): Promise<ApiResponse<null>> {
+export async function verifyCurrentPassword(body: {
+  password: string;
+  type: VerifyPasswordType;
+}): Promise<ApiResponse<null>> {
   const { data } = await axiosInstance.post<ApiResponse<null>>('/auth/verify-password', body);
   return data;
 }
