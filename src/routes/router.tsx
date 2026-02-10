@@ -34,12 +34,11 @@ const protectedChildren: RouteObject[] = [
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
-  { path: 'wishlist', element: <WishlistPage /> },
   { path: 'item_selection', element: <ItemSelectionPage /> },
   { path: 'wishlist',
     children: [
       { index: true, element: <WishlistPage /> },
-      { path: '/wishlist/detail/:itemId', element: <WishItemDetailPage />,}
+      { path: 'detail/:itemId', element: <WishItemDetailPage /> },
     ],
   },
   {

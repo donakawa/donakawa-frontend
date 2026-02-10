@@ -37,11 +37,7 @@ export async function createWishlistItem(data: CreateWishlistItemRequest) {
   if (data.url) formData.append("url", data.url);
   if (data.file) formData.append("file", data.file);
 
-  const res = await http.post("/wishlist/items", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const res = await http.post("/wishlist/items", formData);
   return res.data;
 }
 
@@ -129,17 +125,25 @@ export async function updateWishlistItemReason(
   return await http.patch(`/wishlist/items/${itemId}/reason`, data);
 }
 
-export async function updateManualWishlistItem(itemId: string, data: any) {
+export async function updateManualWishlistItem(
+    itemId: string,
+    data: {
+      productName?: string;
+      price?: number;
+      storeName?: string;
+      url?: string;
+      file?: File | Blob;
+      brandName?: string;
+    }
+  ) {
   const formData = new FormData();
-  if (data.productName) formData.append("productName", data.productName);
-  if (data.price) formData.append("price", String(data.price));
-  if (data.storeName) formData.append("storeName", data.storeName);
-  if (data.url) formData.append("url", data.url);
-  if (data.file) formData.append("file", data.file);
-  if (data.brandName) formData.append("brandName", data.brandName);
+  if (data.productName != null) formData.append("productName", data.productName);
+  if (data.price != null) formData.append("price", String(data.price));
+  if (data.storeName != null) formData.append("storeName", data.storeName);
+  if (data.url != null) formData.append("url", data.url);
+  if (data.file != null) formData.append("file", data.file);
+  if (data.brandName != null) formData.append("brandName", data.brandName);
 
-  const res = await http.patch(`/wishlist/items/${itemId}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await http.patch(`/wishlist/items/${itemId}`, formData);
   return res.data;
 }

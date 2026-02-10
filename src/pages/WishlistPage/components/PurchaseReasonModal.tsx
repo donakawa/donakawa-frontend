@@ -8,10 +8,17 @@ import ProgressBar from './ProgressBar';
 import TimeSlotButton from './TimeSlotButton';
 import CalendarStrip from './CalendarStrip';
 
+interface PurchaseDecisionPayload {
+  type: 'AUTO' | 'MANUAL';
+  date: string;
+  purchasedAt: 'MORNING' | 'EVENING' | 'NIGHT';
+  reason: string;
+}
+
 interface PurchaseReasonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (data: any) => void;
+  onComplete: (data: PurchaseDecisionPayload) => void;
   itemType: 'AUTO' | 'MANUAL';
 }
 

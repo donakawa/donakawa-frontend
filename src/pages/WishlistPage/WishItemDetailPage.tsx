@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import PurchaseReasonModal from './components/PurchaseReasonModal';
 import SuccessModal from './components/SuccessContent';
 import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal';
-import { getWishlistItemDetail, buyWishlistItem, dropWishlistItem } from '@/apis/WishlistPage/wishlistItems';
+import { getWishlistItemDetail, buyWishlistItem, dropWishlistItem, type PurchaseDecisionPayload } from '@/apis/WishlistPage/wishlistItems';
 import WishRegistrationPage from './WishRegistrationPage';
 import DefaultPhotoBig from '@/assets/default_item_photo_big.svg';
 import DefaultPhoto from '@/assets/default_item_photo.svg';
@@ -12,7 +12,13 @@ export default function WishItemDetailPage() {
   const navigate = useNavigate();
   const { itemId } = useParams();
   const [searchParams] = useSearchParams();
-  const type = searchParams.get('type') as 'AUTO' | 'MANUAL';
+  const rawType = searchParams.get('type');
+  const type = rawType === 'AUTO' || rawType === 'MANUAL' ? rawType : null;
+
+  if (!type) {
+    navigate('/wishlist', { replace: true });
+    return null;
+  }
 
   const [item, setItem] = useState<any>(null);
   const [isReasonOpen, setIsReasonOpen] = useState(false);
@@ -25,6 +31,8 @@ export default function WishItemDetailPage() {
     if (itemId && type) {
       getWishlistItemDetail(itemId, type).then((res) => {
         if (res.resultType === 'SUCCESS') setItem(res.data);
+      }).catch((err) => {
+        console.error('아이템 상세 조회 실패:', err);
       });
     }
   }, [itemId, type]);
@@ -41,7 +49,19 @@ export default function WishItemDetailPage() {
 
   if(!item) return null;
 
-if (isEditing) {
+  const fetchItem = () => {
+    if (itemId && type) {
+      getWishlistItemDetail(itemId, type).then((res) => {
+        if (res.resultType === 'SUCCESS') setItem(res.data);
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchItem();
+  }, [itemId, type]);
+
+  if (isEditing) {
     return (
       <WishRegistrationPage
         isEdit={true}
@@ -59,7 +79,7 @@ if (isEditing) {
         onBack={() => setIsEditing(false)}
         onComplete={() => {
           setIsEditing(false);
-          window.location.reload(); 
+          fetchItem();
         }}
       />
     );
@@ -90,8 +110,8 @@ if (isEditing) {
   const handleRecordComplete = async (modalData: any) => {
     try {
       if (!itemId || !type) return;
-      const payload = {
-        type: type,
+      const payload: PurchaseDecisionPayload = {
+        type,
         date: modalData.date,
         purchasedAt: modalData.purchasedAt, 
         reasonId: modalData.reasonId,
@@ -109,8 +129,6 @@ if (isEditing) {
     setIsSuccessOpen(false);
     navigate('/report/review'); //구매 상세페이지로 수정
   };
-
-  if (!item) return null;
 
   return (
     <div className="w-full min-h-screen bg-white text-[#111]">
@@ -132,7 +150,7 @@ if (isEditing) {
             </div>
             <h2 className="text-[18px] font-semibold text-[rgba(0,0,0,0.85)] mb-1 leading-tight">{item.name}</h2>
             <div className="flex items-baseline gap-[6px] mb-[14px]">
-              <span className="text-[20px] font-semibold text-[rgba(0,0,0,0.9)]">{item.price.toLocaleString()}</span>
+              <span className="text-[20px] font-semibold text-[rgba(0,0,0,0.9)]">{item.price?.toLocaleString() ?? '0'}</span>
               <span className="text-[14px] font-normal text-[rgba(0,0,0,0.6)]">원</span>
             </div>
 
@@ -152,7 +170,8 @@ if (isEditing) {
           </section>
 
           <section className="px-[18px] py-4">
-            <button type="button" onClick={() => window.open(item.productUrl, '_blank')} className="w-full h-[74px] rounded-full cursor-pointer bg-[rgba(255,255,230,1)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] flex items-center justify-between px-[18px] border-0">
+            <button type="button" onClick={() => {
+              if (item.productUrl) window.open(item.productUrl, '_blank', 'noopener,noreferrer');}} className="w-full h-[74px] rounded-full cursor-pointer bg-[rgba(255,255,230,1)] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] flex items-center justify-between px-[18px] border-0">
               <div className="flex items-center gap-3">
                 <div aria-hidden className="w-[38px] h-[38px] rounded-full bg-[rgba(0,0,0,0.12)]" />
                 <div className="flex flex-col gap-1 items-start text-left">

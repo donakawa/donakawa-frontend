@@ -39,7 +39,7 @@ import { useWishlistFolderItems } from '@/queries/WishlistPage/useWishlistFolder
 import { useDeleteWishlistItem } from '@/queries/WishlistPage/useDeleteWishlistItem';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-
+type WishlistDisplayItem = WishlistItemType & { realId: string };
 
 const HEADER_HEIGHT = 56;
 
@@ -88,7 +88,7 @@ export default function WishlistPage() {
     },
   });
 
-  const displayItems: WishlistItemType[] = useMemo(() => {
+  const displayItems: WishlistDisplayItem[] = useMemo(() => {
     const currentItemsData = isAllTab ? allItemsData : folderItemsData;
     
     return (currentItemsData?.items || []).map((item) => ({
@@ -132,7 +132,9 @@ export default function WishlistPage() {
   );
 
   const handleItemClick = (compositeId: string) => {
-    const [type, id] = compositeId.split('_');
+    const idx = compositeId.indexOf('_');
+    const type = compositeId.slice(0, idx);
+    const id = compositeId.slice(idx + 1);
     navigate(`/wishlist/detail/${id}?type=${type}`);
   };
 
@@ -230,11 +232,6 @@ export default function WishlistPage() {
         editMode.off();
         showToast(`'${folderName}' 폴더가 추가되었습니다!`);
         resetBanner();
-        return;
-      }
-
-      if (res.resultType === "FAILED" && res.error?.errorCode === "DUPLICATE_FOLDER_NAME") {
-        showToast(res.error.message);
         return;
       }
 
@@ -397,6 +394,11 @@ export default function WishlistPage() {
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
               <WishlistGrid items={displayItems} onItemClick={handleItemClick}/>
+              {hasNext && (
+                <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                  {isFetchingNext && <p className="text-xs text-gray-400">불러오는 중...</p>}
+                </div>
+              )}
               <div className="h-[50px]" />
             </div>
           </>

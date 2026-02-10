@@ -63,34 +63,57 @@ export default function WishRegistrationPage({
     return name && price && brand && reason && store && url;
   }, [name, price, brand, reason, store, url]);
 
+  const toNumericPrice = (value: string) => {
+    const numeric = Number(value.replace(/[^0-9]/g, ""));
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
+
   const handleSave = async () => {
     try {
+      // EDIT MODE
       if (isEdit && itemId && itemType) {
-        if (itemType === 'AUTO') {
-          await updateWishlistItemReason(itemId, { reason, type: 'AUTO' });
+        if (itemType === "AUTO") {
+          // AUTO는 reason만 수정
+          await updateWishlistItemReason(itemId, { reason, type: "AUTO" });
         } else {
-          const numericPrice = Number(price.toString().replace(/[^0-9]/g, ''));
-          await Promise.all([
-            updateManualWishlistItem(itemId, {
-              productName: name, price: numericPrice, storeName: store, brandName: brand, url, file: rawFile || undefined
-            }),
-            updateWishlistItemReason(itemId, { reason, type: 'MANUAL' })
-          ]);
+          const numericPrice = toNumericPrice(price);
+
+          await updateManualWishlistItem(itemId, {
+            productName: name,
+            price: numericPrice,
+            storeName: store,
+            brandName: brand,
+            url,
+            file: rawFile || undefined,
+          });
+
+          await updateWishlistItemReason(itemId, { reason, type: "MANUAL" });
         }
-      } else {
+      }
+      // CREATE MODE
+      else {
         if ((initialData as any)?.cacheId) {
           await createWishlistItemFromCache((initialData as any).cacheId, reason);
         } else {
-          const numericPrice = Number(price.toString().replace(/[^0-9]/g, ''));
+          const numericPrice = toNumericPrice(price);
           await registerItem({
-            productName: name, price: numericPrice, storeName: store, brandName: brand, reason, file: rawFile || undefined, url,
+            productName: name,
+            price: numericPrice,
+            storeName: store,
+            brandName: brand,
+            reason,
+            file: rawFile || undefined,
+            url,
           });
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["wishlistItems"] });
-      queryClient.invalidateQueries({ queryKey: ["wishlistFolderItems"] });
-      
+      // 캐시 갱신
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["wishlistItems"] }),
+        queryClient.invalidateQueries({ queryKey: ["wishlistFolderItems"] }),
+      ]);
+
       onComplete({ name, reason, isEdit: !!isEdit });
     } catch (error) {
       alert("처리에 실패했습니다.");

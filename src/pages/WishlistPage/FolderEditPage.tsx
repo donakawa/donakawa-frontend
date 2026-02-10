@@ -25,22 +25,22 @@ export default function FolderEditPage({ folders, onBack, onAddFolder, onDeleteC
   };
 
   const handleConfirmDelete = async () => {
-  if (!targetFolder) return;
+    if (!targetFolder) return;
 
-  try {
-    await deleteFolder(targetFolder.id);
-    
-    setDeleteModalOpen(false);
-    onDeleteComplete(targetFolder.name);
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+    try {
+      await deleteFolder(targetFolder.id);
+      
       setDeleteModalOpen(false);
       onDeleteComplete(targetFolder.name);
-    } else {
-      alert("폴더 삭제에 실패했습니다.");
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        setDeleteModalOpen(false);
+        onDeleteComplete(targetFolder.name);
+      } else {
+        alert("폴더 삭제에 실패했습니다.");
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="absolute inset-0 z-[100] bg-white flex flex-col">

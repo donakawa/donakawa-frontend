@@ -1,4 +1,4 @@
-export type ApiResultType = "SUCCESS" | "FAIL";
+export type ApiResultType = "SUCCESS" | "FAILED";
 
 export interface ApiResponse<T> {
   resultType: ApiResultType;

@@ -53,13 +53,16 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
             const d = resultRes.data;
             onComplete({
               name: d.productName,
-              price: d.price.toLocaleString(),
+              price: d.price != null ? d.price.toLocaleString() : "0",
               brand: d.brandName,
               store: d.platformName,
               image: d.imageUrl || DefaultPhoto,
               url: originalUrl,
               cacheId: dataId
             });
+          }
+          else {
+            alert("상품 정보를 분석하는 데 실패했습니다.");
           }
         } else if (result === 'FAILED') {
           throw new Error("CRAWL_FAILED");
