@@ -34,8 +34,7 @@
 
 @font-face {
   font-family: 'Galmuri11';
-  font-weight: 700;
-  src: url('https://cdn.jsdelivr.net/npm/galmuri/dist/Galmuri11-Bold.woff2') format('woff2');
+  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
   font-display: swap;
 }
 

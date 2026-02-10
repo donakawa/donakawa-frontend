@@ -23,13 +23,12 @@ import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
-// import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
-// import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ProfileSettingPage from '@/pages/MyPage/ProfileSettingPage';
 import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Password';
 import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
 import WithdrawalPage from '@/pages/MyPage/components/WithdrawalPage';
+import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <LoginPage /> },
@@ -52,6 +51,7 @@ const protectedChildren: RouteObject[] = [
     ],
   },
   { path: 'wishlist', element: <WishlistPage /> },
+  { path: 'item_selection', element: <ItemSelectionPage /> },
   {
     path: 'report',
     children: [
