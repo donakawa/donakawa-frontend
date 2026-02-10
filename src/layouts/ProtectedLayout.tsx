@@ -1,8 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import { getMe } from '@/apis/auth'; // 실제 api 경로로 확인해주세요
 
 export interface HeaderControlContext {
   setTitle: (title: string) => void;
@@ -12,27 +13,45 @@ export interface HeaderControlContext {
 }
 
 export default function ProtectedLayout() {
-  const isAuthenticated = true;
   const location = useLocation();
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [title, setTitle] = useState('');
   const [customBack, setCustomBack] = useState<(() => void) | null>(null);
-
   const [rightAction, setRightAction] = useState<{
     rightNode: React.ReactNode;
     onClick: () => void;
     ariaLabel?: string;
   } | null>(null);
-
   const [layoutModal, setLayoutModal] = useState<React.ReactNode | null>(null);
 
-  // 헤더 삭제
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkAuth = async () => {
+      try {
+        await getMe();
+        if (isMounted) setIsAuthenticated(true);
+      } catch (error) {
+        console.error('인증 실패:', error);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          alert('로그인이 필요한 서비스입니다.');
+        }
+      }
+    };
+
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const shouldHideHeader = useMemo(() => {
     const HIDE_LIST = ['/home', '/wishlist', '/report', '/mypage'];
     return HIDE_LIST.includes(location.pathname);
   }, [location.pathname]);
 
-  // 네브바 표시
   const shouldShowBottomNav = useMemo(() => {
     const SHOW_LIST = ['/home', '/wishlist', '/report', '/mypage', '/consumption/regret', '/consumption/satisfaction'];
     return SHOW_LIST.includes(location.pathname);
@@ -40,15 +59,11 @@ export default function ProtectedLayout() {
 
   const handleSetTitle = useCallback((t: string) => setTitle(t), []);
   const handleSetCustomBack = useCallback((fn: (() => void) | null) => setCustomBack(() => fn), []);
-
   const handleSetRightAction = useCallback(
     (action: { rightNode: React.ReactNode; onClick: () => void; ariaLabel?: string } | null) => setRightAction(action),
     [],
   );
-
-  const handleSetLayoutModal = useCallback((node: React.ReactNode | null) => {
-    setLayoutModal(node);
-  }, []);
+  const handleSetLayoutModal = useCallback((node: React.ReactNode | null) => setLayoutModal(node), []);
 
   const outletContext = useMemo<HeaderControlContext>(
     () => ({
@@ -60,7 +75,8 @@ export default function ProtectedLayout() {
     [handleSetTitle, handleSetCustomBack, handleSetRightAction, handleSetLayoutModal],
   );
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (isAuthenticated === null) return <div>로딩 중...</div>;
+  if (isAuthenticated === false) return <Navigate to="/login" replace />;
 
   return (
     <div className="AppContainer relative flex min-h-screen flex-col">

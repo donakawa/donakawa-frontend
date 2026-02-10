@@ -15,13 +15,6 @@ const Step6 = ({ onNext, defaultValue, prevData }: StepProps) => {
   const [budget, setBudget] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data } = useQuery({
-    queryKey: ['budget', 'recommend', prevData],
-    queryFn: () => getRecommendBudget(prevData),
-
-    staleTime: 1000 * 60,
-  });
-
   const { data: userData } = useQuery({
     queryKey: ['user', 'me'],
     queryFn: getMe,
