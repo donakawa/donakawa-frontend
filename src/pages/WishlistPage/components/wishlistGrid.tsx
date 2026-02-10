@@ -1,4 +1,5 @@
 import WishlistItem from './wishlistItem';
+import DefaultPhoto from '@/assets/default_item_photo.svg';
 
 export type WishlistItemType = {
   id: string;
@@ -38,7 +39,7 @@ export default function WishlistGrid({
         {items.map((it) => (
           <WishlistItem
             key={it.id}
-            imageUrl={it.imageUrl}
+            imageUrl={it.imageUrl||DefaultPhoto}
             price={it.price}
             title={it.title}
             editMode={editMode}
