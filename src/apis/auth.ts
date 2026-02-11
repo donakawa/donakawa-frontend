@@ -1,4 +1,3 @@
-// src/apis/auth.ts
 import type { AxiosResponse } from 'axios';
 import { instance } from './axios';
 import type { Provider } from '@/types/MyPage/mypage';
@@ -138,3 +137,12 @@ export const updateGoal = async (goal: string) => {
   const response = await instance.patch<CommonResponse<UpdateGoalResponse>>('/auth/profile/goal', { newGoal: goal });
   return handleResponse(response);
 };
+
+// 닉네임 변경
+export type NicknamePatchData = {
+  id: string;
+  nickname: string;
+  updatedAt: string;
+};
+
+export type NicknameUiState = 'idle' | 'ok' | 'over' | 'same' | 'dup' | 'auth' | 'server' | 'done';
