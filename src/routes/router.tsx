@@ -16,21 +16,23 @@ import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
 import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
-import GoogleCallbackPage from '@/pages/LoginPage/GoogleCallbackPage';
+import AuthCallbackPage from '@/pages/LoginPage/AuthCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
 import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
 import WishItemDetailPage from '@/pages/WishlistPage/WishItemDetailPage';
+import SocialGoalPage from '@/pages/LoginPage/SocialGoalPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <SignupPage /> },
   { path: 'signup', element: <SignupPage /> },
   { path: 'login', element: <LoginPage /> },
-  { path: 'auth/callback', element: <GoogleCallbackPage /> },
+  { path: 'auth/callback', element: <AuthCallbackPage /> },
   { path: 'find-password', element: <FindPasswordPage /> },
 ];
 
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
+  { path: 'social/goal', element: <SocialGoalPage />},
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },

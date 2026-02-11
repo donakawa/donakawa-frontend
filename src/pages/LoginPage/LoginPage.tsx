@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
+import { RiKakaoTalkFill } from 'react-icons/ri';
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 import logo from '../../assets/seed.svg';
 import { login } from '../../apis/auth';
@@ -16,7 +17,6 @@ interface ErrorResponse {
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -26,24 +26,6 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // 구글 로그인 토큰 처리
-  useEffect(() => {
-    // 1. 주소창의 쿼리 파라미터(?accessToken=...)를 가져옴
-    const params = new URLSearchParams(location.search);
-    const accessToken = params.get('accessToken');
-    const refreshToken = params.get('refreshToken');
-
-    // 2. 토큰이 있다면 로그인 처리
-    if (accessToken) {
-      localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-
-      // 3. 홈으로 이동 (replace: true는 뒤로가기 했을 때 로그인 페이지로 다시 안 오게 함)
-      navigate('/home', { replace: true });
-    }
-  }, [location, navigate]);
 
   // 유효성 검사
   const isEmailValid = email.length > 0;
@@ -90,10 +72,15 @@ const LoginPage = () => {
 
   // 4. 구글 로그인 버튼 로직
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google-login`;
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/login`;
   };
 
-  //  입력창 스타일: 에러 시 빨간 테두리
+  // 5. 카카오 로그인 버튼 로직 (기존 주소 사용)
+  const handleKakaoLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login`;
+  };
+
+  // 입력창 스타일 함수
   const getInputClass = (isValid: boolean, hasError: boolean) => {
     const baseClass =
       'w-full rounded-lg border px-4 py-3.5 text-sm outline-none placeholder:text-gray-400 transition-colors';
@@ -193,8 +180,18 @@ const LoginPage = () => {
           구글 로그인
         </button>
 
-        {/* 5. 회원가입 링크 */}
-        <div className="text-center">
+        {/*  카카오 로그인 */}
+        <button
+          type="button"
+          onClick={handleKakaoLogin}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+        >
+          <RiKakaoTalkFill size={20} />
+          카카오 로그인
+        </button>
+
+        {/* 회원가입 링크 */}
+        <div className="pt-2 text-center">
           <Link to="/signup" className="text-sm font-medium text-primary-brown-300 hover:underline">
             회원가입
           </Link>

@@ -22,7 +22,11 @@ const FindPasswordPage = () => {
   // --- Step 1 & 2 상태 (이메일 & 인증코드) ---
   const [email, setEmail] = useState('');
   const [authCode, setAuthCode] = useState(['', '', '', '', '', '']);
-  const [timeLeft, setTimeLeft] = useState(299);
+  
+  // 타이머 상태 분리 (입력 유효시간 5분 / 재전송 쿨타임 30초)
+  const [inputTimeLeft, setInputTimeLeft] = useState(300); // 5분
+  const [resendCooldown, setResendCooldown] = useState(30); // 30초
+  
   const [timerTrigger, setTimerTrigger] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
@@ -37,18 +41,17 @@ const FindPasswordPage = () => {
   const [showPw, setShowPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
-  // --- 타이머 로직 ---
+  //  타이머 로직 변경 
   useEffect(() => {
     if (step !== 2) return;
+    
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      // 1. 입력 유효 시간 감소
+      setInputTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      // 2. 재전송 쿨타임 감소
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
+
     return () => clearInterval(timer);
   }, [step, timerTrigger]);
 
@@ -67,8 +70,12 @@ const FindPasswordPage = () => {
     try {
       await sendAuthCode(email, 'RESET_PASSWORD');
       alert('인증번호가 발송되었습니다.');
-      setTimeLeft(299);
+      
+      //  타이머 초기화 (5분 / 30초)
+      setInputTimeLeft(300);
+      setResendCooldown(30);
       setTimerTrigger((prev) => prev + 1);
+      
       setStep(2);
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
@@ -91,7 +98,11 @@ const FindPasswordPage = () => {
     try {
       await sendAuthCode(email, 'RESET_PASSWORD');
       alert('인증번호가 재전송되었습니다.');
-      setTimeLeft(299);
+      
+      //  재전송 시 타이머 리셋 (5분 / 30초)
+      setInputTimeLeft(300);
+      setResendCooldown(30);
+      
       setAuthCode(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
       setTimerTrigger((prev) => prev + 1);
@@ -104,6 +115,9 @@ const FindPasswordPage = () => {
   // --- [Step 2] 코드 입력 ---
   const handleCodeChange = (index: number, value: string) => {
     setCodeError('');
+    //  시간 만료 시 입력 불가
+    if (inputTimeLeft === 0) return;
+
     const sanitizedValue = value.replace(/[^0-9]/g, '');
     if (sanitizedValue.length > 1) return;
 
@@ -125,7 +139,11 @@ const FindPasswordPage = () => {
   // --- [Step 2] 인증 확인 ---
   const handleVerify = async () => {
     setCodeError('');
-    if (timeLeft === 0) return;
+    //  시간 만료 체크
+    if (inputTimeLeft === 0) {
+        alert('입력 시간이 만료되었습니다. 재전송 버튼을 눌러주세요.');
+        return;
+    }
 
     setLoading(true);
     try {
@@ -189,7 +207,6 @@ const FindPasswordPage = () => {
   // --- 렌더링 ---
   return (
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-4">
-      {/* 모바일 뷰에 최적화된 최대 너비 컨테이너 */}
       <div className="w-full max-w-sm">
         {/* 1. 상단 뒤로가기 버튼 */}
         <div className="mb-6 flex items-center justify-start h-12">
@@ -201,23 +218,11 @@ const FindPasswordPage = () => {
           </button>
         </div>
 
-        {/* 2. 단계별 프로그래스 바 (끊어진 형태) */}
+        {/* 2. 단계별 프로그래스 바 */}
         <div className="mb-8 flex w-full gap-2">
-          {/* Step 1 Bar */}
-          <div
-            className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
-            ${step >= 1 ? 'bg-primary-600' : 'bg-gray-200'}`}
-          />
-          {/* Step 2 Bar */}
-          <div
-            className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
-            ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`}
-          />
-          {/* Step 3 Bar */}
-          <div
-            className={`h-[4px] flex-1 rounded-full transition-colors duration-300 
-            ${step >= 3 ? 'bg-primary-600' : 'bg-gray-200'}`}
-          />
+          <div className={`h-[4px] flex-1 rounded-full transition-colors duration-300 ${step >= 1 ? 'bg-primary-600' : 'bg-gray-200'}`} />
+          <div className={`h-[4px] flex-1 rounded-full transition-colors duration-300 ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`} />
+          <div className={`h-[4px] flex-1 rounded-full transition-colors duration-300 ${step >= 3 ? 'bg-primary-600' : 'bg-gray-200'}`} />
         </div>
 
         {/* 3. STEP 텍스트 & 타이틀 */}
@@ -279,36 +284,42 @@ const FindPasswordPage = () => {
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
+                    aria-label={`인증번호 ${idx + 1}자리`}
                     value={num}
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
-                    disabled={timeLeft === 0}
+                    //  시간 만료 시 비활성화
+                    disabled={inputTimeLeft === 0}
                     className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none transition-all shadow-sm
-                      ${
-                        timeLeft === 0
-                          ? 'bg-gray-100 border-gray-200 text-gray-400'
-                          : codeError
-                            ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500'
-                            : num
-                              ? 'border-primary-brown-300 bg-primary-brown-300 text-white'
-                              : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
+                      ${inputTimeLeft === 0
+                        ? 'bg-gray-100 border-gray-200 text-gray-400'
+                        : codeError
+                          ? 'border-red-500 bg-red-50 focus:border-red-500 text-red-500'
+                          : num
+                            ? 'border-primary-brown-300 bg-primary-brown-300 text-white'
+                            : 'border-gray-200 bg-gray-50 focus:border-primary-brown-300 focus:bg-white text-gray-900'
                       }`}
                   />
                 ))}
               </div>
 
+              {/* 우측 하단 타이머 (5분 기준) */}
               <div className="text-right">
-                <span className={`text-sm font-medium ${timeLeft <= 10 ? 'text-red-500' : 'text-primary-brown-300'}`}>
-                  {timeLeft > 0 ? formatTime(timeLeft) : '00:00'}
+                <span className={`text-sm font-medium ${inputTimeLeft <= 60 ? 'text-red-500' : 'text-primary-brown-300'}`}>
+                  {inputTimeLeft > 0 ? formatTime(inputTimeLeft) : '00:00'}
                 </span>
               </div>
 
               {codeError && <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">{codeError}</p>}
             </div>
 
+            {/* 재전송 버튼 영역 */}
             <div className="text-center py-4">
-              {timeLeft > 0 ? (
-                <p className="text-sm text-black font-medium">{formatTime(timeLeft)} 후 재전송 가능</p>
+              {/*  쿨타임(30초) 체크 */}
+              {resendCooldown > 0 ? (
+                <p className="text-sm text-gray-500 font-medium">
+                  {resendCooldown}초 후 재전송 가능
+                </p>
               ) : (
                 <button
                   onClick={handleResend}
@@ -320,9 +331,10 @@ const FindPasswordPage = () => {
 
             <button
               onClick={handleVerify}
-              disabled={timeLeft === 0 || authCode.some((c) => c === '') || loading}
+              //  시간 만료 시 버튼 비활성화
+              disabled={inputTimeLeft === 0 || authCode.some(c => c === '') || loading}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                timeLeft > 0 && !authCode.some((c) => c === '')
+                (inputTimeLeft > 0 && !authCode.some(c => c === ''))
                   ? 'bg-primary-600 hover:bg-primary-500'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}>
