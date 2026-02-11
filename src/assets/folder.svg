@@ -1,0 +1,26 @@
+<svg
+  viewBox="0 0 60 60"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+>
+  <defs>
+    <linearGradient
+      id="folderGradient"
+      x1="30"
+      y1="0"
+      x2="30"
+      y2="60"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#614540" />
+      <stop offset="1" stop-color="#BFD8B8" />
+    </linearGradient>
+  </defs>
+
+  <rect
+    width="60"
+    height="60"
+    rx="10"
+    fill="url(#folderGradient)"
+  />
+</svg>
