@@ -4,7 +4,8 @@ import { type PanInfo, motion, useDragControls, useAnimation } from 'framer-moti
 
 import SeedIcon from '@/assets/seed.svg?react';
 import SeedGreenIcon from '@/assets/seed_green.svg?react';
-import MascotIcon from '@/assets/mascot.svg?react';
+import DonaIcon from '@/assets/happy_dona.png';
+import DonaSadIcon from '@/assets/sad_dona.png';
 import SatisfactionIcon from '@/assets/satisfactionface.svg?react';
 import RegretIcon from '@/assets/regretface.svg?react';
 import ArrowIcon from '@/assets/arrow.svg?react';
@@ -55,7 +56,7 @@ const HomePage = () => {
         </div>
         {/* 햄스터 */}
         <div className="w-[100px] h-[99px] flex items-center justify-center">
-          <MascotIcon className="w-full h-full" />
+          {isPositive ? <img src={DonaIcon} alt="happy" /> : <img src={DonaSadIcon} alt="sad" />}
         </div>
       </section>
       {/* 하단 흰색 카드 영역 */}

@@ -13,8 +13,8 @@ export default function SelectableItem({ imageUrl, title, price, isSelected, onC
   return (
     <div className="flex flex-col gap-[4px] cursor-pointer" onClick={onClick}>
       {/* 이미지 영역 */}
-      <div className="relative rounded-[5px] overflow-hidden">
-        <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+      <div className="relative rounded-[5px] aspect-square overflow-hidden">
+        <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
 
         {/* 선택 체크박스 */}
         <div className="absolute top-[4px] right-[4px]">
