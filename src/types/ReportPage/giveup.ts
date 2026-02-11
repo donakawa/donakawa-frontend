@@ -3,6 +3,7 @@ export type GiveupItem = {
   title: string;
   price: number;
   imageUrl: string;
+  type: string;
 };
 
 export type GiveupItemsSummary = {

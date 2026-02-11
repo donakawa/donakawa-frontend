@@ -48,6 +48,7 @@ export default function ProtectedLayout() {
 
   const shouldHideHeader = useMemo(() => {
     const HIDE_LIST = ['/home', '/wishlist', '/report', '/mypage'];
+    if (location.pathname.startsWith('/wishlist/detail/')) return true;
     return HIDE_LIST.includes(location.pathname);
   }, [location.pathname]);
 

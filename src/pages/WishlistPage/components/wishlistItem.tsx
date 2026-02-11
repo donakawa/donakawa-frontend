@@ -1,3 +1,5 @@
+import DefaultPhoto from '@/assets/default_item_photo.svg';
+
 type Props = {
   imageUrl: string;
   price: number;
@@ -40,7 +42,7 @@ export default function WishlistItem({
         ].join(' ')}
       >
         <img
-          src={imageUrl}
+          src={imageUrl || DefaultPhoto}
           alt={title}
           className="w-full h-full object-cover"
         />

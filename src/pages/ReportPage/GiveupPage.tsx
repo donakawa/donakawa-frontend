@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+
 import type { GiveupItemsPageData } from '@/types/ReportPage/giveup';
 import WishlistGrid, { type WishlistItemType } from '@/pages/WishlistPage/components/wishlistGrid';
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -14,39 +15,44 @@ export default function GiveupItemsPage(): React.JSX.Element {
     return () => setTitle('');
   }, [setTitle]);
 
-  const data: GiveupItemsPageData = useMemo(
-    () => ({
-      summary: {
-        totalGiveupAmount: 234_500,
-        GiveupCount: 4,
-      },
-      items: [
-        {
-          id: '1',
-          title: '캐시미어 로제...',
-          price: 238_400,
-          imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=60',
+  const data = useMemo(
+    () =>
+      ({
+        summary: {
+          totalGiveupAmount: 234_500,
+          GiveupCount: 4,
         },
-        {
-          id: '2',
-          title: '캐시미어 로제...',
-          price: 238_400,
-          imageUrl: 'https://images.unsplash.com/photo-1520975958225-5f1d6b5d4a0b?auto=format&fit=crop&w=600&q=60',
-        },
-        {
-          id: '3',
-          title: '캐시미어 로제...',
-          price: 238_400,
-          imageUrl: 'https://images.unsplash.com/photo-1520975869016-6dcf7b3f1d6b?auto=format&fit=crop&w=600&q=60',
-        },
-        {
-          id: '4',
-          title: '캐시미어 로제...',
-          price: 238_400,
-          imageUrl: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=600&q=60',
-        },
-      ],
-    }),
+        items: [
+          {
+            id: '1',
+            title: '캐시미어 로제...',
+            price: 238_400,
+            imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=60',
+            type: 'MANUAL',
+          },
+          {
+            id: '2',
+            title: '캐시미어 로제...',
+            price: 238_400,
+            imageUrl: 'https://images.unsplash.com/photo-1520975958225-5f1d6b5d4a0b?auto=format&fit=crop&w=600&q=60',
+            type: 'MANUAL',
+          },
+          {
+            id: '3',
+            title: '캐시미어 로제...',
+            price: 238_400,
+            imageUrl: 'https://images.unsplash.com/photo-1520975869016-6dcf7b3f1d6b?auto=format&fit=crop&w=600&q=60',
+            type: 'MANUAL',
+          },
+          {
+            id: '4',
+            title: '캐시미어 로제...',
+            price: 238_400,
+            imageUrl: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=600&q=60',
+            type: 'MANUAL',
+          },
+        ],
+      }) satisfies GiveupItemsPageData,
     [],
   );
 
@@ -54,9 +60,10 @@ export default function GiveupItemsPage(): React.JSX.Element {
     () =>
       data.items.map((it) => ({
         id: it.id,
-        imageUrl: it.imageUrl,
+        imageUrl: it.imageUrl ?? '',
         price: it.price,
         title: it.title,
+        type: it.type === 'AUTO' ? 'AUTO' : 'MANUAL',
       })),
     [data.items],
   );
