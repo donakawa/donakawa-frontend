@@ -31,7 +31,7 @@ export type ChatMessage =
   | { id: string; role: 'assistant'; kind: 'typing' }
   | { id: string; role: 'assistant'; kind: 'survey'; chatId: number };
 
-type ToastKind = 'delete' | 'sendFail';
+type ToastKind = 'delete' | 'sendFail' | 'historyFail' | 'openFail' | 'deleteFail';
 
 export function useAIChatPage(args: { location: Location; navigate: NavigateFunction }) {
   const { location, navigate } = args;
@@ -92,11 +92,13 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
       if (rooms.length > 0 && activeHistoryId === null) {
         setActiveHistoryId(rooms[0].id);
       }
-    } catch {
+    } catch (err) {
+      console.error('[useAIChat] fetchChatRooms failed:', err);
+      fireToast('historyFail');
     } finally {
       setIsChatHistoryLoading(false);
     }
-  }, [activeHistoryId]);
+  }, [activeHistoryId, fireToast]);
 
   useEffect(() => {
     void fetchChatRooms();
@@ -150,7 +152,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
           name: detail.wishItem.name,
           price: detail.wishItem.price,
           imageUrl: '',
-          type: 'MANUAL',
+          type: detail.wishItem.type,
         };
 
         const restored: ChatMessage[] = [
@@ -251,7 +253,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
   const goToItemSelection = useCallback(() => {
     const from = location.pathname + location.search;
-    navigate('/home/items/select', { state: { from } });
+    navigate('/item_selection', { state: { from } });
   }, [navigate, location.pathname, location.search]);
 
   const clearPickedWishItem = useCallback((): void => {

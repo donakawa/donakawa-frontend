@@ -68,6 +68,14 @@ export default function ProgressiveSurvey({ chatId }: Props) {
     }
   }, [chatId]);
 
+  const timerRefs = useRef<number[]>([]);
+
+  useEffect(() => {
+    return () => {
+      timerRefs.current.forEach((t) => window.clearTimeout(t));
+    };
+  }, []);
+
   const fetchQuestion = useCallback(async (): Promise<void> => {
     setIsTyping(true);
 
@@ -78,10 +86,11 @@ export default function ProgressiveSurvey({ chatId }: Props) {
         setCurrent(null);
         setIsDone(true);
 
-        window.setTimeout(() => {
+        const t1 = window.setTimeout(() => {
           setIsTyping(false);
           void fetchResult();
         }, 500);
+        timerRefs.current.push(t1);
 
         return;
       }
@@ -91,7 +100,8 @@ export default function ProgressiveSurvey({ chatId }: Props) {
 
       setShown((prev) => (prev.some((p) => p.step === next.step) ? prev : [...prev, next]));
 
-      window.setTimeout(() => setIsTyping(false), 700);
+      const t2 = window.setTimeout(() => setIsTyping(false), 700);
+      timerRefs.current.push(t2);
     } catch (e: unknown) {
       setIsTyping(false);
       setResultState({ kind: 'error', message: e instanceof Error ? e.message : '질문을 불러오지 못했어요.' });

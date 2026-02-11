@@ -276,7 +276,7 @@ export default function CalendarPanel() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-0.5 flex justify-between pl-1">
+                      <div className="flex flex-col justify-between gap-0.5 pl-1">
                         <div className="text-[16px] font-medium text-black">{p.title}</div>
 
                         <div className="text-[16px] font-medium text-black mb-1">{formatWon(p.price)}</div>

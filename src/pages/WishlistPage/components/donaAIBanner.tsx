@@ -28,7 +28,7 @@ const DonaAiBanner = React.forwardRef<HTMLDivElement, Props>(({ onDismiss }, ref
   const handleChatStart = () => {
     // 클릭하면 다른 페이지로 가니까, 부모 배너도 숨겨주고 이동
     onDismiss?.();
-    navigate('/home/ai-chat');
+    navigate('/ai-chat');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -54,14 +54,12 @@ const DonaAiBanner = React.forwardRef<HTMLDivElement, Props>(({ onDismiss }, ref
       tabIndex={0}
       onKeyDown={handleKeyDown}
       aria-label="도나 AI 상담 시작"
-      onClick={handleChatStart}
-    >
+      onClick={handleChatStart}>
       <button
         type="button"
         onClick={toggleExpand}
         className="absolute left-2 w-6 h-6 flex items-center justify-center z-20 cursor-pointer"
-        aria-label={isExpanded ? '배너 접기' : '배너 펼치기'}
-      >
+        aria-label={isExpanded ? '배너 접기' : '배너 펼치기'}>
         {isExpanded ? <CloseArrow /> : <OpenArrow />}
       </button>
 
@@ -70,8 +68,7 @@ const DonaAiBanner = React.forwardRef<HTMLDivElement, Props>(({ onDismiss }, ref
           flex flex-col ml-[36px] whitespace-nowrap transition-opacity duration-300
           text-[12px] font-bold tracking-tighter font-galmuri
           ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-        `}
-      >
+        `}>
         <span>구매가 고민될 때,</span>
         <span>도나AI와 상담은 어때요?</span>
       </div>

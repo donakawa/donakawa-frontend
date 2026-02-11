@@ -47,6 +47,7 @@ export type ChatRoomDetail = {
     id: number;
     name: string;
     price: number;
+    type: 'AUTO' | 'MANUAL';
   };
   answers: Array<{
     step: number;
@@ -135,7 +136,7 @@ export async function getChatRooms(): Promise<ChatRoomListItem[]> {
       return {
         id,
         title: typeof title === 'string' && title.trim() ? title : `채팅 ${id}`,
-        createdAt: typeof createdAt === 'string' ? createdAt : new Date().toISOString(),
+        createdAt: typeof createdAt === 'string' ? createdAt : '', // ✅ 수정
       };
     })
     .filter((v): v is ChatRoomListItem => v !== null);

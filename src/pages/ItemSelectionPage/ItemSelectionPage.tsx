@@ -10,15 +10,8 @@ import ArrowIcon from '@/assets/arrow.svg?react';
 
 type LocationState = { from?: string };
 
-export type ChatItemType = 'AUTO' | 'MANUAL';
-
-export type PickedWishItem = {
-  wishItemId: number;
-  name: string;
-  price: number;
-  imageUrl: string;
-  type: ChatItemType;
-};
+import type { ChatItemType } from '@/apis/AIChatPage/aichat';
+import type { PickedWishItem } from '../HomePage/hooks/useAIChat';
 
 type WishItemStatus = 'WISHLISTED' | 'UNWISHLISTED' | string;
 
