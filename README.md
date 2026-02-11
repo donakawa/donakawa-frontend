@@ -10,7 +10,7 @@
 
 | <a href="https://github.com/Hagyeong13"><img src="https://avatars.githubusercontent.com/u/151161100?v=4" width="120px;" alt=""/></a> | <a href="https://github.com/shinhyunwooo"><img src="https://avatars.githubusercontent.com/u/106210148?v=4" width="120px;" alt=""/></a> | <a href="https://github.com/yangyangeeee"><img src="https://avatars.githubusercontent.com/u/156039054?v=4" width="120px;" alt=""/></a> | <a href="https://github.com/juyeonnnn"><img src="https://avatars.githubusercontent.com/u/118319081?v=4" width="120px;" alt=""/></a> |
 | --- | --- | --- | --- |
-| 김나경 | 신현우 | 양서윤 | 정주연 |
+| 김하경 | 신현우 | 양서윤 | 정주연 |
 | 위시리스트 페이지<br/>공통 컴포넌트 | 로그인 페이지<br/>회원가입 페이지 | 프로젝트 초기세팅<br/>기록 페이지<br/>마이  페이지 | 홈 페이지 <br/>공통 컴포넌 |
 
 <br>
