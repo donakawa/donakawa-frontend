@@ -2,8 +2,6 @@
 
 <img width="50%" height="486" alt="image" src="https://github.com/user-attachments/assets/988c4646-f3e1-4a22-8927-d2efe59fae42" />
 
-**UMC 9th 데모데이 프로젝트**
-
 </div>
 
 <br/>
