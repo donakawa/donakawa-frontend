@@ -354,7 +354,7 @@ export default function RecordView() {
                 key={item.itemId}
                 type="button"
                 onClick={() => onClickReviewItem(item)}
-                className="min-w-[170px] max-w-[170px] text-left active:scale-[0.99] transition-transform"
+                className="min-w-[94px] max-w-[94px]"
                 style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <div className="flex flex-col gap-1.5">
                   <div className="text-xs font-medium" style={{ color: 'var(--color-gray-600)' }}>

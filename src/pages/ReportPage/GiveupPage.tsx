@@ -1,85 +1,136 @@
-import { useEffect, useMemo } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
-import type { GiveupItemsPageData } from '@/types/ReportPage/giveup';
-import WishlistGrid, { type WishlistItemType } from '@/pages/WishlistPage/components/wishlistGrid';
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
+import WishlistGrid, { type WishlistItemType } from '@/pages/WishlistPage/components/wishlistGrid';
+
+import { getWishlistAnalytics } from '@/apis/WishlistPage/analytics';
+import { getWishlistItems } from '@/apis/WishlistPage/wishlistItems';
+
+type LoadState = 'idle' | 'loading' | 'success' | 'error';
+
+type GiveupSummary = {
+  totalGiveupAmount: number;
+  giveupCount: number;
+};
+
+type DroppedWishItem = {
+  id: string;
+  name: string;
+  price: number;
+  photoUrl: string;
+  type: 'AUTO' | 'MANUAL';
+  status: 'WISHLISTED' | 'DROPPED' | 'BOUGHT';
+};
+
+type PageState = {
+  summary: GiveupSummary;
+  items: DroppedWishItem[];
+  loadState: LoadState;
+  errorMessage: string;
+};
+
+const DEFAULT_STATE: PageState = {
+  summary: { totalGiveupAmount: 0, giveupCount: 0 },
+  items: [],
+  loadState: 'idle',
+  errorMessage: '',
+};
 
 const formatWon = (value: number): string => new Intl.NumberFormat('ko-KR').format(value);
 
 export default function GiveupItemsPage(): React.JSX.Element {
+  const navigate = useNavigate();
   const { setTitle } = useOutletContext<HeaderControlContext>();
+
+  const [state, setState] = useState<PageState>(DEFAULT_STATE);
 
   useEffect(() => {
     setTitle('포기한 템');
     return () => setTitle('');
   }, [setTitle]);
 
-  const data = useMemo(
-    () =>
-      ({
-        summary: {
-          totalGiveupAmount: 234_500,
-          GiveupCount: 4,
-        },
-        items: [
-          {
-            id: '1',
-            title: '캐시미어 로제...',
-            price: 238_400,
-            imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=60',
-            type: 'MANUAL',
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchAll = async () => {
+      try {
+        setState((prev) => ({ ...prev, loadState: 'loading', errorMessage: '' }));
+
+        const [analyticsRes, itemsRes] = await Promise.all([
+          getWishlistAnalytics(),
+          getWishlistItems({ status: 'DROPPED' }),
+        ]);
+
+        if (!mounted) return;
+
+        const droppedSummary =
+          analyticsRes.resultType === 'SUCCESS' ? analyticsRes.data.droppedItems : { totalCount: 0, totalPrice: 0 };
+
+        const droppedItems: DroppedWishItem[] =
+          itemsRes.resultType === 'SUCCESS' ? (itemsRes.data.wishitems as DroppedWishItem[]) : [];
+
+        setState({
+          summary: {
+            totalGiveupAmount: droppedSummary.totalPrice ?? 0,
+            giveupCount: droppedSummary.totalCount ?? 0,
           },
-          {
-            id: '2',
-            title: '캐시미어 로제...',
-            price: 238_400,
-            imageUrl: 'https://images.unsplash.com/photo-1520975958225-5f1d6b5d4a0b?auto=format&fit=crop&w=600&q=60',
-            type: 'MANUAL',
-          },
-          {
-            id: '3',
-            title: '캐시미어 로제...',
-            price: 238_400,
-            imageUrl: 'https://images.unsplash.com/photo-1520975869016-6dcf7b3f1d6b?auto=format&fit=crop&w=600&q=60',
-            type: 'MANUAL',
-          },
-          {
-            id: '4',
-            title: '캐시미어 로제...',
-            price: 238_400,
-            imageUrl: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=600&q=60',
-            type: 'MANUAL',
-          },
-        ],
-      }) satisfies GiveupItemsPageData,
-    [],
-  );
+          items: droppedItems,
+          loadState: 'success',
+          errorMessage: '',
+        });
+      } catch (err: unknown) {
+        if (!mounted) return;
+
+        const e = err as {
+          response?: { data?: { error?: { reason?: string }; reason?: string } };
+          message?: string;
+        };
+
+        const message =
+          e?.response?.data?.error?.reason ||
+          e?.response?.data?.reason ||
+          e?.message ||
+          '포기한 아이템을 불러오는 중 오류가 발생했어요.';
+
+        setState((prev) => ({ ...prev, loadState: 'error', errorMessage: message }));
+      }
+    };
+
+    fetchAll();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const gridItems: WishlistItemType[] = useMemo(
     () =>
-      data.items.map((it) => ({
+      state.items.map((it) => ({
         id: it.id,
-        imageUrl: it.imageUrl ?? '',
+        imageUrl: it.photoUrl ?? '',
         price: it.price,
-        title: it.title,
-        type: it.type === 'AUTO' ? 'AUTO' : 'MANUAL',
+        title: it.name,
+        type: it.type,
       })),
-    [data.items],
+    [state.items],
   );
 
   const handleItemClick = (id: string): void => {
-    const found = data.items.find((it) => it.id === id);
+    const found = state.items.find((it) => it.id === id);
     if (!found) return;
-    console.log('clicked item:', found.id);
+
+    navigate(`/wishlist/detail/${found.id}`, { state: { type: found.type } });
   };
 
   return (
     <div className="w-full max-w-[430px] mx-auto min-h-[100vh] flex flex-col bg-white overflow-hidden">
       <main className="flex-1 flex flex-col min-h-0">
         <section className="mt-[14px] px-4 pt-[18px] pb-6 flex flex-col gap-3">
-          <div className="text-[20px] font-semibold">총 아낀 금액: {formatWon(data.summary.totalGiveupAmount)}</div>
-          <p className="text-[16px] text-gray-600">구매 포기한 위시템 {data.summary.GiveupCount}건</p>
+          <div className="text-[20px] font-semibold">총 아낀 금액: {formatWon(state.summary.totalGiveupAmount)}</div>
+          <p className="text-[16px] text-gray-600">구매 포기한 위시템 {state.summary.giveupCount}건</p>
+
+          {state.loadState === 'error' && <p className="text-[14px] text-red-500">{state.errorMessage}</p>}
         </section>
 
         <section

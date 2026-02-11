@@ -9,6 +9,9 @@ import CompletedPage from '@/pages/ReportPage/components/CompletedPage';
 
 import { getHistoryItems, getWrittenReviews } from '@/apis/ReportPage/review';
 
+/** ✅ 이 파일에서만 쓸 enum 타입: 실수 방지 */
+type ReviewStatusParam = 'ALL' | 'WRITTEN' | 'NOT_WRITTEN';
+
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
@@ -43,7 +46,7 @@ export default function PurchaseReview() {
 
   // Pending
   const [pendingItems, setPendingItems] = useState<PendingReviewItem[]>([]);
-  const [pendingLoading, setPendingLoading] = useState<boolean>(false);
+  const [pendingLoading, setPendingLoading] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
 
   const fetchPending = async () => {
@@ -51,9 +54,12 @@ export default function PurchaseReview() {
     setPendingError(null);
 
     try {
-      const items = await getHistoryItems({ reviewStatus: 'NOT_WRITTEN' });
+      // ✅ 명세: NOT_WRITTEN / WRITTEN / ALL
+      const reviewStatus: ReviewStatusParam = 'NOT_WRITTEN';
+      const items = await getHistoryItems({ reviewStatus });
 
       const mapped: PendingReviewItem[] = items.map((it) => ({
+        // ⚠️ 여기 id가 itemId가 맞는지는 추후 write API 명세에 따라 purchaseId로 바뀔 수 있음
         id: String(it.itemId),
         title: it.itemName,
         price: it.price,
@@ -75,9 +81,9 @@ export default function PurchaseReview() {
 
   // Completed
   const [completedItems, setCompletedItems] = useState<CompletedReviewItem[]>([]);
-  const [completedLoading, setCompletedLoading] = useState<boolean>(false);
+  const [completedLoading, setCompletedLoading] = useState(false);
   const [completedError, setCompletedError] = useState<string | null>(null);
-  const [completedFetched, setCompletedFetched] = useState<boolean>(false);
+  const [completedFetched, setCompletedFetched] = useState(false);
 
   const fetchCompleted = async () => {
     setCompletedLoading(true);
@@ -123,8 +129,9 @@ export default function PurchaseReview() {
     }
   }, [activeTab, completedFetched, completedLoading]);
 
-  const handleWriteClick = (itemId: string) => {
-    navigate(`/report/review/write?purchasedId=${encodeURIComponent(itemId)}`);
+  const handleWriteClick = (id: string) => {
+    // ✅ 기존 로직 유지 (쿼리키 purchasedId). 백엔드가 purchaseId를 원하면 여기만 바꾸면 됨.
+    navigate(`/report/review/write?purchasedId=${encodeURIComponent(id)}`);
   };
 
   const handleOpenClick = (id: string) => {

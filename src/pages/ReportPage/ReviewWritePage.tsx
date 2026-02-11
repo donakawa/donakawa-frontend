@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 
@@ -12,6 +12,7 @@ import StarIcon from '@/assets/star_rare.svg';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
+/** ===== Types ===== */
 type ApiFailError<EData = unknown> = {
   errorCode: string;
   reason: string;
@@ -33,24 +34,27 @@ type ApiResponseFail<EData = unknown> = {
 type ApiResponse<T, EData = unknown> = ApiResponseSuccess<T> | ApiResponseFail<EData>;
 
 type PendingItemRaw = {
+  reviewId?: number;
   itemId: number;
-  itemType?: 'manual' | 'auto' | string;
-  name: string;
+  itemName: string;
   price: number;
-  thumbnailUrl?: string | null;
-  purchasedAt?: 'MORNING' | 'EVENING' | 'DAWN' | 'NOON' | string;
-  tags?: string[];
-  purchaseDate?: string;
-  createdAt?: string;
+  imageUrl: string;
+  purchaseReasons: string[];
+  purchasedAt: string;
+
+  // 시간대(선택)
+  purchasedAtTime?: 'DAWN' | 'EVENING' | 'NOON' | 'MORNING' | 'NIGHT' | string;
+
+  // ✅ 서버가 내려주면 사용 (POST /review에 필수)
+  itemType?: 'AUTO' | 'MANUAL' | 'auto' | 'manual' | string;
 };
 
-type GetPendingItemsData =
-  | {
-      items: PendingItemRaw[];
-    }
-  | PendingItemRaw[];
+type GetPendingItemsData = {
+  items: PendingItemRaw[];
+};
 
 type PostReviewRequestBody = {
+  itemType: 'AUTO' | 'MANUAL'; // ✅ 서버 필수
   satisfaction: number;
   frequency: number;
 };
@@ -71,20 +75,26 @@ type UiPurchase = {
   tags: string[];
   dateText: string;
   dayLabelText: string;
-  purchasedAt?: PendingItemRaw['purchasedAt']; // ✅ 추가
+  timeLabel?: string;
+
+  // ✅ POST에 보내기 위해 저장
+  itemType?: 'AUTO' | 'MANUAL';
 };
 
+/** ===== Utils ===== */
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
 async function requestWithOptionalApiPrefix<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
   const url1 = new URL(path, API_URL).toString();
+
   try {
     if (method === 'GET') {
       const res = await axios.get<T>(url1, { withCredentials: true });
       return res.data;
     }
+
     const res = await axios.post<T>(url1, body, {
       withCredentials: true,
       headers: { 'Content-Type': 'application/json' },
@@ -100,6 +110,7 @@ async function requestWithOptionalApiPrefix<T>(method: 'GET' | 'POST', path: str
         const res2 = await axios.get<T>(url2, { withCredentials: true });
         return res2.data;
       }
+
       const res2 = await axios.post<T>(url2, body, {
         withCredentials: true,
         headers: { 'Content-Type': 'application/json' },
@@ -113,18 +124,62 @@ async function requestWithOptionalApiPrefix<T>(method: 'GET' | 'POST', path: str
 
 function formatDateText(isoLike: string | undefined): string {
   if (!isoLike) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(isoLike)) return isoLike.replaceAll('-', '.');
+
   const d = new Date(isoLike);
-  if (Number.isNaN(d.getTime())) {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(isoLike)) return isoLike.replaceAll('-', '.');
-    return '';
-  }
+  if (Number.isNaN(d.getTime())) return '';
+
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}.${m}.${day}`;
 }
 
-export default function ReviewWritePage() {
+function parseDateOrNull(isoLike: string | undefined): Date | null {
+  if (!isoLike) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(isoLike)) {
+    const [y, m, d] = isoLike.split('-').map((v) => Number(v));
+    if (!y || !m || !d) return null;
+    const dd = new Date(y, m - 1, d);
+    if (!Number.isNaN(dd.getTime())) return dd;
+  }
+
+  const d = new Date(isoLike);
+  if (!Number.isNaN(d.getTime())) return d;
+  return null;
+}
+
+function daysSince(isoLike: string | undefined): number | null {
+  const d = parseDateOrNull(isoLike);
+  if (!d) return null;
+
+  const diff = Date.now() - d.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  return Math.max(0, days);
+}
+
+function normalizeTimeLabel(raw: unknown): string {
+  const t = typeof raw === 'string' ? raw : '';
+  const upper = t.toUpperCase();
+
+  if (upper === 'NIGHT') return 'EVENING';
+  if (upper === 'DAWN' || upper === 'EVENING') return upper;
+  if (t === '새벽' || t === '저녁') return t;
+
+  return 'EVENING';
+}
+
+function normalizeItemType(raw: unknown): 'AUTO' | 'MANUAL' | undefined {
+  const t = typeof raw === 'string' ? raw : '';
+  const upper = t.toUpperCase();
+  if (upper === 'AUTO') return 'AUTO';
+  if (upper === 'MANUAL') return 'MANUAL';
+  return undefined;
+}
+
+/** ===== Component ===== */
+export default function ReviewWritePage(): React.JSX.Element {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
@@ -142,7 +197,10 @@ export default function ReviewWritePage() {
   const [submitError, setSubmitError] = useState<string>('');
 
   const isCompleted = rating > 0 && usage > 0;
-  const usageRatio = usage <= 1 ? 0 : Math.min(1, (usage - 1) / 4);
+
+  const usageRatio = useMemo(() => {
+    return usage <= 1 ? 0 : Math.min(1, (usage - 1) / 4);
+  }, [usage]);
 
   useEffect(() => {
     let alive = true;
@@ -152,8 +210,10 @@ export default function ReviewWritePage() {
       setPurchaseError('');
 
       try {
-        const res = await requestWithOptionalApiPrefix<ApiResponse<GetPendingItemsData>>('GET', '/histories/items');
-
+        const res = await requestWithOptionalApiPrefix<ApiResponse<GetPendingItemsData>>(
+          'GET',
+          '/histories/items?reviewStatus=NOT_WRITTEN',
+        );
         if (!alive) return;
 
         if (res.resultType === 'FAIL') {
@@ -162,10 +222,8 @@ export default function ReviewWritePage() {
           return;
         }
 
-        const data = res.data;
-        const list: PendingItemRaw[] = Array.isArray(data) ? data : data.items;
-
-        if (!list || list.length === 0) {
+        const list = res.data.items ?? [];
+        if (list.length === 0) {
           setPurchaseError('후기 작성 가능한 아이템이 없어요.');
           setPurchase(null);
           return;
@@ -173,15 +231,21 @@ export default function ReviewWritePage() {
 
         const target = (purchaseId ? list.find((x) => String(x.itemId) === purchaseId) : null) ?? list[0];
 
+        const d = daysSince(target.purchasedAt);
+        const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
+
         const ui: UiPurchase = {
           itemId: String(target.itemId),
-          title: target.name,
-          price: target.price,
-          imageUrl: target.thumbnailUrl ?? null,
-          tags: Array.isArray(target.tags) ? target.tags : [],
-          dateText: formatDateText(target.purchaseDate ?? target.createdAt),
-          dayLabelText: '',
-          purchasedAt: target.purchasedAt, // ✅ 추가
+          title: target.itemName || '상품명',
+          price: typeof target.price === 'number' ? target.price : 0,
+          imageUrl: target.imageUrl || null,
+          tags: Array.isArray(target.purchaseReasons) ? target.purchaseReasons : [],
+          dateText: formatDateText(target.purchasedAt),
+          dayLabelText,
+          timeLabel: normalizeTimeLabel(target.purchasedAtTime),
+
+          // ✅ itemType 저장 (없으면 undefined)
+          itemType: normalizeItemType(target.itemType),
         };
 
         setPurchase(ui);
@@ -213,6 +277,8 @@ export default function ReviewWritePage() {
 
     try {
       const body: PostReviewRequestBody = {
+        // ✅ 서버가 필수로 요구함. 응답에 없으면 일단 AUTO로 fallback
+        itemType: purchase.itemType ?? 'AUTO',
         satisfaction: Number(rating),
         frequency: Number(usage),
       };
@@ -280,11 +346,10 @@ export default function ReviewWritePage() {
     );
   }
 
-  // ✅ 구매 시간대에 따른 아이콘 결정
-  const { src: timeIconSrc, alt: timeIconAlt } = getTimeIcon(purchase.purchasedAt);
+  const { src: timeIconSrc, alt: timeIconAlt } = getTimeIcon(purchase.timeLabel);
 
   return (
-    <div className="w-full max-w-[430px] mx-auto min-h-[100dvh] bg-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="w-full max-w-[375px] mx-auto min-h-[100dvh] bg-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <main className="p-5">
         {/* 구매 정보 */}
         <section className="pb-[18px]">
@@ -294,7 +359,7 @@ export default function ReviewWritePage() {
           </div>
 
           <div className="flex gap-[20px]">
-            <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100">
+            <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100 relative">
               {purchase.imageUrl ? (
                 <img src={purchase.imageUrl} alt={purchase.title} className="w-full h-full object-cover block" />
               ) : (
@@ -306,7 +371,7 @@ export default function ReviewWritePage() {
 
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div className="text-[16px] font-medium truncate">{purchase.title}</div>
-              <div className="text-[18px] font-medium">{purchase.price.toLocaleString('ko-KR')}</div>
+              <div className="text-[18px] font-medium">{purchase.price.toLocaleString('ko-KR')}원</div>
               {purchase.dayLabelText ? (
                 <div className="text-[16px] font-medium text-gray-600">{purchase.dayLabelText}</div>
               ) : (
@@ -320,7 +385,7 @@ export default function ReviewWritePage() {
               {purchase.tags.map((t) => (
                 <span
                   key={`${purchase.itemId}-${t}`}
-                  className="px-[6px] py-[3px] rounded-full bg-white shadow text-[12px] text-primary-brown-500">
+                  className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] text-primary-brown-500">
                   #{t}
                 </span>
               ))}
@@ -330,6 +395,7 @@ export default function ReviewWritePage() {
           <div className="mt-[40px] h-px bg-gray-100" />
         </section>
 
+        {/* 만족도 */}
         <section className="py-[26px]">
           <h2 className="mb-[14px] text-[14px] text-center">구체적인 만족도는 어떤가요?</h2>
 
@@ -345,7 +411,11 @@ export default function ReviewWritePage() {
                   onClick={() => setRating(score)}
                   className="bg-transparent p-0"
                   aria-label={`${score}점`}>
-                  <img src={filled ? StarFullIcon : StarIcon} alt="" className="w-[30px] h-[30px]" />
+                  <img
+                    src={filled ? StarFullIcon : StarIcon}
+                    alt=""
+                    className={cn('w-[30px] h-[30px]', !filled && 'opacity-60')}
+                  />
                 </button>
               );
             })}
@@ -374,10 +444,12 @@ export default function ReviewWritePage() {
             </div>
           </div>
 
-          {/* 제출 에러 */}
-          {submitError && <p className="mt-4 text-center text-[12px] text-red-500">{submitError}</p>}
+          <div className="mt-[12px] flex justify-between text-[12px] text-gray-400 w-[85%] mx-auto">
+            <span>거의 안 씀</span>
+            <span>매우 자주</span>
+          </div>
 
-          {/* 제출 중 */}
+          {submitError && <p className="mt-4 text-center text-[12px] text-red-500">{submitError}</p>}
           {isSubmitting && <p className="mt-2 text-center text-[12px] text-gray-400">등록 중…</p>}
         </section>
       </main>

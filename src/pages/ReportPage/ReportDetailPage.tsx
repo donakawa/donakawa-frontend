@@ -129,7 +129,7 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
               <span className="text-[12px] font-normal text-gray-600">담은 지 +{product.daysAfterSaved}일</span>
             </div>
 
-            <h2 className="text-[18px] font-semibold text-[rgba(0,0,0,0.85)]">{product.title}</h2>
+            <h2 className="text-[18px] font-semibold text-black">{product.title}</h2>
 
             <div className="flex items-baseline gap-[6px] mb-[14px]">
               <span className="text-[20px] font-semibold text-black">{formatWon(product.priceWon)}</span>
@@ -207,7 +207,7 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
             <div
               className={[
                 'w-full rounded-[16px]',
-                'bg-primary-200',
+                'bg-primary-300',
                 'px-[18px] pt-[18px] pb-[18px]',
                 'flex items-end justify-between',
               ].join(' ')}>

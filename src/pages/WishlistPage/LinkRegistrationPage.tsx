@@ -30,8 +30,8 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
 
   //SSE(Server-Sent Events)를 통해 크롤링 진행 상황을 수신
   const subscribeToEvents = (jobId: string, originalUrl: string) => {
-    const sseUrl = `${import.meta.env.VITE_API_BASE_URL}/wishlist/crawl-tasks/${jobId}/events`;
-    
+    const sseUrl = `${import.meta.env.VITE_API_URL}/wishlist/crawl-tasks/${jobId}/events`;
+
     const eventSource = new EventSource(sseUrl, { withCredentials: true });
     eventSourceRef.current = eventSource;
 
@@ -44,34 +44,34 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
         if (result === 'DONE' && dataId) {
           isDoneRef.current = true;
           const resultRes = await getCrawlResult(dataId);
-          
+
           eventSource.close();
           setIsLoading(false);
           retryCountRef.current = 0; // 성공 시 재시도 횟수 초기화
 
-          if (resultRes.resultType === "SUCCESS") {
+          if (resultRes.resultType === 'SUCCESS') {
             const d = resultRes.data;
             onComplete({
               name: d.productName,
-              price: d.price != null ? d.price.toLocaleString() : "0",
+              price: d.price != null ? d.price.toLocaleString() : '0',
               brand: d.brandName,
               store: d.platformName,
               image: d.imageUrl || DefaultPhoto,
               url: originalUrl,
-              cacheId: dataId
+              cacheId: dataId,
             });
-          }
-          else {
-            alert("상품 정보를 분석하는 데 실패했습니다.");
+          } else {
+            alert('상품 정보를 분석하는 데 실패했습니다.');
           }
         } else if (result === 'FAILED') {
-          throw new Error("CRAWL_FAILED");
+          throw new Error('CRAWL_FAILED');
         }
       } catch (err) {
-        if (!isDoneRef.current) { // 성공하지 않았을 때만 에러 처리
+        if (!isDoneRef.current) {
+          // 성공하지 않았을 때만 에러 처리
           eventSource.close();
           setIsLoading(false);
-          alert("상품 정보를 분석하는 데 실패했습니다.");
+          alert('상품 정보를 분석하는 데 실패했습니다.');
         }
       }
     });
@@ -79,16 +79,16 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
     eventSource.onerror = (_e: any) => {
       if (isDoneRef.current) return;
       eventSource.close();
-      
+
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current += 1;
         console.log(`연결 지연 발생 - ${retryCountRef.current}번째 재시도 중...`);
-        
+
         setTimeout(() => subscribeToEvents(jobId, originalUrl), 2000);
       } else {
         setIsLoading(false);
         retryCountRef.current = 0;
-        alert("상품 정보를 가져오는 시간이 너무 오래 걸립니다. 잠시 후 다시 시도해주세요.");
+        alert('상품 정보를 가져오는 시간이 너무 오래 걸립니다. 잠시 후 다시 시도해주세요.');
       }
     };
   };
@@ -101,25 +101,24 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
 
     try {
       const startRes = await startCrawlTask(url);
-      
-      if (startRes.resultType === "SUCCESS") {
+
+      if (startRes.resultType === 'SUCCESS') {
         const jobId = startRes.data.jobId;
         subscribeToEvents(jobId, url);
       } else {
-        throw new Error("TASK_START_FAILED");
+        throw new Error('TASK_START_FAILED');
       }
     } catch (error: any) {
       setIsLoading(false);
 
       if (error.response?.status === 409) {
-        const errorMessage = error.response.data?.error?.message || "이미 추가된 상품입니다.";
+        const errorMessage = error.response.data?.error?.message || '이미 추가된 상품입니다.';
         alert(errorMessage);
+      } else {
+        alert('크롤링 요청 중 오류가 발생했습니다.');
       }
-      else {
-        alert("크롤링 요청 중 오류가 발생했습니다.");
-      }
-      
-      console.error("Crawl request error:", error);
+
+      console.error('Crawl request error:', error);
     }
   };
 
@@ -131,7 +130,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
       <header className="flex items-center justify-between px-5 h-[56px] shrink-0">
         <button onClick={onBack} className="p-2 -ml-2">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 18L9 12L15 6" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
         <h1 className="text-[18px] font-bold text-black">위시템 등록</h1>
@@ -149,11 +148,8 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
             onClick={handleRegister}
             disabled={!url}
             className={`w-[335px] h-[52px] rounded-[12px] text-[16px] font-bold transition-colors ${
-              url 
-                ? 'bg-[color:var(--color-primary-500)] text-white' 
-                : 'bg-[#CECECE] text-white'
-            }`}
-          >
+              url ? 'bg-[color:var(--color-primary-500)] text-white' : 'bg-[#CECECE] text-white'
+            }`}>
             등록하기
           </button>
         </div>

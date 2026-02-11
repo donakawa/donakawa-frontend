@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import type { ApiResponse, MeData } from '@/apis/auth';
+import type { ApiResponse } from '@/apis/auth';
 import type { Profile } from '@/types/MyPage/mypage';
 
-import { instance } from '@/apis/axios';
 import { LOCAL_STORAGE_KEY } from '@/constants/key';
+
+import { getAuthMe } from '@/apis/MyPage/auth';
+import { getWishlistAnalytics } from '@/apis/WishlistPage/analytics';
 
 import SettingIcon from '@/assets/setting.svg';
 import ProfileIcon from '@/assets/profile.svg';
@@ -45,7 +47,7 @@ export default function MyPage() {
 
   const goToSettingPage = () => navigate('/mypage/setting');
   const goToGoalPage = () => navigate('/mypage/goal');
-  const goToCompleted = () => navigate('/mypage/completed');
+  const goToCompleted = () => navigate('/report/review');
   const goToGiveup = () => navigate('/report/giveup');
 
   const forceToLogin = () => {
@@ -57,45 +59,57 @@ export default function MyPage() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchMe = async () => {
+    const fetchMeAndAnalytics = async () => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
 
-        const res = await instance.get<ApiResponse<MeData>>('/auth/me');
+        const [meRes, analyticsRes] = await Promise.all([getAuthMe(), getWishlistAnalytics()]);
         if (!mounted) return;
 
-        if (res.data.resultType === 'SUCCESS') {
-          const me = res.data.data;
+        // 1) /auth/me 실패면 기존과 동일하게 auth fail 처리
+        if (meRes.resultType !== 'SUCCESS') {
+          const code = (meRes.error?.errorCode ?? '') as ApiFailedErrorCode;
+          const reason = meRes.error?.reason ?? '사용자 정보를 불러오지 못했어요.';
 
-          setState((prev) => ({
-            ...prev,
-            nickname: me.nickname ?? '',
-            email: me.email ?? '',
-            goal: me.goal ?? '',
-            isLoading: false,
-          }));
-          return;
-        }
+          if (isAuthFail(code) || code === 'U001') {
+            alert(reason);
+            forceToLogin();
+            return;
+          }
 
-        const code = (res.data.error?.errorCode ?? '') as ApiFailedErrorCode;
-        const reason = res.data.error?.reason ?? '사용자 정보를 불러오지 못했어요.';
-
-        if (isAuthFail(code) || code === 'U001') {
           alert(reason);
-          forceToLogin();
+          setState((prev) => ({ ...prev, isLoading: false }));
           return;
         }
 
-        alert(reason);
-        setState((prev) => ({ ...prev, isLoading: false }));
-      } catch (err: any) {
+        const me = meRes.data;
+
+        // 2) analytics는 실패해도 마이페이지는 뜨게(0 처리)
+        const dropped =
+          analyticsRes.resultType === 'SUCCESS' ? analyticsRes.data.droppedItems : { totalCount: 0, totalPrice: 0 };
+
+        setState((prev) => ({
+          ...prev,
+          nickname: me.nickname ?? '',
+          email: me.email ?? '',
+          goal: me.goal ?? '',
+          giveupCount: dropped.totalCount ?? 0,
+          giveupPrice: dropped.totalPrice ?? 0,
+          isLoading: false,
+        }));
+      } catch (err: unknown) {
         if (!mounted) return;
 
-        const code = (err?.response?.data?.error?.errorCode ?? '') as ApiFailedErrorCode;
+        const e = err as {
+          response?: { data?: { error?: { errorCode?: string; reason?: string }; reason?: string } };
+          message?: string;
+        };
+
+        const code = (e?.response?.data?.error?.errorCode ?? '') as ApiFailedErrorCode;
         const reason =
-          err?.response?.data?.error?.reason ||
-          err?.response?.data?.reason ||
-          err?.message ||
+          e?.response?.data?.error?.reason ||
+          e?.response?.data?.reason ||
+          e?.message ||
           '사용자 정보를 불러오는 중 오류가 발생했어요.';
 
         if (isAuthFail(code) || code === 'U001') {
@@ -109,7 +123,7 @@ export default function MyPage() {
       }
     };
 
-    fetchMe();
+    fetchMeAndAnalytics();
 
     return () => {
       mounted = false;
@@ -122,6 +136,9 @@ export default function MyPage() {
     try {
       setIsLoggingOut(true);
 
+      // 기존 코드 유지: 로그아웃은 컴포넌트에서 instance.post로 하던 방식 그대로 쓰려면
+      // auth.ts에 logout 함수 만들고 싶으면 그때 분리하면 됨.
+      const { instance } = await import('@/apis/axios');
       const res = await instance.post<ApiResponse<null>>('/auth/logout');
 
       if (res.data.resultType === 'SUCCESS') {
@@ -136,13 +153,15 @@ export default function MyPage() {
       if (isAuthFail(code)) {
         forceToLogin();
       }
-    } catch (err: any) {
-      const code = (err?.response?.data?.error?.errorCode ?? '') as ApiFailedErrorCode;
+    } catch (err: unknown) {
+      const e = err as {
+        response?: { data?: { error?: { errorCode?: string; reason?: string }; reason?: string } };
+        message?: string;
+      };
+
+      const code = (e?.response?.data?.error?.errorCode ?? '') as ApiFailedErrorCode;
       const reason =
-        err?.response?.data?.error?.reason ||
-        err?.response?.data?.reason ||
-        err?.message ||
-        '로그아웃 중 오류가 발생했어요.';
+        e?.response?.data?.error?.reason || e?.response?.data?.reason || e?.message || '로그아웃 중 오류가 발생했어요.';
 
       alert(reason);
 

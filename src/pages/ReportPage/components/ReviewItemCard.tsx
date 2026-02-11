@@ -71,7 +71,7 @@ export function CompletedReviewCard({ item, onOpenClick }: CompletedCardProps) {
             {item.tags.map((t) => (
               <span
                 key={`${item.reviewId}-${t}`}
-                className="px-[6px] py-[3px] rounded-full bg-white shadow text-[12px]">
+                className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-500">
                 #{t}
               </span>
             ))}
