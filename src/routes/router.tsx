@@ -15,6 +15,7 @@ import SocialGoalPage from '@/pages/LoginPage/SocialGoalPage';
 import HomePage from '@/pages/HomePage/HomePage';
 import BudgetSettingPage from '@/pages/BudgetSettingPage/BudgetSettingPage';
 import BudgetSummaryPage from '@/pages/BudgetSummaryPage/BudgetSummaryPage';
+import AIChatPage from '@/pages/HomePage/AIChatPage';
 
 // 위시리스트
 import WishlistPage from '@/pages/WishlistPage/WishlistPage';
@@ -46,6 +47,7 @@ const publicChildren: RouteObject[] = [
 
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
+  { path: 'ai-chat', element: <AIChatPage /> },
   { path: 'social/goal', element: <SocialGoalPage /> },
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
