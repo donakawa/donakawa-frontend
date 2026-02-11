@@ -5,7 +5,7 @@ import { type PanInfo, motion, useDragControls, useAnimation } from 'framer-moti
 import SeedIcon from '@/assets/seed.svg?react';
 import SeedGreenIcon from '@/assets/seed_green.svg?react';
 import MascotIcon from '@/assets/mascot.svg?react';
-import SatisfactionIcon from '@/assets/satisfactionface.svg?react';
+import SatisfactionIcon from '@/assets/satisfactionFace.svg?react';
 import RegretIcon from '@/assets/regretface.svg?react';
 import ArrowIcon from '@/assets/arrow.svg?react';
 import Trophy from '@/assets/trophy.svg?react';
