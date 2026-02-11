@@ -75,6 +75,7 @@ export const useBudgetLogic = () => {
     return () => {
       setTitle('');
       setRightAction(null);
+      setCustomBack(null);
     };
   }, [isEdit, setRightAction, setCustomBack, navigate, setTitle]);
 
