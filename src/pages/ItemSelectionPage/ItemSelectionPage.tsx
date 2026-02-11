@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import { instance } from '@/apis/axios';
 
@@ -7,11 +7,13 @@ import SelectableItem from './components/SelectableItem';
 import CategoryFilter from './components/CategoryFilter';
 
 import ArrowIcon from '@/assets/arrow.svg?react';
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 
 type LocationState = { from?: string };
 
 import type { ChatItemType } from '@/apis/AIChatPage/aichat';
 import type { PickedWishItem } from '../HomePage/hooks/useAIChat';
+import { type HeaderControlContext } from '@/layouts/ProtectedLayout';
 
 type WishItemStatus = 'WISHLISTED' | 'UNWISHLISTED' | string;
 
@@ -57,6 +59,8 @@ export default function ItemSelectionPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { setTitle } = useOutletContext<HeaderControlContext>();
+
   const from = (location.state as LocationState | null)?.from ?? '/home/ai-chat';
 
   const [items, setItems] = useState<WishItem[]>([]);
@@ -65,6 +69,10 @@ export default function ItemSelectionPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
+
+  useEffect(() => {
+    setTitle('고민템을 선택해주세요!');
+  }, [setTitle]);
 
   useEffect(() => {
     let mounted = true;
@@ -186,7 +194,7 @@ export default function ItemSelectionPage() {
               <SelectableItem
                 key={item.id}
                 id={item.id}
-                imageUrl={item.photoUrl ?? 'https://placehold.co/150'}
+                imageUrl={item.photoUrl ?? DefaultImg}
                 title={item.name}
                 price={item.price}
                 isSelected={selectedId === item.id}
