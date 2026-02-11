@@ -28,7 +28,7 @@ const DonaAiBanner = React.forwardRef<HTMLDivElement, Props>(({ onDismiss }, ref
   const handleChatStart = () => {
     // 클릭하면 다른 페이지로 가니까, 부모 배너도 숨겨주고 이동
     onDismiss?.();
-    navigate('/home');
+    navigate('/home/ai-chat');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

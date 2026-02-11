@@ -4,4 +4,5 @@ export interface WishItemData {
   brand: string;
   store: string;
   image: string;
+  url: string;
 }

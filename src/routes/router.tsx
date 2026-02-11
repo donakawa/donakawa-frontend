@@ -19,6 +19,7 @@ import ConsumptionPage from '@/pages/ConsumptionPage/ConsumptionPage';
 import AuthCallbackPage from '@/pages/LoginPage/AuthCallbackPage';
 import FindPasswordPage from '@/pages/FindPasswordPage/FindPasswordPage';
 import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
+import WishItemDetailPage from '@/pages/WishlistPage/WishItemDetailPage';
 import SocialGoalPage from '@/pages/LoginPage/SocialGoalPage';
 
 const publicChildren: RouteObject[] = [
@@ -35,8 +36,13 @@ const protectedChildren: RouteObject[] = [
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
-  { path: 'wishlist', element: <WishlistPage /> },
   { path: 'item_selection', element: <ItemSelectionPage /> },
+  { path: 'wishlist',
+    children: [
+      { index: true, element: <WishlistPage /> },
+      { path: 'detail/:itemId', element: <WishItemDetailPage /> },
+    ],
+  },
   {
     path: 'report',
     children: [
