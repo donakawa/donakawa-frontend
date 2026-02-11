@@ -1,9 +1,5 @@
 import type { CalendarCell, CalendarPurchaseItem, DayTime } from '@/types/ReportPage/report';
 
-import SunIcon from '@/assets/SunIcon.svg';
-import MoonIcon from '@/assets/MoonIcon.svg';
-import MoonDawnIcon from '@/assets/MoonDawnIcon.svg';
-
 export type CalendarPurchase = CalendarPurchaseItem & { rating?: number };
 
 export const TIME_ORDER: DayTime[] = ['아침', '낮', '저녁', '새벽'];
@@ -26,12 +22,6 @@ export function formatKoreanDate(iso: string): string {
   const p = parseISO(iso);
   if (!p) return iso;
   return `${p.y}.${String(p.m).padStart(2, '0')}.${String(p.d).padStart(2, '0')}`;
-}
-
-export function getTimeIcon(time: DayTime): { src: string; alt: string } {
-  if (time === '새벽') return { src: MoonDawnIcon, alt: '새벽 달' };
-  if (time === '저녁') return { src: MoonIcon, alt: '달' };
-  return { src: SunIcon, alt: '해' };
 }
 
 export function groupByTime(list: CalendarPurchase[]): Record<DayTime, CalendarPurchase[]> {

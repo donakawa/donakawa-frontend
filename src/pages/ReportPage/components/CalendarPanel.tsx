@@ -9,7 +9,8 @@ import StarFilled from '@/assets/star_full.svg';
 import StarEmpty from '@/assets/star_line.svg';
 
 import { formatWon } from '@/utils/ReportPage/report';
-import { formatKoreanDate, getTimeIcon, toISO } from '@/utils/ReportPage/calendar';
+import { formatKoreanDate, toISO } from '@/utils/ReportPage/calendar';
+import { getTimeIcon } from '@/utils/ReportPage/timeIcon';
 import { useCalendarMonth } from '@/pages/ReportPage/hooks/useCalendarMonth';
 import type { CalendarCell, ConsumptionReason, DayTime } from '@/types/ReportPage/report';
 

@@ -5,7 +5,8 @@ import axios, { AxiosError } from 'axios';
 import type { RatingValue, UsageLevel } from '@/types/ReportPage/review';
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
-import MoonIcon from '@/assets/MoonIcon.svg';
+import { getTimeIcon } from '@/utils/ReportPage/timeIcon';
+
 import StarFullIcon from '@/assets/star_full.svg';
 import StarIcon from '@/assets/star_rare.svg';
 
@@ -70,6 +71,7 @@ type UiPurchase = {
   tags: string[];
   dateText: string;
   dayLabelText: string;
+  purchasedAt?: PendingItemRaw['purchasedAt']; // ✅ 추가
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -179,6 +181,7 @@ export default function ReviewWritePage() {
           tags: Array.isArray(target.tags) ? target.tags : [],
           dateText: formatDateText(target.purchaseDate ?? target.createdAt),
           dayLabelText: '',
+          purchasedAt: target.purchasedAt, // ✅ 추가
         };
 
         setPurchase(ui);
@@ -277,6 +280,9 @@ export default function ReviewWritePage() {
     );
   }
 
+  // ✅ 구매 시간대에 따른 아이콘 결정
+  const { src: timeIconSrc, alt: timeIconAlt } = getTimeIcon(purchase.purchasedAt);
+
   return (
     <div className="w-full max-w-[430px] mx-auto min-h-[100dvh] bg-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <main className="p-5">
@@ -284,7 +290,7 @@ export default function ReviewWritePage() {
         <section className="pb-[18px]">
           <div className="flex items-center gap-[10px] mb-[12px]">
             <div className="text-[14px] font-normal text-primary-brown-400">{purchase.dateText}</div>
-            <img src={MoonIcon} alt="" aria-hidden className="h-[30px]" />
+            <img src={timeIconSrc} alt={timeIconAlt} className="h-[30px]" />
           </div>
 
           <div className="flex gap-[20px]">

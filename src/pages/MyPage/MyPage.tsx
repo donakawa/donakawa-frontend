@@ -46,7 +46,7 @@ export default function MyPage() {
   const goToSettingPage = () => navigate('/mypage/setting');
   const goToGoalPage = () => navigate('/mypage/goal');
   const goToCompleted = () => navigate('/mypage/completed');
-  const goToGiveup = () => navigate('/mypage/giveup');
+  const goToGiveup = () => navigate('/report/giveup');
 
   const forceToLogin = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
