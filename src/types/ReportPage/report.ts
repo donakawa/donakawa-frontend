@@ -4,7 +4,14 @@ export type ConsumptionReason = '필요해서' | '세일 중' | '품절임박';
 
 export type Star = 1 | 2 | 3 | 4 | 5;
 
+export type Period = {
+  from: string;
+  to: string;
+  days: number;
+};
+
 export type MonthlyReport = {
+  period: Period;
   totalWon: number;
   savedWon: number;
   reasons: ConsumptionReason[];
@@ -15,7 +22,13 @@ export type MonthlyReport = {
 
 export type DayTime = '아침' | '낮' | '저녁' | '새벽';
 
+export type Weekday = '월' | '화' | '수' | '목' | '금' | '토' | '일';
+
 export type TimeDistribution = Record<DayTime, number>;
+
+export type WeekdayDistribution = Record<Weekday, number>;
+
+export type DistributionMode = 'time' | 'weekday';
 
 export type PurchaseItem = {
   id: string;

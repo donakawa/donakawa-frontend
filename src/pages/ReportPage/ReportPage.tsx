@@ -13,8 +13,8 @@ export default function ReportPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('record');
 
   return (
-    <div className="w-full min-h-full bg-[var(--color-primary-100)] text-[var(--color-gray-1000)]">
-      <div className="flex gap-[10px] px-4 pt-3 bg-[var(--color-white)]">
+    <div className="w-full min-h-full bg-primary-100 text-black">
+      <div className="flex gap-[10px] px-4 pt-3 bg-white">
         <button
           type="button"
           onClick={() => setActiveTab('record')}
@@ -23,8 +23,8 @@ export default function ReportPage() {
             '[clip-path:inset(-10px_-10px_0px_-10px)]',
             'shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]',
             activeTab === 'record'
-              ? 'border-b border-b-[var(--color-white)] bg-[var(--color-primary-100)] text-[var(--color-primary-brown-500)]'
-              : 'border-b border-b-[var(--color-gray-200)] bg-[var(--color-white)] text-[var(--color-gray-200)]',
+              ? 'border-b border-b-white bg-primary-100 text-primary-brown-500'
+              : 'border-b border-b-gray-200 bg-white text-gray-200',
             'transition-[background,border-color,transform] duration-150 ease-out',
           )}>
           기록
@@ -38,8 +38,8 @@ export default function ReportPage() {
             '[clip-path:inset(-10px_-10px_0px_-10px)]',
             'shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]',
             activeTab === 'calendar'
-              ? 'border-b border-b-[var(--color-white)] bg-[var(--color-secondary-100)] text-[var(--color-primary-brown-500)]'
-              : 'border-b border-b-[var(--color-gray-200)] bg-[var(--color-white)] text-[var(--color-gray-200)]',
+              ? 'border-b border-b-white bg-secondary-100 text-primary-brown-500'
+              : 'border-b border-b-gray-200 bg-white text-gray-200',
             'transition-[background,border-color,transform] duration-150 ease-out',
           )}>
           캘린더

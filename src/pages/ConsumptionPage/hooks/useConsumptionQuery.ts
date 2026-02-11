@@ -23,6 +23,7 @@ export const useConsumptionQuery = (currentType: 'satisfaction' | 'regret') => {
         title: item.name,
         price: item.price,
         imageUrl: item.imageUrl || '',
+        type: 'AUTO',
       })),
     ) ?? [];
 
