@@ -1,18 +1,54 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { instance } from '@/apis/axios';
+
 import SelectableItem from './components/SelectableItem';
 import CategoryFilter from './components/CategoryFilter';
 
 import ArrowIcon from '@/assets/arrow.svg?react';
 
-// 더미 데이터
-const MOCK_ITEMS = Array.from({ length: 12 }).map((_, i) => ({
-  id: String(i),
-  title: '캐시미어 로제 니트',
-  price: 238400,
-  imageUrl: 'https://placehold.co/150',
-  category: i % 2 === 0 ? 'outer' : 'top',
-}));
+type LocationState = { from?: string };
+
+export type ChatItemType = 'AUTO' | 'MANUAL';
+
+export type PickedWishItem = {
+  wishItemId: number;
+  name: string;
+  price: number;
+  imageUrl: string;
+  type: ChatItemType;
+};
+
+type WishItemStatus = 'WISHLISTED' | 'UNWISHLISTED' | string;
+
+type WishItem = {
+  id: string;
+  name: string;
+  price: number;
+  photoUrl: string | null;
+  type: 'MANUAL' | 'CRAWLED' | string;
+  status: WishItemStatus;
+};
+
+type WishlistItemsSuccess = {
+  resultType: 'SUCCESS';
+  error: null;
+  data: {
+    nextCursor: string | null;
+    wishitems: WishItem[];
+  };
+};
+
+type WishlistItemsFail = {
+  resultType: 'FAIL' | 'FAILED';
+  error: { errorCode: string; reason?: string; message?: string; data: unknown | null };
+  data: null;
+};
+
+type WishlistItemsResponse = WishlistItemsSuccess | WishlistItemsFail;
+
+const WISH_STATUS: WishItemStatus = 'WISHLISTED';
 
 const CATEGORIES = [
   { id: 'all', label: 'ALL' },
@@ -26,42 +62,139 @@ const CATEGORIES = [
 
 export default function ItemSelectionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // 상태 관리
+  const from = (location.state as LocationState | null)?.from ?? '/home/ai-chat';
+
+  const [items, setItems] = useState<WishItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // 필터링 로직
-  const filteredItems =
-    activeCategory === 'all' ? MOCK_ITEMS : MOCK_ITEMS.filter((item) => item.category === activeCategory);
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchWishlist = async () => {
+      setLoading(true);
+      setErrorMsg(null);
+
+      try {
+        const res = await instance.get<WishlistItemsResponse>('/wishlist/items', {
+          params: {
+            status: WISH_STATUS,
+            take: 50,
+            _ts: Date.now(),
+          },
+          headers: {
+            Accept: 'application/json',
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+          },
+          withCredentials: true,
+        });
+
+        if (!mounted) return;
+
+        if (res.data.resultType !== 'SUCCESS') {
+          setItems([]);
+          const msg = res.data.error?.reason ?? res.data.error?.message ?? '위시리스트를 불러오지 못했어요.';
+          setErrorMsg(msg);
+          return;
+        }
+
+        setItems(res.data.data.wishitems ?? []);
+      } catch (err: unknown) {
+        if (!mounted) return;
+
+        const e = err as {
+          response?: { data?: { message?: string; reason?: string; error?: { reason?: string; message?: string } } };
+          message?: string;
+        };
+
+        const serverMsg =
+          e?.response?.data?.message ||
+          e?.response?.data?.error?.reason ||
+          e?.response?.data?.error?.message ||
+          e?.response?.data?.reason ||
+          e?.message;
+
+        setItems([]);
+        setErrorMsg(serverMsg ? String(serverMsg) : '위시리스트를 불러오는 중 오류가 발생했어요.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    void fetchWishlist();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    if (activeCategory === 'all') return items;
+    return items;
+  }, [items, activeCategory]);
+
+  const selectedItem = useMemo(() => {
+    if (!selectedId) return null;
+    return items.find((it) => it.id === selectedId) ?? null;
+  }, [selectedId, items]);
 
   const handleItemClick = (id: string) => {
     setSelectedId((prev) => (prev === id ? null : id));
   };
 
+  const mapWishItemTypeToChatType = (wishType: string): ChatItemType => {
+    if (wishType === 'MANUAL') return 'MANUAL';
+    return 'AUTO';
+  };
+
   const handleSubmit = () => {
-    if (!selectedId) return;
-    console.log('선택된 상품 ID:', selectedId);
-    navigate('/chat');
+    if (!selectedItem) return;
+
+    const wishItemId = Number(selectedItem.id);
+    if (Number.isNaN(wishItemId)) return;
+
+    const pickedWishItem: PickedWishItem = {
+      wishItemId,
+      name: selectedItem.name,
+      price: selectedItem.price,
+      imageUrl: selectedItem.photoUrl ?? 'https://placehold.co/150',
+      type: mapWishItemTypeToChatType(selectedItem.type),
+    };
+
+    navigate(from, {
+      state: { pickedWishItem },
+    });
   };
 
   return (
-    <div className="flex flex-col h-[100dvh]">
-      {/* 상단 카테고리 필터 */}
+    <div className="flex h-[100dvh] flex-col">
       <CategoryFilter categories={CATEGORIES} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
 
-      {/* 상품 그리드 */}
       <div
-        className="flex-1 overflow-y-auto no-scrollbar rounded-t-[16px] shadow-[0_0_4px_rgba(0,0,0,0.25)] 
-                    pt-[20px] px-[20px] pb-[50px] bg-secondary-100">
-        {filteredItems.length > 0 ? (
+        className="flex-1 overflow-y-auto no-scrollbar rounded-t-[16px] shadow-[0_0_4px_rgba(0,0,0,0.25)]
+                   bg-secondary-100 px-[20px] pb-[50px] pt-[20px]">
+        {loading ? (
+          <div className="flex h-full items-center justify-center text-gray-500">
+            <p className="text-[16px]">불러오는 중...</p>
+          </div>
+        ) : errorMsg ? (
+          <div className="mt-[100px] flex h-full flex-col items-center text-gray-500">
+            <p className="text-center text-[16px] whitespace-pre-line">{errorMsg}</p>
+          </div>
+        ) : filteredItems.length > 0 ? (
           <div className="grid grid-cols-3 gap-[26px]">
             {filteredItems.map((item) => (
               <SelectableItem
                 key={item.id}
                 id={item.id}
-                imageUrl={item.imageUrl}
-                title={item.title}
+                imageUrl={item.photoUrl ?? 'https://placehold.co/150'}
+                title={item.name}
                 price={item.price}
                 isSelected={selectedId === item.id}
                 onClick={() => handleItemClick(item.id)}
@@ -69,21 +202,20 @@ export default function ItemSelectionPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center mt-[100px] text-gray-500">
+          <div className="mt-[100px] flex h-full flex-col items-center text-gray-500">
             <p className="text-[16px]">아이템이 없어요.</p>
           </div>
         )}
       </div>
 
-      {/* 하단 버튼 */}
       {selectedId && (
         <div className="fixed bottom-0 mx-[20px] pb-[34px]">
           <button
             onClick={handleSubmit}
-            className="w-[335px] h-[60px] flex items-center justify-between px-[24px] bg-white border-[1px] border-gray-300
-                       rounded-full shadow-[0_0_4px_rgba(0,0,0,0.25)] active:scale-[0.98] transition-transform">
-            <span className="font-medium text-[16px]">이 상품을 첨부할래요!</span>
-            <ArrowIcon className="w-[8px] h-[13px] text-black" />
+            className="flex h-[60px] w-[335px] items-center justify-between rounded-full border-[1px] border-gray-300 bg-white
+                       px-[24px] shadow-[0_0_4px_rgba(0,0,0,0.25)] transition-transform active:scale-[0.98]">
+            <span className="text-[16px] font-medium">이 상품을 첨부할래요!</span>
+            <ArrowIcon className="h-[13px] w-[8px] text-black" />
           </button>
         </div>
       )}
