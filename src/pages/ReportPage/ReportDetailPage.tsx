@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import type { ReportDetailProduct, PurchaseDecision } from '@/types/ReportPage/detail';
+import type { ReportDetailProduct, PurchaseDecision } from '@/types/ReportPage/Detail';
 
 import LeftArrow from '@/assets/arrow_left(white).svg';
 import SampleImage from '@/assets/sample2.svg';
