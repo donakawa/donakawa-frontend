@@ -6,8 +6,8 @@ import SeedIcon from '@/assets/seed.svg?react';
 import SeedGreenIcon from '@/assets/seed_green.svg?react';
 import DonaIcon from '@/assets/happy_dona.png';
 import DonaSadIcon from '@/assets/sad_dona.png';
-import SatisfactionIcon from '@/assets/satisfactionface.svg?react';
-import RegretIcon from '@/assets/regretface.svg?react';
+import SatisfactionIcon from '@/assets/satisfactionFace.svg?react';
+import RegretIcon from '@/assets/regretFace.svg?react';
 import ArrowIcon from '@/assets/arrow.svg?react';
 import Trophy from '@/assets/trophy.svg?react';
 
