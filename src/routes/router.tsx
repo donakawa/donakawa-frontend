@@ -22,7 +22,7 @@ import ItemSelectionPage from '@/pages/ItemSelectionPage/ItemSelectionPage';
 import SocialGoalPage from '@/pages/LoginPage/SocialGoalPage';
 
 const publicChildren: RouteObject[] = [
-  { index: true, element: <SignupPage /> },
+  { index: true, element: <LoginPage /> },
   { path: 'signup', element: <SignupPage /> },
   { path: 'login', element: <LoginPage /> },
   { path: 'auth/callback', element: <AuthCallbackPage /> },
@@ -31,7 +31,7 @@ const publicChildren: RouteObject[] = [
 
 const protectedChildren: RouteObject[] = [
   { path: 'home', element: <HomePage /> },
-  { path: 'social/goal', element: <SocialGoalPage />},
+  { path: 'social/goal', element: <SocialGoalPage /> },
   { path: 'budget/setting', element: <BudgetSettingPage /> },
   { path: 'budget/result', element: <BudgetSummaryPage /> },
   { path: 'consumption/:type', element: <ConsumptionPage /> },
