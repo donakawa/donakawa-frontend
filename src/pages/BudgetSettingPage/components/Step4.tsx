@@ -16,7 +16,7 @@ const Step4 = ({ onNext, defaultValue }: StepProps) => {
     <StepLayout
       stepText="STEP 4"
       title="매달 저축/ 투자액은 얼마인가요?"
-      description="소득의 20%인 20만원이 가장 이상적이에요!"
+      description="소득의 20%가 가장 이상적이에요!"
       isNextDisabled={numericValue === 0}
       onNext={() => onNext(numericValue)}>
       <MoneyInputSection value={inputValue} onChange={setInputValue} />
