@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Navigate, Outlet, useLocation, useNavigate} from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import { getMe } from '@/apis/auth';
 import BottomNav from '@/components/BottomNav';

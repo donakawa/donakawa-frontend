@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import StepLayout from './StepLayout';
 import MoneyInputSection from './MoneyInputSection';
 

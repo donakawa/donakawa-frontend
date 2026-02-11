@@ -1,31 +1,40 @@
+// src/apis/auth.ts
 import type { AxiosResponse } from 'axios';
 import { instance } from './axios';
+import type { Provider } from '@/types/MyPage/mypage';
 
-interface CommonResponse<T> {
-  resultType: string;
+export interface CommonResponse<T> {
+  resultType: 'SUCCESS' | 'FAILED' | string;
   error: { errorCode: string; reason: string } | null;
   data: T;
 }
 
-interface LoginRequest {
+const handleResponse = <T>(response: AxiosResponse<CommonResponse<T>>): T => {
+  if (response.data.resultType === 'FAILED') {
+    throw { response };
+  }
+  return response.data.data;
+};
+
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-interface LoginResponse {
+export interface LoginResponse {
   id: string;
   email: string;
   nickname: string;
 }
 
-interface RegisterRequest {
+export interface RegisterRequest {
   email: string;
   password: string;
   nickname: string;
   goal: string;
 }
 
-interface UserResponse {
+export interface UserResponse {
   id: string;
   email: string;
   nickname: string;
@@ -35,25 +44,48 @@ interface UserResponse {
 }
 
 // 비밀번호 재설정 요청 타입
-interface ResetPasswordRequest {
+export interface ResetPasswordRequest {
   email: string;
   newPassword: string;
 }
 
 // 목표 수정 응답 데이터 타입
-interface UpdateGoalResponse {
+export interface UpdateGoalResponse {
   id: string;
   goal: string;
   updatedAt: string;
 }
-// --- [API 함수] ---
 
-//  API 응답을 검사해서 FAILED면 에러를 던지는 함수
-const handleResponse = <T>(response: AxiosResponse<CommonResponse<T>>): T => {
-  if (response.data.resultType === 'FAILED') {
-    throw { response };
-  }
-  return response.data.data;
+export type ResultType = 'SUCCESS' | 'FAILED';
+
+export type ApiErrorPayload = {
+  errorCode: string;
+  reason: string;
+  message?: string;
+  data: unknown | null;
+};
+
+export type ApiResponse<T> =
+  | { resultType: 'SUCCESS'; error: null; data: T }
+  | { resultType: 'FAILED'; error: ApiErrorPayload; data: null };
+
+export type MeData = {
+  id: string;
+  email: string;
+  nickname: string;
+  goal: string;
+  hasPassword: boolean;
+  providers: string[];
+};
+
+export const pickPrimaryProvider = (providers: string[]): Provider | 'email' => {
+  const lower = providers.map((p) => p.toLowerCase());
+
+  if (lower.includes('google')) return 'google' as Provider;
+  if (lower.includes('kakao')) return 'kakao' as Provider;
+  if (lower.includes('naver')) return 'naver' as Provider;
+
+  return 'email';
 };
 
 // 1. 로그인
@@ -62,13 +94,13 @@ export const login = async (data: LoginRequest) => {
   return handleResponse(response);
 };
 
-// 2. 이메일 인증번호 발송 (type 매개변수 추가, 기본값은 'REGISTER')
+// 2. 이메일 인증번호 발송
 export const sendAuthCode = async (email: string, type: 'REGISTER' | 'RESET_PASSWORD' = 'REGISTER') => {
   const response = await instance.post<CommonResponse<null>>('/auth/email/send-code', { email, type });
   return handleResponse(response);
 };
 
-// 3. 이메일 인증번호 검증 (type 매개변수 추가, 기본값은 'REGISTER')
+// 3. 이메일 인증번호 검증
 export const verifyAuthCode = async (email: string, code: string, type: 'REGISTER' | 'RESET_PASSWORD' = 'REGISTER') => {
   const response = await instance.post<CommonResponse<null>>('/auth/email/verify-code', { email, code, type });
   return handleResponse(response);
@@ -83,7 +115,9 @@ export const register = async (data: RegisterRequest) => {
 // 5. 닉네임 중복 확인
 export const checkNicknameDuplicate = async (nickname: string) => {
   const encodedNickname = encodeURIComponent(nickname);
-  const response = await instance.get<CommonResponse<{ isAvailable: boolean }>>(`/auth/nickname/duplicate?nickname=${encodedNickname}`);
+  const response = await instance.get<CommonResponse<{ isAvailable: boolean }>>(
+    `/auth/nickname/duplicate?nickname=${encodedNickname}`,
+  );
   return handleResponse(response);
 };
 
@@ -99,10 +133,8 @@ export const getMe = async () => {
   return handleResponse(response);
 };
 
-// 8. 목표 수정 (소셜 로그인 후 설정 / 마이페이지 수정 공용)
+// 8. 목표 수정
 export const updateGoal = async (goal: string) => {
-  const response = await instance.patch<CommonResponse<UpdateGoalResponse>>('/auth/profile/goal', { 
-    newGoal: goal 
-  });
+  const response = await instance.patch<CommonResponse<UpdateGoalResponse>>('/auth/profile/goal', { newGoal: goal });
   return handleResponse(response);
 };

@@ -1,4 +1,3 @@
-import React from 'react';
 import AllIcon from '@/assets/all_folder.svg?react';
 import Folder from '@/assets/folder.svg?react';
 

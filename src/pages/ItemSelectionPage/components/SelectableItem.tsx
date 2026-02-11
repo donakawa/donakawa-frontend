@@ -9,7 +9,7 @@ type Props = {
   onClick: () => void;
 };
 
-export default function SelectableItem({ id, imageUrl, title, price, isSelected, onClick }: Props) {
+export default function SelectableItem({ imageUrl, title, price, isSelected, onClick }: Props) {
   return (
     <div className="flex flex-col gap-[4px] cursor-pointer" onClick={onClick}>
       {/* 이미지 영역 */}
