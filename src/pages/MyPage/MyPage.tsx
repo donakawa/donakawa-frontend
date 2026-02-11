@@ -5,6 +5,7 @@ import type { ApiResponse, MeData } from '@/apis/auth';
 import type { Profile } from '@/types/MyPage/mypage';
 
 import { instance } from '@/apis/axios';
+import { LOCAL_STORAGE_KEY } from '@/constants/key';
 
 import SettingIcon from '@/assets/setting.svg';
 import ProfileIcon from '@/assets/profile.svg';
@@ -21,24 +22,37 @@ type ProfileState = {
 };
 
 const DEFAULT_STATE: ProfileState = {
-  nickname: '습관성충동구매',
-  email: 'example@example.com',
-  goal: '자기개발',
-  giveupCount: 26,
-  giveupPrice: 459_200,
+  nickname: '',
+  email: '',
+  goal: '',
+  giveupCount: 0,
+  giveupPrice: 0,
   isLoading: true,
 };
+
+type ApiFailedErrorCode = 'A004' | 'A005' | 'A006' | 'U001';
+
+function isAuthFail(code?: string): code is 'A004' | 'A005' | 'A006' {
+  return code === 'A004' || code === 'A005' || code === 'A006';
+}
 
 export default function MyPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [state, setState] = useState<ProfileState>(DEFAULT_STATE);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const goToSettingPage = () => navigate('/mypage/setting');
   const goToGoalPage = () => navigate('/mypage/goal');
   const goToCompleted = () => navigate('/mypage/completed');
   const goToGiveup = () => navigate('/mypage/giveup');
+
+  const forceToLogin = () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
+    localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
+    navigate('/login', { replace: true });
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -48,7 +62,6 @@ export default function MyPage() {
         setState((prev) => ({ ...prev, isLoading: true }));
 
         const res = await instance.get<ApiResponse<MeData>>('/auth/me');
-
         if (!mounted) return;
 
         if (res.data.resultType === 'SUCCESS') {
@@ -56,16 +69,42 @@ export default function MyPage() {
 
           setState((prev) => ({
             ...prev,
-            nickname: me.nickname,
-            email: me.email,
-            goal: me.goal,
+            nickname: me.nickname ?? '',
+            email: me.email ?? '',
+            goal: me.goal ?? '',
             isLoading: false,
           }));
-        } else {
-          setState((prev) => ({ ...prev, isLoading: false }));
+          return;
         }
-      } catch {
+
+        const code = (res.data.error?.errorCode ?? '') as ApiFailedErrorCode;
+        const reason = res.data.error?.reason ?? '사용자 정보를 불러오지 못했어요.';
+
+        if (isAuthFail(code) || code === 'U001') {
+          alert(reason);
+          forceToLogin();
+          return;
+        }
+
+        alert(reason);
+        setState((prev) => ({ ...prev, isLoading: false }));
+      } catch (err: any) {
         if (!mounted) return;
+
+        const code = (err?.response?.data?.error?.errorCode ?? '') as ApiFailedErrorCode;
+        const reason =
+          err?.response?.data?.error?.reason ||
+          err?.response?.data?.reason ||
+          err?.message ||
+          '사용자 정보를 불러오는 중 오류가 발생했어요.';
+
+        if (isAuthFail(code) || code === 'U001') {
+          alert(reason);
+          forceToLogin();
+          return;
+        }
+
+        alert(reason);
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
@@ -76,6 +115,44 @@ export default function MyPage() {
       mounted = false;
     };
   }, [location.key]);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    try {
+      setIsLoggingOut(true);
+
+      const res = await instance.post<ApiResponse<null>>('/auth/logout');
+
+      if (res.data.resultType === 'SUCCESS') {
+        forceToLogin();
+        return;
+      }
+
+      const code = (res.data.error?.errorCode ?? '') as ApiFailedErrorCode;
+      const reason = res.data.error?.reason ?? '로그아웃에 실패했어요.';
+      alert(reason);
+
+      if (isAuthFail(code)) {
+        forceToLogin();
+      }
+    } catch (err: any) {
+      const code = (err?.response?.data?.error?.errorCode ?? '') as ApiFailedErrorCode;
+      const reason =
+        err?.response?.data?.error?.reason ||
+        err?.response?.data?.reason ||
+        err?.message ||
+        '로그아웃 중 오류가 발생했어요.';
+
+      alert(reason);
+
+      if (isAuthFail(code)) {
+        forceToLogin();
+      }
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const userProfile: Profile = useMemo(
     () => ({
@@ -109,9 +186,11 @@ export default function MyPage() {
             </div>
 
             <div className="mt-[6px] text-[16px] font-[400] text-center">
-              {state.isLoading ? '불러오는 중…' : userProfile.nickname}
+              {state.isLoading ? '불러오는 중…' : userProfile.nickname || '-'}
             </div>
-            <div className="text-[12px] font-[400] text-gray-600 text-center">{userProfile.email}</div>
+            <div className="text-[12px] font-[400] text-gray-600 text-center">
+              {state.isLoading ? '' : userProfile.email || '-'}
+            </div>
           </div>
 
           <div className="mt-5 grid grid-cols-[1fr_1px_1fr] items-center gap-[14px]">
@@ -140,7 +219,7 @@ export default function MyPage() {
         <div className="flex flex-col gap-1">
           <div className="text-[12px] font-[400] text-gray-600">목표</div>
           <div className="w-fit rounded-[50px] bg-primary-100 px-[10px] py-[5px] text-[14px] font-[700] border-2 border-primary-400">
-            {goal}
+            {state.isLoading ? '불러오는 중…' : goal || '-'}
           </div>
         </div>
 
@@ -172,6 +251,14 @@ export default function MyPage() {
           <img src={GrayRightArrow} alt="" className="h-[13px] w-2" />
         </button>
       </section>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className="mt-2 w-full py-4 text-center text-[14px] font-[400] text-gray-400 disabled:opacity-60">
+        {isLoggingOut ? '로그아웃 중…' : '로그아웃'}
+      </button>
     </div>
   );
 }
