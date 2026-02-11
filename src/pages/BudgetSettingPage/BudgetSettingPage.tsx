@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
@@ -25,10 +25,10 @@ const BudgetSettingPage = () => {
 
   const [budgetData, setBudgetData] = useState<SetBudgetRequest>({
     monthlyIncome: 0,
-    incomeDate: 1,
+    incomeDate: 0,
     fixedExpense: 0,
     monthlySaving: 0,
-    spendStrategy: 1,
+    spendStrategy: 0,
     shoppingBudget: 0,
   });
 
@@ -47,10 +47,28 @@ const BudgetSettingPage = () => {
     },
   });
 
+  const prevStep = useCallback(() => {
+    if (step === 1) {
+      navigate(-1);
+      return;
+    }
+    setDirection(-1);
+    setStep((prev) => prev - 1);
+  }, [step, navigate]);
+
+  const nextStep = useCallback(() => {
+    if (step === TOTAL_STEPS) {
+      submitBudget(budgetData);
+      return;
+    }
+    setDirection(1);
+    setStep((prev) => prev + 1);
+  }, [step, budgetData, submitBudget, navigate, TOTAL_STEPS]);
+
   useEffect(() => {
     setTitle('목표 예산 설정');
 
-    setCustomBack(() => prevStep);
+    setCustomBack(prevStep);
 
     if (step === 1 || step > 4) {
       setRightAction(null);
@@ -60,26 +78,7 @@ const BudgetSettingPage = () => {
         onClick: nextStep,
       });
     }
-  });
-
-  const nextStep = () => {
-    if (step === TOTAL_STEPS) {
-      submitBudget(budgetData);
-      navigate('/budget/result');
-      return;
-    }
-    setDirection(1);
-    setStep((prev) => prev + 1);
-  };
-
-  const prevStep = () => {
-    if (step === 1) {
-      navigate(-1);
-      return;
-    }
-    setDirection(-1);
-    setStep((prev) => prev - 1);
-  };
+  }, [step, setTitle, setCustomBack, setRightAction, prevStep, nextStep]);
 
   // 애니메이션 설정값
   const variants = {
@@ -120,31 +119,34 @@ const BudgetSettingPage = () => {
                 defaultValue={budgetData.monthlyIncome}
               />
             )}
+
             {step === 2 && (
               <Step2
-                onNext={(val) => {
-                  updateData('fixedExpense', val);
-                  nextStep();
-                }}
-                defaultValue={budgetData.fixedExpense || 0}
-              />
-            )}
-            {step === 3 && (
-              <Step3
-                onNext={(val) => {
-                  updateData('monthlySaving', val);
-                  nextStep();
-                }}
-                defaultValue={budgetData.monthlySaving}
-              />
-            )}
-            {step === 4 && (
-              <Step4
                 onNext={(val) => {
                   updateData('incomeDate', val);
                   nextStep();
                 }}
                 defaultValue={budgetData.incomeDate}
+              />
+            )}
+
+            {step === 3 && (
+              <Step3
+                onNext={(val) => {
+                  updateData('fixedExpense', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.fixedExpense}
+              />
+            )}
+
+            {step === 4 && (
+              <Step4
+                onNext={(val) => {
+                  updateData('monthlySaving', val);
+                  nextStep();
+                }}
+                defaultValue={budgetData.monthlySaving}
               />
             )}
             {step === 5 && (

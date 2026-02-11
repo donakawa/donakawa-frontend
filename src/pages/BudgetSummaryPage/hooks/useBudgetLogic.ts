@@ -24,9 +24,9 @@ export const useBudgetLogic = () => {
     income: 0,
     fixedCost: 0,
     savingCost: 0,
-    strategy: 1,
+    strategy: 0,
     shoppingTarget: 0,
-    renewalDay: 1,
+    renewalDay: 0,
   });
 
   // 조회
@@ -53,11 +53,19 @@ export const useBudgetLogic = () => {
   useEffect(() => {
     setTitle('목표 예산 설정');
 
+    setCustomBack(() => {
+      if (isEdit) {
+        if (window.confirm('수정 중인 내용은 저장되지 않습니다. 홈으로 이동할까요?')) {
+          navigate('/home', { replace: true });
+        }
+      } else {
+        navigate('/home', { replace: true });
+      }
+    });
+
     if (isEdit) {
-      setCustomBack(() => () => setIsEdit(false));
       setRightAction(null);
     } else {
-      setCustomBack(() => navigate('/home', { replace: true }));
       setRightAction({
         rightNode: '수정하기',
         onClick: () => setIsEdit(true),

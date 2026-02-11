@@ -31,7 +31,7 @@ const STRATEGIES: Strategy[] = [
   {
     id: 'free',
     title: '자유 지출',
-    description: '수입의 25% 내외 넉넉한 쇼핑',
+    description: '수입의 50% 내외 넉넉한 쇼핑',
     value: 3,
     icon: <ShoppingIcon />,
   },
