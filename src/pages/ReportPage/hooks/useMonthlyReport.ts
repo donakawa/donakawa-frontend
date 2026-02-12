@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { instance } from '@/apis/axios';
-import type { ConsumptionReason, MonthlyReport, Star } from '@/types/ReportPage/report';
-import { isConsumptionReason, toStar } from '@/utils/ReportPage/report';
+import type { MonthlyReport, Star } from '@/types/ReportPage/report';
+import { hasConsumptionData, toStarOrNull } from '@/utils/ReportPage/report';
 
 type ReportSuccessResponse = {
   resultType: 'SUCCESS';
@@ -12,12 +12,12 @@ type ReportSuccessResponse = {
     summary: {
       totalSpent: number;
       savedAmount: number;
-      averageSatisfaction: number;
+      averageSatisfaction: number | null;
     };
     topReasons: Array<{
       reason: string;
       count: number;
-      averageSatisfaction: number;
+      averageSatisfaction: number | null;
     }>;
   };
 };
@@ -40,28 +40,33 @@ type UseMonthlyReportResult = {
 function buildMonthlyReport(body: ReportSuccessResponse): MonthlyReport {
   const { period, summary, topReasons } = body.data;
 
-  const reasons: ConsumptionReason[] = (topReasons ?? [])
-    .map((r) => r.reason)
-    .filter((r): r is ConsumptionReason => isConsumptionReason(r));
+  const hasData = hasConsumptionData({ totalSpent: summary.totalSpent }, topReasons ?? []);
 
-  const baseStar = toStar(summary.averageSatisfaction);
+  const reasons: string[] = hasData
+    ? (topReasons ?? [])
+        .filter((r) => (r?.count ?? 0) > 0)
+        .map((r) => r.reason)
+        .filter((r) => typeof r === 'string' && r.length > 0)
+    : [];
 
-  const reasonSatisfaction: Record<ConsumptionReason, Star> = {
-    필요해서: baseStar,
-    '세일 중': baseStar,
-    품절임박: baseStar,
-  };
+  const baseStar = hasData ? toStarOrNull(summary.averageSatisfaction) : null;
 
-  (topReasons ?? []).forEach((r) => {
-    if (isConsumptionReason(r.reason)) {
-      reasonSatisfaction[r.reason] = toStar(r.averageSatisfaction);
-    }
-  });
+  const reasonSatisfaction: Record<string, Star | null> = {};
 
-  const insight =
-    reasons.length > 0
+  if (hasData) {
+    (topReasons ?? []).forEach((r) => {
+      if (!r?.reason) return;
+      if ((r.count ?? 0) <= 0) return;
+
+      reasonSatisfaction[r.reason] = toStarOrNull(r.averageSatisfaction);
+    });
+  }
+
+  const insight = hasData
+    ? reasons.length > 0
       ? `최근 한 달 동안 "${reasons.join(', ')}" 등의 이유로 소비가 많았어요. 구매 전 한 번만 더 고민해보면 지갑을 더 지킬 수 있어요!`
-      : '최근 한 달 소비 패턴을 점검해보며, 구매 전 “정말 필요한가?”를 한 번 더 체크해보세요.';
+      : '최근 한 달 소비 패턴을 점검해보며, 구매 전 “정말 필요한가?”를 한 번 더 체크해보세요.'
+    : '아직 소비 기록이 없어요. 첫 기록을 남겨보면 리포트를 만들어드릴게요!';
 
   return {
     period,
@@ -103,16 +108,7 @@ export function useMonthlyReport(): UseMonthlyReportResult {
   };
 
   useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      if (!alive) return;
-      await refetch();
-    })();
-
-    return () => {
-      alive = false;
-    };
+    void refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

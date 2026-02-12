@@ -2,15 +2,23 @@ import { instance } from '@/apis/axios';
 
 import type {
   CalendarElement,
-  CalendarPurchaseItem,
   ConsumptionReason,
-  DayTime,
   MonthlyReport,
   Star,
-  Weekday,
   TimeDistribution,
   WeekdayDistribution,
+  DayTime,
 } from '@/types/ReportPage/report';
+
+import {
+  emptyTimeDist,
+  emptyWeekdayDist,
+  hasConsumptionData,
+  isDayTimeDisplayName,
+  isWeekdayDisplayName,
+  toDayTimeFromCalendar,
+  toStarOrNull,
+} from '@/utils/ReportPage/report';
 
 type ReportSuccessResponse = {
   resultType: 'SUCCESS';
@@ -20,37 +28,23 @@ type ReportSuccessResponse = {
     summary: {
       totalSpent: number;
       savedAmount: number;
-      averageSatisfaction: number;
+      averageSatisfaction: number | null;
     };
     topReasons: Array<{
       reason: string;
       count: number;
-      averageSatisfaction: number;
+      averageSatisfaction: number | null;
     }>;
   };
 };
 
 type ReportFailResponse = {
   resultType: 'FAIL';
-  error: {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
+  error: { errorCode: string; reason: string; data?: unknown };
   success: null;
 };
 
 type ReportResponse = ReportSuccessResponse | ReportFailResponse;
-
-function toStar(n: number): Star {
-  const rounded = Math.round(n);
-  const clamped = Math.max(1, Math.min(5, rounded));
-  return clamped as Star;
-}
-
-function isConsumptionReason(v: string): v is ConsumptionReason {
-  return v === '필요해서' || v === '세일 중' || v === '품절임박';
-}
 
 type CalendarSuccessResponse = {
   resultType: 'SUCCESS';
@@ -58,15 +52,8 @@ type CalendarSuccessResponse = {
   data: {
     year: number;
     month: number;
-    summary: {
-      totalAmount: number;
-      purchaseCount: number;
-    };
-    calendar: Array<{
-      date: string;
-      purchaseCount: number;
-      totalAmount: number;
-    }>;
+    summary: { totalAmount: number; purchaseCount: number };
+    calendar: Array<{ date: string; purchaseCount: number; totalAmount: number }>;
     itemsByDate: Record<
       string,
       Array<{
@@ -75,47 +62,20 @@ type CalendarSuccessResponse = {
         name: string;
         price: number;
         thumbnailUrl: string;
-        purchasedAt: string;
+        purchasedAt: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
         satisfaction: number | null;
       }>
     >;
-  };
+  } | null;
 };
 
 type CalendarFailResponse = {
   resultType: 'FAIL';
-  error: {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
+  error: { errorCode: string; reason: string; data?: unknown };
   success: null;
 };
 
 type CalendarResponse = CalendarSuccessResponse | CalendarFailResponse;
-
-type CalendarPurchase = CalendarPurchaseItem & { rating?: number };
-
-function toDayTime(purchasedAt: string): DayTime {
-  switch (purchasedAt) {
-    case 'MORNING':
-      return '아침';
-    case 'AFTERNOON':
-      return '낮';
-    case 'EVENING':
-      return '저녁';
-    case 'NIGHT':
-      return '새벽';
-    default:
-      return '낮';
-  }
-}
-
-function toRating5(satisfaction: number): 1 | 2 | 3 | 4 | 5 {
-  const rounded = Math.round(satisfaction);
-  const clamped = Math.max(1, Math.min(5, rounded));
-  return clamped as 1 | 2 | 3 | 4 | 5;
-}
 
 type AnalyticsMetricParam = 'time' | 'day';
 
@@ -131,35 +91,42 @@ type AnalyticsSuccessResponse = {
       count: number;
       percentage: number;
     }>;
-  };
+  } | null;
 };
 
 type AnalyticsFailResponse = {
   resultType: 'FAIL';
-  error: {
-    errorCode: string;
-    reason: string;
-    data?: unknown;
-  };
+  error: { errorCode: string; reason: string; data?: unknown };
   success: null;
 };
 
 type AnalyticsResponse = AnalyticsSuccessResponse | AnalyticsFailResponse;
 
-function emptyTimeDist(): TimeDistribution {
-  return { 아침: 0, 낮: 0, 저녁: 0, 새벽: 0 };
+export type CalendarPurchase = {
+  id: string;
+  date: string;
+  timeLabel: DayTime;
+  reason: ConsumptionReason[];
+  title: string;
+  price: number;
+  imageUrl: string;
+  hasReview: boolean;
+  rating?: Star;
+};
+
+function toRating5(satisfaction: number): Star {
+  const rounded = Math.round(satisfaction);
+  const clamped = Math.max(1, Math.min(5, rounded));
+  return clamped as Star;
 }
 
-function emptyWeekdayDist(): WeekdayDistribution {
-  return { 월: 0, 화: 0, 수: 0, 목: 0, 금: 0, 토: 0, 일: 0 };
-}
+function normalizeReasons(topReasons: Array<{ reason: string; count: number }>): ConsumptionReason[] {
+  const list = (topReasons ?? [])
+    .filter((r) => (r?.count ?? 0) > 0)
+    .map((r) => (typeof r.reason === 'string' ? r.reason.trim() : ''))
+    .filter((r) => r.length > 0);
 
-function isWeekdayDisplayName(v: string): v is Weekday {
-  return v === '월' || v === '화' || v === '수' || v === '목' || v === '금' || v === '토' || v === '일';
-}
-
-function isDayTimeDisplayName(v: string): v is DayTime {
-  return v === '아침' || v === '낮' || v === '저녁' || v === '새벽';
+  return Array.from(new Set(list));
 }
 
 export const reportApi = {
@@ -174,34 +141,33 @@ export const reportApi = {
 
     const { period, summary, topReasons } = body.data;
 
-    const reasons: ConsumptionReason[] = topReasons
-      .map((r) => r.reason)
-      .filter((r): r is ConsumptionReason => isConsumptionReason(r));
+    const hasData = hasConsumptionData(summary, topReasons);
 
-    const baseStar = toStar(summary.averageSatisfaction);
-    const reasonSatisfaction: Record<ConsumptionReason, Star> = {
-      필요해서: baseStar,
-      '세일 중': baseStar,
-      품절임박: baseStar,
-    };
+    const reasons: ConsumptionReason[] = hasData ? normalizeReasons(topReasons) : [];
+    const avgStar: Star | null = hasData ? toStarOrNull(summary.averageSatisfaction) : null;
 
-    topReasons.forEach((r) => {
-      if (isConsumptionReason(r.reason)) {
-        reasonSatisfaction[r.reason] = toStar(r.averageSatisfaction);
-      }
-    });
+    const reasonSatisfaction: Record<ConsumptionReason, Star | null> = {};
+    if (hasData) {
+      (topReasons ?? []).forEach((r) => {
+        if ((r?.count ?? 0) <= 0) return;
+        const key = typeof r.reason === 'string' ? r.reason.trim() : '';
+        if (!key) return;
+        reasonSatisfaction[key] = toStarOrNull(r.averageSatisfaction);
+      });
+    }
 
-    const insight =
-      reasons.length > 0
+    const insight = hasData
+      ? reasons.length > 0
         ? `최근 한 달 동안 "${reasons.join(', ')}" 등의 이유로 소비가 많았어요. 구매 전 한 번만 더 고민해보면 지갑을 더 지킬 수 있어요!`
-        : '최근 한 달 소비 패턴을 점검해보며, 구매 전 “정말 필요한가?”를 한 번 더 체크해보세요.';
+        : '최근 한 달 소비 패턴을 점검해보며, 구매 전 “정말 필요한가?”를 한 번 더 체크해보세요.'
+      : '아직 소비 기록이 없어요. 첫 기록을 남겨보면 리포트를 만들어드릴게요!';
 
     return {
       period,
       totalWon: summary.totalSpent,
       savedWon: summary.savedAmount,
       reasons,
-      averageSatisfaction: baseStar,
+      averageSatisfaction: avgStar,
       reasonSatisfaction,
       insight,
     };
@@ -213,10 +179,7 @@ export const reportApi = {
     timeDistribution?: TimeDistribution;
     weekdayDistribution?: WeekdayDistribution;
   }> {
-    const res = await instance.get<AnalyticsResponse>('/histories/analytics', {
-      params: { metric },
-    });
-
+    const res = await instance.get<AnalyticsResponse>('/histories/analytics', { params: { metric } });
     const body = res.data;
 
     if (body.resultType === 'FAIL') {
@@ -224,22 +187,25 @@ export const reportApi = {
     }
 
     const data = body.data;
-    const totalCount = data?.totalCount ?? 0;
-    const stats = data?.statistics ?? [];
+    if (!data) {
+      return metric === 'time'
+        ? { metric: 'TIME', totalCount: 0, timeDistribution: emptyTimeDist() }
+        : { metric: 'DAY', totalCount: 0, weekdayDistribution: emptyWeekdayDist() };
+    }
+
+    const totalCount = data.totalCount ?? 0;
+    const stats = data.statistics ?? [];
 
     if (data.metric === 'TIME') {
       const dist = emptyTimeDist();
-
       stats.forEach((s) => {
         const name = s.displayName;
         if (isDayTimeDisplayName(name)) dist[name] = s.percentage;
       });
-
       return { metric: 'TIME', totalCount, timeDistribution: dist };
     }
 
     const dist = emptyWeekdayDist();
-
     stats.forEach((s) => {
       const name = s.displayName;
       if (isWeekdayDisplayName(name)) dist[name] = s.percentage;
@@ -251,14 +217,8 @@ export const reportApi = {
   async fetchCalendarMonth(
     year: number,
     month: number,
-  ): Promise<{
-    element: CalendarElement;
-    itemsByDate: Record<string, CalendarPurchase[]>;
-  }> {
-    const res = await instance.get<CalendarResponse>('/histories/calendar', {
-      params: { year, month },
-    });
-
+  ): Promise<{ element: CalendarElement; itemsByDate: Record<string, CalendarPurchase[]> }> {
+    const res = await instance.get<CalendarResponse>('/histories/calendar', { params: { year, month } });
     const body = res.data;
 
     if (body.resultType === 'FAIL') {
@@ -268,12 +228,7 @@ export const reportApi = {
     const data = body.data;
     if (!data) {
       return {
-        element: {
-          year,
-          month,
-          totalWon: 0,
-          purchaseCount: 0,
-        },
+        element: { year, month, totalWon: 0, purchaseCount: 0 },
         itemsByDate: {},
       };
     }
@@ -286,7 +241,7 @@ export const reportApi = {
       mappedItemsByDate[date] = (list ?? []).map((it) => ({
         id: String(it.itemId),
         date,
-        timeLabel: toDayTime(it.purchasedAt),
+        timeLabel: toDayTimeFromCalendar(it.purchasedAt),
         reason: [],
         title: it.name,
         price: it.price,
