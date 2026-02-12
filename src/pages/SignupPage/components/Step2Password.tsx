@@ -101,11 +101,11 @@ const Step2Password = ({ onNext }: Props) => {
             
             {/* 불일치 시 에러 메시지 */}
             {confirmPassword && !isMatch && (
-               <div className="mt-1 text-right text-xs text-red-500">
+               <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">
                  비밀번호가 일치하지 않습니다.
+               </div>
+            )}
           </div>
-        )}
-            </div>
         )}
       </div>
 
