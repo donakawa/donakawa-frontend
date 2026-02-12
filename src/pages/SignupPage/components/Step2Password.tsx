@@ -28,15 +28,14 @@ const Step2Password = ({ onNext }: Props) => {
   };
 
   const getWrapperClass = (isValid: boolean, isError: boolean) => {
-    const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
+    const baseClass = "flex items-center w-full h-12 rounded-xl border pl-4 pr-2 bg-white transition-all";
     
     if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
     if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600`;
-    // focus-within으로 내부 input 클릭 시 테두리 강조
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
-  const inputInternalClass = "flex-1 w-full h-12 bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0";
+  const inputInternalClass = "flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0";
 
   return (
     <div className="w-full max-w-sm animate-fade-in">
@@ -52,22 +51,22 @@ const Step2Password = ({ onNext }: Props) => {
       <div className="space-y-2">
 
         {/* 1. 비밀번호 입력 */}
-        <div className={`${getWrapperClass(isValidFormat, false)} relative`}>
+        <div className={getWrapperClass(isValidFormat, false)}>
           <input
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
             aria-label="비밀번호"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`${inputInternalClass} pr-12`}
+            className={inputInternalClass}
           />
           <button
             type="button"
             aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
-            className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors ${
+            className={`ml-2 flex-shrink-0 w-10 h-full flex items-center justify-center transition-colors ${
               isValidFormat ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
@@ -85,22 +84,21 @@ const Step2Password = ({ onNext }: Props) => {
         {/* 2. 비밀번호 확인 입력 (조건부 렌더링) */}
         {isValidFormat && (
           <div className="relative w-full mt-4 animate-fade-in-up">
-            <div className={`${getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)} relative`}>
+            <div className={getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)}>
               <input
                 type={showConfirmPw ? 'text' : 'password'}
                 placeholder="비밀번호 확인"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`${inputInternalClass} pr-12`}
-
+                className={inputInternalClass}
               />
               <button
                 type="button"
                 aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
                 aria-pressed={showConfirmPw}
                 onClick={() => setShowConfirmPw(!showConfirmPw)}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors ${
+                className={`ml-2 flex-shrink-0 w-10 h-full flex items-center justify-center transition-colors ${
                   isMatch ? 'text-primary-600' : 'text-gray-400'
                 }`}
               >
@@ -108,7 +106,7 @@ const Step2Password = ({ onNext }: Props) => {
               </button>
             </div>
             
-            {/* 불일치 시 에러 메시지: 입력창 아래에 띄우기 위해 absolute 유지 */}
+            {/* 불일치 시 에러 메시지: 입력창 아래에 띄우기 위해 absolute 유지 (이건 OK) */}
             {confirmPassword && !isMatch && (
                <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">
                  비밀번호가 일치하지 않습니다.
