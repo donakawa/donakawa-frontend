@@ -17,6 +17,31 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
+function normalizeReasons(v: unknown): string[] {
+  if (Array.isArray(v)) {
+    return v
+      .filter((x): x is string => typeof x === 'string')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (!s) return [];
+
+    if (s.includes(',')) {
+      return s
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean);
+    }
+
+    return [s];
+  }
+
+  return [];
+}
+
 function toRating(v: unknown): Rating {
   const n = typeof v === 'number' ? Math.floor(v) : 1;
   if (n <= 1) return 1;
@@ -57,7 +82,7 @@ export default function PurchaseReview() {
         imageUrl: it.imageUrl ?? '',
         dayLabel: getDDayLabel(it.purchasedAt),
         purchasedAt: it.purchasedAt,
-        tags: it.purchaseReasons ?? [],
+        tags: normalizeReasons(it.purchaseReasons),
       }));
 
       setPendingItems(mapped);
@@ -88,7 +113,7 @@ export default function PurchaseReview() {
         title: r.itemName,
         price: r.price,
         imageUrl: r.imageUrl ?? '',
-        tags: r.purchaseReasons ?? [],
+        tags: normalizeReasons(r.purchaseReasons),
         rating: toRating(r.satisfactionScore),
         purchasedAt: r.purchasedAt,
         itemId: String(r.itemId),
