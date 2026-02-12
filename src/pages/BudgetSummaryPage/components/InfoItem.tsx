@@ -20,7 +20,7 @@ const InfoItem = ({ label, value, isEdit, onChange, icon }: InfoItemProps) => {
           <input
             type="text"
             inputMode="numeric"
-            value={value.toLocaleString()}
+            value={safeValue.toLocaleString()}
             onChange={(e) => onChange(e.target.value)}
             className="w-full px-[18px] py-[12px] rounded-[6px] text-[14px] border-[2px] 
             border-gray-100 focus:border-primary-500 outline-none transition-colors bg-white"
