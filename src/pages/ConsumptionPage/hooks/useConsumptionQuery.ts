@@ -19,7 +19,7 @@ export const useConsumptionQuery = (currentType: 'satisfaction' | 'regret') => {
   const products: WishlistItemType[] =
     query.data?.pages.flatMap((page) =>
       page.items.map((item) => ({
-        id: item.itemId, //리뷰아이디
+        id: item.id, //리뷰아이디
         title: item.name,
         price: item.price,
         imageUrl: item.imageUrl || '',

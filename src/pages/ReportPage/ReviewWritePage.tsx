@@ -32,7 +32,8 @@ type ApiResponseFail<EData = unknown> = {
 
 type ApiResponse<T, EData = unknown> = ApiResponseSuccess<T> | ApiResponseFail<EData>;
 
-type PendingItemRaw = {
+type HistoryItemRaw = {
+  id?: string | number;
   reviewId?: number;
   itemId: number;
   itemName: string;
@@ -42,10 +43,14 @@ type PendingItemRaw = {
   purchasedAt: string;
   purchasedAtTime?: 'DAWN' | 'EVENING' | 'NOON' | 'MORNING' | 'NIGHT' | string;
   itemType?: 'AUTO' | 'MANUAL' | 'auto' | 'manual' | string;
+
+  satisfaction?: number;
+  frequency?: number;
+  updatedAt?: string;
 };
 
-type GetPendingItemsData = {
-  items: PendingItemRaw[];
+type GetItemsData = {
+  items: HistoryItemRaw[];
 };
 
 type PostReviewRequestBody = {
@@ -71,9 +76,10 @@ type UiPurchase = {
   dateText: string;
   dayLabelText: string;
   timeLabel?: string;
-
   itemType?: 'AUTO' | 'MANUAL';
 };
+
+type Mode = 'NOT_WRITTEN' | 'WRITTEN';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -171,13 +177,36 @@ function normalizeItemType(raw: unknown): 'AUTO' | 'MANUAL' | undefined {
   return undefined;
 }
 
+function clampInt(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n));
+}
+
+function toRatingValue(raw: unknown): RatingValue {
+  if (typeof raw !== 'number' || Number.isNaN(raw)) return 0;
+  const v = clampInt(Math.round(raw), 1, 5);
+  return v as Exclude<RatingValue, 0>;
+}
+
+function toUsageLevel(raw: unknown): UsageLevel {
+  if (typeof raw !== 'number' || Number.isNaN(raw)) return 0;
+  const v = clampInt(Math.round(raw), 1, 5);
+  return v as UsageLevel;
+}
+
+function getHistoryKey(x: HistoryItemRaw): string {
+  if (x.id !== undefined && x.id !== null && String(x.id) !== '') return String(x.id);
+  if (typeof x.reviewId === 'number') return String(x.reviewId);
+  return String(x.itemId);
+}
+
 export default function ReviewWritePage(): React.JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
 
-  const itemIdParam = searchParams.get('itemId');
+  const historyIdParam = searchParams.get('historyId');
+
+  const [mode, setMode] = useState<Mode>('NOT_WRITTEN');
 
   const [rating, setRating] = useState<RatingValue>(0);
   const [usage, setUsage] = useState<UsageLevel>(0);
@@ -189,6 +218,7 @@ export default function ReviewWritePage(): React.JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>('');
 
+  const isReadOnly = mode === 'WRITTEN';
   const isCompleted = rating > 0 && usage > 0;
 
   const usageRatio = useMemo(() => {
@@ -198,64 +228,92 @@ export default function ReviewWritePage(): React.JSX.Element {
   useEffect(() => {
     let alive = true;
 
+    const buildUi = (target: HistoryItemRaw): UiPurchase => {
+      const d = daysSince(target.purchasedAt);
+      const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
+
+      return {
+        itemId: String(target.itemId),
+        title: target.itemName || '상품명',
+        price: typeof target.price === 'number' ? target.price : 0,
+        imageUrl: target.imageUrl || null,
+        tags: Array.isArray(target.purchaseReasons) ? target.purchaseReasons : [],
+        dateText: formatDateText(target.purchasedAt),
+        dayLabelText,
+        timeLabel: normalizeTimeLabel(target.purchasedAtTime),
+        itemType: normalizeItemType(target.itemType),
+      };
+    };
+
     const run = async () => {
       setLoadingPurchase(true);
       setPurchaseError('');
+      setSubmitError('');
+      setPurchase(null);
 
       try {
-        const res = await requestWithOptionalApiPrefix<ApiResponse<GetPendingItemsData>>(
+        const notWrittenRes = await requestWithOptionalApiPrefix<ApiResponse<GetItemsData>>(
           'GET',
           '/histories/items?reviewStatus=NOT_WRITTEN',
         );
         if (!alive) return;
 
-        if (res.resultType === 'FAIL') {
-          setPurchaseError(res.error.reason || '구매 정보를 불러오지 못했어요.');
-          setPurchase(null);
+        if (notWrittenRes.resultType === 'FAIL') {
+          setPurchaseError(notWrittenRes.error.reason || '구매 정보를 불러오지 못했어요.');
           return;
         }
 
-        const list = res.data.items ?? [];
-        if (list.length === 0) {
-          setPurchaseError('후기 작성 가능한 아이템이 없어요.');
-          setPurchase(null);
-          return;
-        }
+        const notWrittenList = notWrittenRes.data.items ?? [];
 
-        let target: PendingItemRaw | undefined;
-
-        if (itemIdParam) {
-          target = list.find((x) => String(x.itemId) === String(itemIdParam));
-          if (!target) {
-            setPurchaseError('해당 아이템을 후기 작성 목록에서 찾지 못했어요.');
-            setPurchase(null);
+        if (!historyIdParam) {
+          if (notWrittenList.length === 0) {
+            setPurchaseError('후기 작성 가능한 아이템이 없어요.');
             return;
           }
-        } else {
-          target = list[0];
+          const first = notWrittenList[0];
+          setMode('NOT_WRITTEN');
+          setRating(0);
+          setUsage(0);
+          setPurchase(buildUi(first));
+          return;
         }
 
-        const d = daysSince(target.purchasedAt);
-        const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
+        const foundNotWritten = notWrittenList.find((x) => getHistoryKey(x) === String(historyIdParam));
+        if (foundNotWritten) {
+          setMode('NOT_WRITTEN');
+          setRating(0);
+          setUsage(0);
+          setPurchase(buildUi(foundNotWritten));
+          return;
+        }
 
-        const ui: UiPurchase = {
-          itemId: String(target.itemId),
-          title: target.itemName || '상품명',
-          price: typeof target.price === 'number' ? target.price : 0,
-          imageUrl: target.imageUrl || null,
-          tags: Array.isArray(target.purchaseReasons) ? target.purchaseReasons : [],
-          dateText: formatDateText(target.purchasedAt),
-          dayLabelText,
-          timeLabel: normalizeTimeLabel(target.purchasedAtTime),
-          itemType: normalizeItemType(target.itemType),
-        };
+        const writtenRes = await requestWithOptionalApiPrefix<ApiResponse<GetItemsData>>(
+          'GET',
+          '/histories/items?reviewStatus=WRITTEN',
+        );
+        if (!alive) return;
 
-        setPurchase(ui);
+        if (writtenRes.resultType === 'FAIL') {
+          setPurchaseError(writtenRes.error.reason || '구매 정보를 불러오지 못했어요.');
+          return;
+        }
+
+        const writtenList = writtenRes.data.items ?? [];
+        const foundWritten = writtenList.find((x) => getHistoryKey(x) === String(historyIdParam));
+
+        if (!foundWritten) {
+          setPurchaseError('해당 소비 기록을 후기 목록에서 찾지 못했어요.');
+          return;
+        }
+
+        setMode('WRITTEN');
+        setRating(toRatingValue(foundWritten.satisfaction));
+        setUsage(toUsageLevel(foundWritten.frequency));
+        setPurchase(buildUi(foundWritten));
       } catch (e) {
         if (!alive) return;
         const err = e as AxiosError;
         setPurchaseError(err.message || '구매 정보를 불러오는 중 오류가 발생했어요.');
-        setPurchase(null);
       } finally {
         if (!alive) return;
         setLoadingPurchase(false);
@@ -267,9 +325,10 @@ export default function ReviewWritePage(): React.JSX.Element {
     return () => {
       alive = false;
     };
-  }, [itemIdParam]);
+  }, [historyIdParam]);
 
   const handleDone = async () => {
+    if (isReadOnly) return;
     if (!isCompleted) return;
     if (!purchase) return;
     if (isSubmitting) return;
@@ -305,7 +364,15 @@ export default function ReviewWritePage(): React.JSX.Element {
   };
 
   useEffect(() => {
-    setTitle('소비 후기 작성');
+    setTitle(isReadOnly ? '작성한 소비 후기' : '소비 후기 작성');
+
+    if (isReadOnly) {
+      setRightAction(null);
+      return () => {
+        setTitle('');
+        setRightAction(null);
+      };
+    }
 
     const canSubmit = isCompleted && !isSubmitting && !loadingPurchase && !!purchase && !purchaseError;
 
@@ -323,7 +390,7 @@ export default function ReviewWritePage(): React.JSX.Element {
       setTitle('');
       setRightAction(null);
     };
-  }, [setTitle, setRightAction, isCompleted, isSubmitting, loadingPurchase, purchase, purchaseError]);
+  }, [setTitle, setRightAction, isReadOnly, isCompleted, isSubmitting, loadingPurchase, purchase, purchaseError]);
 
   if (loadingPurchase) {
     return (
@@ -352,7 +419,12 @@ export default function ReviewWritePage(): React.JSX.Element {
   return (
     <div className="w-full max-w-[375px] mx-auto min-h-[100dvh] bg-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <main className="p-5">
-        {/* 구매 정보 */}
+        {isReadOnly && (
+          <div className="mb-4 px-3 py-2 rounded-md bg-gray-50 text-[12px] text-gray-600">
+            이미 작성된 후기예요. (읽기 전용)
+          </div>
+        )}
+
         <section className="pb-[18px]">
           <div className="flex items-center gap-[10px] mb-[12px]">
             <div className="text-[14px] font-normal text-primary-brown-400">{purchase.dateText}</div>
@@ -396,7 +468,6 @@ export default function ReviewWritePage(): React.JSX.Element {
           <div className="mt-[40px] h-px bg-gray-100" />
         </section>
 
-        {/* 만족도 */}
         <section className="py-[26px]">
           <h2 className="mb-[14px] text-[14px] text-center">구체적인 만족도는 어떤가요?</h2>
 
@@ -409,13 +480,17 @@ export default function ReviewWritePage(): React.JSX.Element {
                 <button
                   key={score}
                   type="button"
-                  onClick={() => setRating(score)}
-                  className="bg-transparent p-0"
+                  onClick={() => {
+                    if (isReadOnly) return;
+                    setRating(score);
+                  }}
+                  disabled={isReadOnly}
+                  className={cn('bg-transparent p-0', isReadOnly && 'cursor-default')}
                   aria-label={`${score}점`}>
                   <img
                     src={filled ? StarFullIcon : StarIcon}
                     alt=""
-                    className={cn('w-[30px] h-[30px]', !filled && 'opacity-60')}
+                    className={cn('w-[30px] h-[30px]', !filled && 'opacity-60', isReadOnly && 'opacity-80')}
                   />
                 </button>
               );
@@ -423,7 +498,6 @@ export default function ReviewWritePage(): React.JSX.Element {
           </div>
         </section>
 
-        {/* 사용 빈도 */}
         <section className="py-[26px]">
           <h2 className="mb-[14px] text-[14px] text-center">구매 후 얼만큼 사용했나요?</h2>
 
@@ -437,8 +511,16 @@ export default function ReviewWritePage(): React.JSX.Element {
                 <button
                   key={v}
                   type="button"
-                  onClick={() => setUsage(v as UsageLevel)}
-                  className={cn('w-5 h-5 rounded-full', v <= usage ? 'bg-primary-brown-400' : 'bg-gray-100')}
+                  onClick={() => {
+                    if (isReadOnly) return;
+                    setUsage(v as UsageLevel);
+                  }}
+                  disabled={isReadOnly}
+                  className={cn(
+                    'w-5 h-5 rounded-full',
+                    v <= usage ? 'bg-primary-brown-400' : 'bg-gray-100',
+                    isReadOnly && 'cursor-default',
+                  )}
                   aria-label={`사용 빈도 ${v}`}
                 />
               ))}

@@ -25,8 +25,8 @@ const ConsumptionPage = () => {
   const { ref, inView } = useInView();
   const { products, stats, fetchNextPage, hasNextPage, isFetchingNextPage } = useConsumptionQuery(currentType);
 
-  const handleItemClick = (itemId: string) => {
-    navigate(`/report/review/write?itemId=${itemId}`);
+  const handleItemClick = (historyId: string) => {
+    navigate(`/report/review/write?historyId=${encodeURIComponent(historyId)}`);
   };
 
   useEffect(() => {
