@@ -1,3 +1,5 @@
+import type { DayLabel } from '@/utils/ReportPage/report';
+
 export type ReviewTabKey = 'pending' | 'completed';
 
 export type Rating = 1 | 2 | 3 | 4 | 5;
@@ -6,7 +8,7 @@ export type PendingReviewItem = {
   id: string;
   title: string;
   price: number;
-  dayLabel: number;
+  dayLabel: DayLabel;
   imageUrl: string;
   purchasedAt: string;
   tags: string[];

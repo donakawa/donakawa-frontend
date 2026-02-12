@@ -9,19 +9,12 @@ import CompletedPage from '@/pages/ReportPage/components/CompletedPage';
 
 import { getHistoryItems, getWrittenReviews } from '@/apis/ReportPage/review';
 
-/** ✅ 이 파일에서만 쓸 enum 타입: 실수 방지 */
+import { getDDayLabel } from '@/utils/ReportPage/report';
+
 type ReviewStatusParam = 'ALL' | 'WRITTEN' | 'NOT_WRITTEN';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
-}
-
-function getDayLabel(dateStr: string): number {
-  const d = new Date(dateStr);
-  if (!Number.isNaN(d.getTime())) return d.getDate();
-
-  const d2 = new Date(`${dateStr}T00:00:00`);
-  return Number.isNaN(d2.getTime()) ? 0 : d2.getDate();
 }
 
 function toRating(v: unknown): Rating {
@@ -54,17 +47,15 @@ export default function PurchaseReview() {
     setPendingError(null);
 
     try {
-      // ✅ 명세: NOT_WRITTEN / WRITTEN / ALL
       const reviewStatus: ReviewStatusParam = 'NOT_WRITTEN';
       const items = await getHistoryItems({ reviewStatus });
 
       const mapped: PendingReviewItem[] = items.map((it) => ({
-        // ⚠️ 여기 id가 itemId가 맞는지는 추후 write API 명세에 따라 purchaseId로 바뀔 수 있음
         id: String(it.itemId),
         title: it.itemName,
         price: it.price,
         imageUrl: it.imageUrl ?? '',
-        dayLabel: getDayLabel(it.purchasedAt),
+        dayLabel: getDDayLabel(it.purchasedAt),
         purchasedAt: it.purchasedAt,
         tags: it.purchaseReasons ?? [],
       }));
@@ -130,7 +121,6 @@ export default function PurchaseReview() {
   }, [activeTab, completedFetched, completedLoading]);
 
   const handleWriteClick = (id: string) => {
-    // ✅ 기존 로직 유지 (쿼리키 purchasedId). 백엔드가 purchaseId를 원하면 여기만 바꾸면 됨.
     navigate(`/report/review/write?purchasedId=${encodeURIComponent(id)}`);
   };
 
