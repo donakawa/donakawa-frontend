@@ -46,14 +46,10 @@ export default function AimPage() {
 
   const [currentGoal, setCurrentGoal] = useState<string>('');
 
-  const [confirmedGoal, setConfirmedGoal] = useState<string>('');
-
   const [uiState, setUiState] = useState<UiState>('idle');
   const [helperText, setHelperText] = useState<string>('');
 
-  const isConfirmed = false;
-
-  const hasGoalDraft = isConfirmed || !!selected || text.trim().length > 0;
+  const hasGoalDraft = !!selected || text.trim().length > 0;
 
   const draftGoal = useMemo(() => {
     const t = text.trim();
@@ -62,7 +58,6 @@ export default function AimPage() {
   }, [selected, text]);
 
   const canConfirm = draftGoal.length > 0 && draftGoal.length <= MAX_LEN && uiState !== 'saving';
-  const canComplete = confirmedGoal.length > 0 && uiState !== 'saving';
 
   useEffect(() => {
     let mounted = true;
@@ -76,9 +71,12 @@ export default function AimPage() {
 
         if (res.data.resultType === 'SUCCESS') {
           const me = res.data.data;
-          setCurrentGoal(me.goal ?? '');
-          if (me.goal && me.goal.trim().length > 0) {
-            setText(me.goal);
+          const goal = me.goal ?? '';
+          setCurrentGoal(goal);
+
+          if (goal.trim().length > 0) {
+            setText(goal);
+            setSelected(null);
           }
         } else {
           setCurrentGoal('');
@@ -100,26 +98,23 @@ export default function AimPage() {
   }, []);
 
   const onChangeText = (v: string) => {
-    if (isConfirmed) return;
     if (selected) setSelected(null);
     setText(v.slice(0, MAX_LEN));
     if (helperText) setHelperText('');
   };
 
   const toggleKeyword = (k: AimKeyword) => {
-    if (isConfirmed) return;
     setSelected((prev) => (prev?.id === k.id ? null : k));
     setText('');
     if (helperText) setHelperText('');
   };
 
   const removeKeyword = () => {
-    if (isConfirmed) return;
     setSelected(null);
   };
 
   const onConfirm = async () => {
-    if (!canConfirm || isConfirmed) return;
+    if (!canConfirm || uiState === 'loadingMe') return;
 
     const newGoal = draftGoal.trim();
 
@@ -145,7 +140,6 @@ export default function AimPage() {
       });
 
       if (res.data.resultType === 'SUCCESS') {
-        setConfirmedGoal(res.data.data.goal);
         setCurrentGoal(res.data.data.goal);
         setUiState('done');
         return;
@@ -175,12 +169,11 @@ export default function AimPage() {
   };
 
   const onComplete = () => {
-    if (!canComplete) return;
     navigate(-1);
   };
 
-  const confirmDisabled = !canConfirm || isConfirmed || uiState === 'loadingMe';
-  const completeDisabled = !canComplete || uiState === 'loadingMe';
+  const confirmDisabled = !canConfirm || uiState === 'loadingMe';
+  const completeDisabled = uiState === 'loadingMe';
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
@@ -204,12 +197,12 @@ export default function AimPage() {
                   type="button"
                   aria-label={`${selected.label} 삭제`}
                   onClick={removeKeyword}
-                  disabled={isConfirmed}
+                  disabled={uiState === 'loadingMe'}
                   className={[
                     'h-[31px] px-[10px] py-[5px] rounded-[100px]',
                     'border-2 border-primary-500 bg-primary-100 text-black',
                     'inline-flex items-center gap-2 text-[14px] font-[600]',
-                    isConfirmed ? 'cursor-not-allowed opacity-80' : 'cursor-pointer',
+                    uiState === 'loadingMe' ? 'cursor-not-allowed opacity-80' : 'cursor-pointer',
                   ].join(' ')}>
                   <span className="text-[14px] font-[400]">{selected.label}</span>
                   <img src={CloseIcon} alt="" className="w-3 h-3 block" />
@@ -247,7 +240,7 @@ export default function AimPage() {
         <div className="flex flex-wrap gap-[10px]">
           {keywords.map((k) => {
             const isSelected = selected?.id === k.id;
-            const disabled = isConfirmed || uiState === 'loadingMe';
+            const disabled = uiState === 'loadingMe';
 
             return (
               <button
