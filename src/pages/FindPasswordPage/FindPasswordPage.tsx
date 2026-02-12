@@ -204,15 +204,17 @@ const FindPasswordPage = () => {
     }
   };
 
+  // 🔥 [수정] 기존 getInputClass 제거하고 Wrapper/Input 분리
   const getWrapperClass = (isValid: boolean, isError: boolean) => {
-    const baseClass = "flex items-center w-full h-12 rounded-xl border pl-4 pr-2 bg-white transition-all";
+    const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
     
     if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
     if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600`;
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
-  const inputInternalClass = "flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0";
+  // 🔥 [수정] text-gray-900 강제 적용, 투명 배경
+  const inputInternalClass = "flex-1 w-full h-full bg-transparent border-none outline-none text-sm text-gray-900 placeholder:text-gray-400 p-0 m-0 min-w-0 appearance-none";
 
   // --- 렌더링 ---
   return (
@@ -294,7 +296,6 @@ const FindPasswordPage = () => {
                     value={num}
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
-                    //  시간 만료 시 비활성화
                     disabled={inputTimeLeft === 0}
                     className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none appearance-none transition-all shadow-sm
                       ${inputTimeLeft === 0
@@ -309,7 +310,6 @@ const FindPasswordPage = () => {
                 ))}
               </div>
 
-              {/* 우측 하단 타이머 (5분 기준) */}
               <div className="text-right">
                 <span className={`text-sm font-medium ${inputTimeLeft <= 60 ? 'text-red-500' : 'text-primary-brown-300'}`}>
                   {inputTimeLeft > 0 ? formatTime(inputTimeLeft) : '00:00'}
@@ -319,9 +319,7 @@ const FindPasswordPage = () => {
               {codeError && <p className="mb-2 text-center text-xs text-red-500 animate-fade-in">{codeError}</p>}
             </div>
 
-            {/* 재전송 버튼 영역 */}
             <div className="text-center py-4">
-              {/*  쿨타임(30초) 체크 */}
               {resendCooldown > 0 ? (
                 <p className="text-sm text-gray-500 font-medium">
                   {resendCooldown}초 후 재전송 가능
@@ -337,7 +335,6 @@ const FindPasswordPage = () => {
 
             <button
               onClick={handleVerify}
-              //  시간 만료 시 버튼 비활성화
               disabled={inputTimeLeft === 0 || authCode.some(c => c === '') || loading}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
                 (inputTimeLeft > 0 && !authCode.some(c => c === ''))
@@ -357,7 +354,6 @@ const FindPasswordPage = () => {
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
-                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={inputInternalClass}
@@ -367,7 +363,8 @@ const FindPasswordPage = () => {
                 onClick={() => setShowPw(!showPw)}
                 aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
                 aria-pressed={showPw}
-                className={`ml-2 flex-shrink-0 w-10 h-full flex items-center justify-center transition-colors ${
+                // absolute 제거, 옆에 배치
+                className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -387,7 +384,6 @@ const FindPasswordPage = () => {
                   <input
                     type={showConfirmPw ? 'text' : 'password'}
                     placeholder="비밀번호 확인"
-                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={inputInternalClass}
@@ -397,7 +393,8 @@ const FindPasswordPage = () => {
                     onClick={() => setShowConfirmPw(!showConfirmPw)}
                     aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
                     aria-pressed={showConfirmPw}
-                    className={`ml-2 flex-shrink-0 w-10 h-full flex items-center justify-center transition-colors ${
+                    // absolute 제거, 옆에 배치
+                    className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
                       isMatch ? 'text-primary-600' : 'text-gray-400'
                     }`}>
                     {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
