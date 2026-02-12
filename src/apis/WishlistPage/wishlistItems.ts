@@ -26,20 +26,37 @@ export interface GetWishlistItemsResponse {
   };
 }
 
-export async function createWishlistItem(data: CreateWishlistItemRequest) {
-  const formData = new FormData();
+export async function createWishlistItem(data: {
+  productName: string;
+  price: string | number;
+  storeName: string;
+  brandName: string;
+  reason: string;
+  url?: string;
+  file?: File | Blob | null;
+}) {
+  const fd = new FormData();
 
-  formData.append('productName', data.productName);
-  formData.append('price', String(data.price));
-  formData.append('storeName', data.storeName);
-  formData.append('brandName', data.brandName);
-  formData.append('reason', data.reason);
-  if (data.url) formData.append('url', data.url);
-  if (data.file) formData.append('file', data.file);
+  fd.append('productName', data.productName);
+  fd.append('price', String(data.price));
+  fd.append('storeName', data.storeName);
+  fd.append('brandName', data.brandName);
+  fd.append('reason', data.reason);
+  if (data.url) fd.append('url', data.url);
 
-  const res = await http.post('/wishlist/items', formData);
+  if (data.file) {
+    if (data.file instanceof File) {
+      fd.append('file', data.file, data.file.name);
+    } else {
+      fd.append('file', data.file, 'upload.bin');
+    }
+  }
+
+  const res = await http.post('/wishlist/items', fd);
   return res.data;
 }
+
+
 
 export async function getWishlistItems(params: {
   status: 'WISHLISTED' | 'DROPPED' | 'BOUGHT';
@@ -138,8 +155,14 @@ export async function updateManualWishlistItem(
   if (data.price != null) formData.append('price', String(data.price));
   if (data.storeName != null) formData.append('storeName', data.storeName);
   if (data.url != null) formData.append('url', data.url);
-  if (data.file != null) formData.append('file', data.file);
   if (data.brandName != null) formData.append('brandName', data.brandName);
+  if (data.file != null) {
+    if (data.file instanceof File) {
+      formData.append('file', data.file, data.file.name);
+    } else {
+      formData.append('file', data.file, 'upload.bin');
+    }
+  }
 
   const res = await http.patch(`/wishlist/items/${itemId}`, formData);
   return res.data;
