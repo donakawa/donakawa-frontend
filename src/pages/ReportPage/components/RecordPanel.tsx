@@ -63,7 +63,7 @@ export default function RecordView() {
   return (
     <div
       className="
-        px-4 pt-10 pb-6
+        px-4 pt-10 pb-20
         flex flex-col gap-8
         shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]
       "
@@ -382,9 +382,9 @@ export default function RecordView() {
                 key={item.itemId}
                 type="button"
                 onClick={() => onClickReviewItem(item)}
-                className="min-w-[94px] max-w-[94px]"
+                className="min-w-[94px] max-w-[94px] flex-shrink-0"
                 style={{ WebkitTapHighlightColor: 'transparent' }}>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col items-start gap-1.5">
                   <div className="text-xs font-medium" style={{ color: 'var(--color-gray-600)' }}>
                     {item.dayLabel}
                   </div>
@@ -401,9 +401,7 @@ export default function RecordView() {
                     {formatWon(item.price)}원
                   </div>
 
-                  <div
-                    className="text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap"
-                    style={{ color: 'var(--color-black)' }}>
+                  <div className="text-xs font-medium overflow-hidden truncate" style={{ color: 'var(--color-black)' }}>
                     {item.itemName}
                   </div>
                 </div>
