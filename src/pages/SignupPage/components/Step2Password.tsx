@@ -27,6 +27,17 @@ const Step2Password = ({ onNext }: Props) => {
     onNext(password);
   };
 
+  const getWrapperClass = (isValid: boolean, isError: boolean) => {
+    const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
+    
+    if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
+    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600`;
+    // focus-within으로 내부 input 클릭 시 테두리 강조
+    return `${baseClass} border-gray-200 focus-within:border-primary-600`;
+  };
+
+  const inputInternalClass = "flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 appearance-none min-w-0";
+
   return (
     <div className="w-full max-w-sm animate-fade-in">
       {/* 타이틀 영역 */}
@@ -41,24 +52,21 @@ const Step2Password = ({ onNext }: Props) => {
       <div className="space-y-2">
 
         {/* 1. 비밀번호 입력 */}
-        <div className="relative w-full">
+        <div className={getWrapperClass(isValidFormat, false)}>
           <input
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
+            aria-label="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
-              ${password
-                ? (isValidFormat ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
-                : 'border-gray-200 focus:border-primary-600'
-              }`}
+            className={inputInternalClass}
           />
           <button
             type="button"
             aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
-            className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
+            className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
               isValidFormat ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
@@ -76,30 +84,28 @@ const Step2Password = ({ onNext }: Props) => {
         {/* 2. 비밀번호 확인 입력 (조건부 렌더링) */}
         {isValidFormat && (
           <div className="relative w-full mt-4 animate-fade-in-up">
-            <input
-              type={showConfirmPw ? 'text' : 'password'}
-              placeholder="비밀번호 확인"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
-                ${confirmPassword
-                  ? (isMatch ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
-                  : 'border-gray-200 focus:border-primary-600'
+            <div className={getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)}>
+              <input
+                type={showConfirmPw ? 'text' : 'password'}
+                placeholder="비밀번호 확인"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={inputInternalClass}
+              />
+              <button
+                type="button"
+                aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
+                aria-pressed={showConfirmPw}
+                onClick={() => setShowConfirmPw(!showConfirmPw)}
+                className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                  isMatch ? 'text-primary-600' : 'text-gray-400'
                 }`}
-            />
-             <button
-              type="button"
-              aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
-              aria-pressed={showConfirmPw}
-              onClick={() => setShowConfirmPw(!showConfirmPw)}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
-                isMatch ? 'text-primary-600' : 'text-gray-400'
-              }`}
-            >
-              {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
-            </button>
+              >
+                {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+              </button>
+            </div>
             
-            {/* 불일치 시 에러 메시지 */}
+            {/* 불일치 시 에러 메시지: 입력창 아래에 띄우기 위해 absolute 유지 */}
             {confirmPassword && !isMatch && (
                <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">
                  비밀번호가 일치하지 않습니다.
