@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -82,14 +82,25 @@ export default function AIChatPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
-  useEffect(() => {
-    if (!page.isSidebarOpen) {
-      setLayoutModal(null);
-      return;
-    }
+  /** ✅ 사이드바 모달 컴포넌트 (여기서 검색 상태 관리) */
+  function SidebarModal() {
+    const [searchDraft, setSearchDraft] = useState('');
 
-    const node = (
+    // 열릴 때마다 초기화(원하면 유지해도 됨)
+    useEffect(() => {
+      setSearchDraft(page.search ?? '');
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const filteredHistory = useMemo(() => {
+      const q = searchDraft.trim().toLowerCase();
+      if (!q) return page.chatHistory;
+      return page.chatHistory.filter((item) => item.title.toLowerCase().includes(q));
+    }, [searchDraft, page.chatHistory]);
+
+    return (
       <div className="absolute inset-0">
+        {/* overlay */}
         <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
 
         <aside
@@ -103,18 +114,21 @@ export default function AIChatPage() {
                   <img src={SearchIcon} alt="" />
                 </div>
 
+                {/* ✅ 핵심: 여기서 입력해도 setLayoutModal이 다시 안 불림 -> IME 안 깨짐 */}
                 <input
                   placeholder="검색..."
-                  value={page.search}
+                  value={searchDraft}
+                  lang="ko"
+                  inputMode="text"
                   onCompositionStart={() => {
                     isComposingRef.current = true;
                   }}
                   onCompositionEnd={(e) => {
                     isComposingRef.current = false;
-                    page.setSearch(e.currentTarget.value);
+                    setSearchDraft(e.currentTarget.value);
                   }}
                   onChange={(e) => {
-                    page.setSearch(e.target.value);
+                    setSearchDraft(e.target.value);
                   }}
                   aria-label="채팅 검색"
                   className="h-full min-w-0 flex-1 border-0 bg-transparent text-[16px] font-medium text-black outline-none placeholder:font-semibold placeholder:text-gray-600"
@@ -155,47 +169,45 @@ export default function AIChatPage() {
                 {page.isChatHistoryLoading && page.chatHistory.length === 0 ? (
                   <div className="px-4 py-3 text-[12px] text-gray-500">불러오는 중...</div>
                 ) : (
-                  page.chatHistory
-                    .filter((item) => item.title.toLowerCase().includes(page.search.toLowerCase()))
-                    .map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          if (longPressFiredRef.current) return;
-                          void page.openChatRoom(item.id);
-                        }}
-                        onContextMenu={page.handleHistoryContextMenu(item.id)}
-                        onPointerDown={(e) => {
-                          if (e.pointerType === 'mouse') return;
-                          if (e.isPrimary === false) return;
+                  filteredHistory.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (longPressFiredRef.current) return;
+                        void page.openChatRoom(item.id);
+                      }}
+                      onContextMenu={page.handleHistoryContextMenu(item.id)}
+                      onPointerDown={(e) => {
+                        if (e.pointerType === 'mouse') return;
+                        if (e.isPrimary === false) return;
 
-                          startLongPress(() => {
-                            page.handleHistoryContextMenu(item.id)(e as unknown as React.MouseEvent<HTMLButtonElement>);
-                          });
-                        }}
-                        onPointerUp={() => {
-                          if (longPressFiredRef.current) {
-                            longPressFiredRef.current = false;
-                          }
-                          clearLongPress();
-                        }}
-                        onPointerCancel={() => {
+                        startLongPress(() => {
+                          page.handleHistoryContextMenu(item.id)(e as unknown as React.MouseEvent<HTMLButtonElement>);
+                        });
+                      }}
+                      onPointerUp={() => {
+                        if (longPressFiredRef.current) {
                           longPressFiredRef.current = false;
-                          clearLongPress();
-                        }}
-                        onPointerLeave={() => {
-                          longPressFiredRef.current = false;
-                          clearLongPress();
-                        }}
-                        className={cx(
-                          'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
-                          'py-3 px-4',
-                          item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
-                        )}>
-                        {item.title}
-                      </button>
-                    ))
+                        }
+                        clearLongPress();
+                      }}
+                      onPointerCancel={() => {
+                        longPressFiredRef.current = false;
+                        clearLongPress();
+                      }}
+                      onPointerLeave={() => {
+                        longPressFiredRef.current = false;
+                        clearLongPress();
+                      }}
+                      className={cx(
+                        'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
+                        'py-3 px-4',
+                        item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
+                      )}>
+                      {item.title}
+                    </button>
+                  ))
                 )}
               </div>
             </div>
@@ -248,35 +260,20 @@ export default function AIChatPage() {
         )}
       </div>
     );
+  }
 
-    setLayoutModal(node);
+  /** ✅ 제일 중요: 모달 setLayoutModal은 "열고/닫을 때만" */
+  useEffect(() => {
+    if (!page.isSidebarOpen) {
+      setLayoutModal(null);
+      return;
+    }
+
+    setLayoutModal(<SidebarModal />);
     return () => setLayoutModal(null);
-  }, [
-    page.isSidebarOpen,
-    page.search,
-    page.setSearch,
-    page.onNewChat,
-    page.chatHistory,
-    page.isChatHistoryLoading,
-    page.activeHistoryId,
-    page.deleteTargetId,
-    page.deleteTop,
-    page.isDeleteModalOpen,
-    page.toast,
-
-    page.sidebarRef,
-    page.deletePopoverRef,
-
-    page.closeSidebar,
-    page.handleSidebarMouseDown,
-    page.openChatRoom,
-    page.handleHistoryContextMenu,
-    page.openDeleteModal,
-    page.closeDeleteModal,
-    page.confirmDelete,
-
-    setLayoutModal,
-  ]);
+    // ✅ 의존성에 page.search 같은 거 절대 넣지 마
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page.isSidebarOpen, setLayoutModal]);
 
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
     const hasImage = Boolean(product.imageUrl && product.imageUrl.trim().length > 0);
