@@ -3,7 +3,6 @@ import RegistrationInput from './components/RegistrationInput';
 import LinkLoadingScreen from './LinkLoadingScreen';
 import type { WishItemData } from '../../types/WishlistPage/WishItemData';
 import { startCrawlTask, getCrawlResult } from '@/apis/WishlistPage/wishlistItems';
-import DefaultPhoto from '@/assets/default_photo.svg';
 
 interface Props {
   onBack: () => void;
@@ -56,7 +55,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
               price: d.price != null ? d.price.toLocaleString() : '0',
               brand: d.brandName,
               store: d.platformName,
-              image: d.imageUrl || DefaultPhoto,
+              image: d.imageUrl,
               url: originalUrl,
               cacheId: dataId,
             });

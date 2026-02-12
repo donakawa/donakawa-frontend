@@ -12,7 +12,6 @@ import AddWishItemModal from './components/modals/AddWishItemModal';
 import MoveFolderSheet from './components/MoveFolderSheet';
 import Toast from './components/Toast';
 
-import WishRegistrationPage from './WishRegistrationPage';
 import LinkRegistrationPage from './LinkRegistrationPage';
 import AddFolderPage from './AddFolderPage';
 
@@ -39,6 +38,7 @@ import { useWishlistFolderItems } from '@/queries/WishlistPage/useWishlistFolder
 import { useDeleteWishlistItem } from '@/queries/WishlistPage/useDeleteWishlistItem';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import WishRegistrationPage from './WishRegistrationPage';
 type WishlistDisplayItem = WishlistItemType & { realId: string };
 
 const HEADER_HEIGHT = 56;
@@ -305,7 +305,7 @@ export default function WishlistPage() {
 
   if (showRegistration) {
     return (
-      <WishRegistrationPage 
+      <WishRegistrationPage
         onBack={() => { setShowRegistration(false); setInitialData(null); resetBanner(); }} 
         onComplete={handleRegistrationComplete}
         initialData={initialData || undefined}

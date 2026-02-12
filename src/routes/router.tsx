@@ -28,7 +28,6 @@ import PurchaseReviewPage from '@/pages/ReportPage/PurchaseReviewPage';
 import ReviewWritePage from '@/pages/ReportPage/ReviewWritePage';
 import ReportDetailPage from '@/pages/ReportPage/ReportDetailPage';
 import GiveupItemsPage from '@/pages/ReportPage/GiveupPage';
-import WishItemDetailPage from '@/pages/WishlistPage/WishItemDetailPage';
 
 // 마이페이지
 import MyPage from '@/pages/MyPage/MyPage';
@@ -37,6 +36,7 @@ import NicknameSettingPage from '@/pages/MyPage/components/Nickname';
 import PasswordFlowPage from '@/pages/MyPage/components/Password/Password';
 import GoalPage from '@/pages/MyPage/components/Goal/GoalPage';
 import WithdrawalPage from '@/pages/MyPage/components/WithdrawalPage';
+import WishItemDetailPage from '@/pages/WishlistPage/WishItemDetailPage';
 
 const publicChildren: RouteObject[] = [
   { index: true, element: <LoginPage /> },
