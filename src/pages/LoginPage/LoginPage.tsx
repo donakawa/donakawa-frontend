@@ -62,6 +62,9 @@ const LoginPage = () => {
       } else if (errorCode === 'U002') {
         // U002: 비밀번호 불일치 (또는 소셜 로그인 계정)
         setPasswordError('비밀번호가 일치하지 않습니다.');
+      } else if (errorCode === 'U003') {
+        //  U003: 소셜 로그인 계정 (비밀번호 미설정)
+        setPasswordError('소셜 로그인을 이용하거나 비밀번호를 설정해주세요.');
       } else {
         // 그 외 에러 (서버 오류 등)
         alert(errorReason || '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
