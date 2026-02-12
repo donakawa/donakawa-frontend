@@ -364,6 +364,8 @@ const FindPasswordPage = () => {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
+                aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
+                aria-pressed={showPw}
                 className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
@@ -391,6 +393,8 @@ const FindPasswordPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPw(!showConfirmPw)}
+                    aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
+                    aria-pressed={showConfirmPw}
                     className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                       isMatch ? 'text-primary-600' : 'text-gray-400'
                     }`}>

@@ -30,8 +30,8 @@ const Step2Password = ({ onNext }: Props) => {
   const getWrapperClass = (isValid: boolean, isError: boolean) => {
     const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
     
-    if (isError) return `${baseClass} border-red-500 bg-red-50`;
-    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600 bg-primary-50`;
+    if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
+    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600`;
     // focus-within으로 내부 input 클릭 시 테두리 강조
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
@@ -56,6 +56,7 @@ const Step2Password = ({ onNext }: Props) => {
           <input
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
+            aria-label="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputInternalClass}

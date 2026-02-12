@@ -82,12 +82,12 @@ const LoginPage = () => {
 
   const getInputWrapperClass = (isValid: boolean, hasError: boolean) => {
     const baseClass =
-      'flex items-center w-full h-12 rounded-lg border px-4 transition-colors bg-white';
+      'flex items-center w-full h-12 rounded-xl border px-4 transition-colors bg-white transition-all';
 
     // 1순위: 에러
-    if (hasError) return `${baseClass} border-red-500 bg-red-50`;
+    if (hasError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
     // 2순위: 유효
-    if (isValid) return `${baseClass} border-primary-600 bg-primary-50`;
+    if (isValid) return `${baseClass} border-primary-600 bg-primary-50 ring-1 ring-primary-600`;
     // 3순위: 기본 (포커스 시 테두리 색상 변경을 위해 focus-within 사용)
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
@@ -141,8 +141,10 @@ const LoginPage = () => {
             {/* absolute 제거하고 형제 요소로 배치 */}
             <button
               type="button"
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+              aria-pressed={showPassword}
               onClick={() => setShowPassword(!showPassword)}
-              className="ml-2 flex-shrink-0 text-gray-400 hover:text-gray-600 flex items-center justify-center w-6 h-6"
+                className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${isPasswordValid ? "text-primary-600" : "text-gray-400"}`}
             >
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>
