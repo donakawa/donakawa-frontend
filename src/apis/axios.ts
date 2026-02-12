@@ -115,6 +115,13 @@ instance.interceptors.response.use(
         
         // 실제 리프레시 토큰이 만료된 경우에만 로그아웃 처리
         localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
+        if (LOCAL_STORAGE_KEY.refreshToken) {
+            localStorage.removeItem(LOCAL_STORAGE_KEY.refreshToken);
+        } else {
+             // 혹시 상수에 정의가 안 되어 있다면 문자열로라도 지워주세요
+             localStorage.removeItem('refreshToken'); 
+        }
+
         alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
         window.location.href = '/login';
         return Promise.reject(refreshError);
