@@ -7,6 +7,7 @@ import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 
 import { getTimeIcon } from '@/utils/ReportPage/timeIcon';
 
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 import StarFullIcon from '@/assets/star_full.svg';
 import StarIcon from '@/assets/star_rare.svg';
 
@@ -38,7 +39,7 @@ type HistoryItemRaw = {
   itemId: number;
   itemName: string;
   price: number;
-  imageUrl: string;
+  imageUrl: string | null;
   purchaseReasons: string[];
   purchasedAt: string;
   purchasedAtTime?: 'DAWN' | 'EVENING' | 'NOON' | 'MORNING' | 'NIGHT' | string;
@@ -442,7 +443,11 @@ export default function ReviewWritePage(): React.JSX.Element {
           <div className="flex gap-[20px]">
             <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100 relative">
               {purchase.imageUrl ? (
-                <img src={purchase.imageUrl} alt={purchase.title} className="w-full h-full object-cover block" />
+                <img
+                  src={purchase.imageUrl ?? DefaultImg}
+                  alt={purchase.title}
+                  className="w-full h-full object-cover block"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[12px] text-gray-400">
                   이미지 없음
