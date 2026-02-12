@@ -39,17 +39,17 @@ const Step2Password = ({ onNext }: Props) => {
 
       {/* 입력 폼 영역 */}
       <div className="space-y-2">
-        
+
         {/* 1. 비밀번호 입력 */}
-        <div className="relative">
+        <div className="relative flex items-center">
           <input
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none transition-all
-              ${password 
-                ? (isValidFormat ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50') 
+            className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
+              ${password
+                ? (isValidFormat ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
                 : 'border-gray-200 focus:border-primary-600'
               }`}
           />
@@ -58,7 +58,7 @@ const Step2Password = ({ onNext }: Props) => {
             aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
-            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+            className={`absolute right-4 z-10 transition-colors ${
               isValidFormat ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
@@ -75,13 +75,13 @@ const Step2Password = ({ onNext }: Props) => {
 
         {/* 2. 비밀번호 확인 입력 (조건부 렌더링) */}
         {isValidFormat && (
-          <div className="relative mt-4 animate-fade-in-up">
+          <div className="relative flex items-center mt-4 animate-fade-in-up">
             <input
               type={showConfirmPw ? 'text' : 'password'}
               placeholder="비밀번호 확인"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none transition-all
+              className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
                 ${confirmPassword
                   ? (isMatch ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
                   : 'border-gray-200 focus:border-primary-600'
@@ -92,7 +92,7 @@ const Step2Password = ({ onNext }: Props) => {
               aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
               aria-pressed={showConfirmPw}
               onClick={() => setShowConfirmPw(!showConfirmPw)}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+              className={`absolute right-4 z-10 transition-colors ${
                 isMatch ? 'text-primary-600' : 'text-gray-400'
               }`}
             >
@@ -101,7 +101,7 @@ const Step2Password = ({ onNext }: Props) => {
             
             {/* 불일치 시 에러 메시지 */}
             {confirmPassword && !isMatch && (
-               <div className="mt-1 text-right text-xs text-red-500">
+               <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">
                  비밀번호가 일치하지 않습니다.
                </div>
             )}
