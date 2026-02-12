@@ -26,7 +26,6 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-
   // 유효성 검사
   const isEmailValid = email.length > 0;
   const isPasswordValid = password.length > 0;
@@ -82,17 +81,14 @@ const LoginPage = () => {
 
   const getInputWrapperClass = (isValid: boolean, hasError: boolean) => {
     const baseClass =
-      'flex items-center w-full h-12 rounded-lg border pl-4 pr-2 transition-all bg-white';
+      'flex items-center w-full h-12 rounded-lg border px-4 transition-all bg-white';
 
-    // 1순위: 에러
     if (hasError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
-    // 2순위: 유효
     if (isValid) return `${baseClass} border-primary-600 bg-primary-50 ring-1 ring-primary-600`;
-    // 3순위: 기본
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
-  const inputInternalClass = 'flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0';
+  const inputInternalClass = 'flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0 appearance-none m-0 p-0 text-gray-900';
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-24">
@@ -126,6 +122,7 @@ const LoginPage = () => {
 
         {/* 비밀번호 입력 */}
         <div>
+          {/* 🔥 [구조 변경] relative/absolute 제거하고 flex container로 변경 */}
           <div className={getInputWrapperClass(isPasswordValid, !!passwordError)}>
             <input
               type={showPassword ? 'text' : 'password'}
@@ -138,13 +135,15 @@ const LoginPage = () => {
               }}
               className={inputInternalClass}
             />
-            {/* absolute 제거하고 형제 요소로 배치 */}
+            {/* 버튼을 입력창 옆에 나란히 배치 */}
             <button
               type="button"
               aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
               aria-pressed={showPassword}
               onClick={() => setShowPassword(!showPassword)}
-              className={`ml-2 flex-shrink-0 w-10 h-full flex items-center justify-center transition-colors ${isPasswordValid ? "text-primary-600" : "text-gray-400"}`}
+              className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
+                isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+                }`}
             >
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>
