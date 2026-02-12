@@ -352,7 +352,7 @@ const FindPasswordPage = () => {
                 placeholder="비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
+                className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
                   ${
                     password
                       ? isValidFormat
@@ -364,7 +364,7 @@ const FindPasswordPage = () => {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -384,7 +384,7 @@ const FindPasswordPage = () => {
                   placeholder="비밀번호 확인"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
+                  className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
                     ${
                       confirmPassword
                         ? isMatch
@@ -396,7 +396,7 @@ const FindPasswordPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPw(!showConfirmPw)}
-                  className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
                     isMatch ? 'text-primary-600' : 'text-gray-400'
                   }`}>
                   {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}

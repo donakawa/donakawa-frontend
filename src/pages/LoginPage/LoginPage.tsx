@@ -80,10 +80,9 @@ const LoginPage = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login`;
   };
 
-  // 입력창 스타일 함수
   const getInputClass = (isValid: boolean, hasError: boolean) => {
-        const baseClass =
-      'w-full rounded-lg border px-4 py-3.5 text-sm outline-none appearance-none placeholder:text-gray-400 transition-colors';
+    const baseClass =
+      'w-full h-12 rounded-lg border px-4 text-sm outline-none appearance-none placeholder:text-gray-400 transition-colors';
 
     // 1순위: 에러 있음 (빨간색)
     if (hasError) {
@@ -93,8 +92,8 @@ const LoginPage = () => {
     if (isValid) {
       return `${baseClass} border-primary-600 bg-primary-50 focus:border-primary-600`;
     }
-    // 3순위: 기본 (회색)
-    return `${baseClass} border-gray-200 focus:border-primary-600`;
+    // 기본 상태일 때 배경색 흰색 명시
+    return `${baseClass} border-gray-200 bg-white focus:border-primary-600`;
   };
 
   return (
@@ -138,12 +137,13 @@ const LoginPage = () => {
               }}
               className={`${getInputClass(isPasswordValid, !!passwordError)} pr-12`}
             />
-            <button
+                        <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
+              className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
                 isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
-              }`}>
+              }`}
+            >
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>
           </div>
