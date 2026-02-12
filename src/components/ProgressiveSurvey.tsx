@@ -38,9 +38,17 @@ export const LoadingBubble = () => (
 
 function decisionToUi(decision: string): { title: string; border: string; header: string } {
   if (decision.includes('추천')) {
-    return { title: '구매 추천', border: 'border-rgba(104, 171, 110, 1)', header: 'bg-rgba(104, 171, 110, 1)' };
+    return {
+      title: '구매 추천',
+      border: 'border-[rgba(104,171,110,1)]',
+      header: 'bg-[rgba(104,171,110,1)]',
+    };
   }
-  return { title: '구매 보류', border: 'border-rgba(255, 86, 82, 1)', header: 'bg-rgba(255, 86, 82, 1)' };
+  return {
+    title: '구매 보류',
+    border: 'border-[rgba(255,86,82,1)]',
+    header: 'bg-[rgba(255,86,82,1)]',
+  };
 }
 
 export default function ProgressiveSurvey({ chatId }: Props) {
