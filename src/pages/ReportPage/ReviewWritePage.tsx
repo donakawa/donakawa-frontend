@@ -174,10 +174,10 @@ function normalizeItemType(raw: unknown): 'AUTO' | 'MANUAL' | undefined {
 export default function ReviewWritePage(): React.JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
 
-  // ✅ URL: /report/review/write?purchasedId=57
-  const purchasedId = searchParams.get('purchasedId');
+  const itemIdParam = searchParams.get('itemId');
 
   const [rating, setRating] = useState<RatingValue>(0);
   const [usage, setUsage] = useState<UsageLevel>(0);
@@ -222,10 +222,18 @@ export default function ReviewWritePage(): React.JSX.Element {
           return;
         }
 
-        const key = purchasedId;
-        const target =
-          (key ? list.find((x) => String(x.reviewId ?? x.itemId) === key || String(x.itemId) === key) : null) ??
-          list[0];
+        let target: PendingItemRaw | undefined;
+
+        if (itemIdParam) {
+          target = list.find((x) => String(x.itemId) === String(itemIdParam));
+          if (!target) {
+            setPurchaseError('해당 아이템을 후기 작성 목록에서 찾지 못했어요.');
+            setPurchase(null);
+            return;
+          }
+        } else {
+          target = list[0];
+        }
 
         const d = daysSince(target.purchasedAt);
         const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
@@ -259,7 +267,7 @@ export default function ReviewWritePage(): React.JSX.Element {
     return () => {
       alive = false;
     };
-  }, [purchasedId]);
+  }, [itemIdParam]);
 
   const handleDone = async () => {
     if (!isCompleted) return;
