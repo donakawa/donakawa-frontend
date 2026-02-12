@@ -127,7 +127,7 @@ const LoginPage = () => {
         {/* 비밀번호 입력 */}
         <div>
            {/* Wrapper 적용: Input과 Button이 나란히 배치됨 */}
-          <div className={getInputWrapperClass(isPasswordValid, !!passwordError)}>
+          <div className={`${getInputWrapperClass(isPasswordValid, !!passwordError)} relative`}>
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="비밀번호"
@@ -137,7 +137,7 @@ const LoginPage = () => {
                 setPassword(e.target.value);
                 if (passwordError) setPasswordError('');
               }}
-              className={`${inputInternalClass} relative z-10`}
+              className={`${inputInternalClass} pr-12`}
             />
             {/* absolute 제거하고 형제 요소로 배치 */}
             <button
@@ -145,7 +145,8 @@ const LoginPage = () => {
               aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
               aria-pressed={showPassword}
               onClick={() => setShowPassword(!showPassword)}
-                className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${isPasswordValid ? "text-primary-600" : "text-gray-400"}`}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors ${isPasswordValid ? "text-primary-600" : "text-gray-400"}`}
+
             >
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>

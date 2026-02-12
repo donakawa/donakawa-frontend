@@ -353,21 +353,21 @@ const FindPasswordPage = () => {
         {step === 3 && (
           <div className="space-y-2 animate-fade-in">
             {/* 비밀번호 입력 Wrapper */}
-            <div className={getWrapperClass(isValidFormat, false)}>
+            <div className={`${getWrapperClass(isValidFormat, false)} relative`}>
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`${inputInternalClass} relative z-10`}
+                className={`${inputInternalClass} pr-12`}
               />
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
                 aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
                 aria-pressed={showPw}
-                className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -383,21 +383,21 @@ const FindPasswordPage = () => {
             {isValidFormat && (
               <div className="relative w-full mt-4 animate-fade-in-up">
                 {/* 비밀번호 확인 Wrapper */}
-                <div className={getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)}>
+                <div className={`${getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)} relative`}>
                   <input
                     type={showConfirmPw ? 'text' : 'password'}
                     placeholder="비밀번호 확인"
                     autoComplete="current-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`${inputInternalClass} relative z-10`}
+                    className={`${inputInternalClass} pr-12`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPw(!showConfirmPw)}
                     aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
                     aria-pressed={showConfirmPw}
-                    className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                    className={`absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors ${
                       isMatch ? 'text-primary-600' : 'text-gray-400'
                     }`}>
                     {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
