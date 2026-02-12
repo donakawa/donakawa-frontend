@@ -13,8 +13,15 @@ interface ReviewItem {
 const getDDay = (dateString: string) => {
   const today = new Date();
   const purchaseDate = new Date(dateString);
-  const diffTime = Math.abs(today.getTime() - purchaseDate.getTime());
-  return `${Math.floor(diffTime / (1000 * 60 * 60 * 24))} Day+`;
+
+  today.setHours(0, 0, 0, 0);
+  purchaseDate.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - purchaseDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return 'Today';
+  return `${diffDays} Day+`;
 };
 
 export const ReviewList = ({

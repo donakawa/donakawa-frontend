@@ -9,7 +9,8 @@ interface InfoItemProps {
 }
 
 const InfoItem = ({ label, value, isEdit, onChange, icon }: InfoItemProps) => {
-  const isZero = value === 0;
+  const safeValue = Number(value) || 0;
+  const isZero = safeValue === 0;
 
   return (
     <div className="w-full">
@@ -32,7 +33,7 @@ const InfoItem = ({ label, value, isEdit, onChange, icon }: InfoItemProps) => {
             <span className="text-[14px] text-gray-600">{label}</span>
             <span className={`text-[20px] font-semibold ${isZero ? 'text-primary-brown-400' : 'text-primary-600'}`}>
               {!isZero && '+ '}
-              {value.toLocaleString()}
+              {safeValue.toLocaleString()}
             </span>
           </div>
         </div>

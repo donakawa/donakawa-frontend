@@ -107,7 +107,7 @@ const StrategyCard = ({ isEdit, data, onChange }: StrategyCardProps) => {
                 className={`${inputStyle} w-[60px] border-gray-600 focus:border-primary-brown-400`}
               />
             ) : (
-              <span>{data.renewalDay}</span>
+              <span>{data.renewalDay || '0'}</span>
             )}
             <span>일</span>
           </div>
