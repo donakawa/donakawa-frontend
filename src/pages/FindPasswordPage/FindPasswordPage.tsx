@@ -346,7 +346,7 @@ const FindPasswordPage = () => {
         {/* --- [화면 3] 새 비밀번호 입력 --- */}
         {step === 3 && (
           <div className="space-y-2 animate-fade-in">
-            <div className="relative flex items-center">
+            <div className="relative w-full">
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
@@ -364,7 +364,7 @@ const FindPasswordPage = () => {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className={`absolute right-4 z-10 transition-colors ${
+                className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -378,7 +378,7 @@ const FindPasswordPage = () => {
             </div>
 
             {isValidFormat && (
-              <div className="relative flex items-center mt-4 animate-fade-in-up">
+              <div className="relative w-full mt-4 animate-fade-in-up">
                 <input
                   type={showConfirmPw ? 'text' : 'password'}
                   placeholder="비밀번호 확인"
@@ -396,7 +396,7 @@ const FindPasswordPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPw(!showConfirmPw)}
-                  className={`absolute right-4 z-10 transition-colors ${
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
                     isMatch ? 'text-primary-600' : 'text-gray-400'
                   }`}>
                   {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
