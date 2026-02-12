@@ -47,7 +47,7 @@ const Step2Password = ({ onNext }: Props) => {
             placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
+            className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
               ${password
                 ? (isValidFormat ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
                 : 'border-gray-200 focus:border-primary-600'
@@ -58,7 +58,7 @@ const Step2Password = ({ onNext }: Props) => {
             aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
-            className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
+            className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
               isValidFormat ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
@@ -81,7 +81,7 @@ const Step2Password = ({ onNext }: Props) => {
               placeholder="비밀번호 확인"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
+              className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
                 ${confirmPassword
                   ? (isMatch ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50' : 'border-red-500 bg-red-50')
                   : 'border-gray-200 focus:border-primary-600'
@@ -92,7 +92,7 @@ const Step2Password = ({ onNext }: Props) => {
               aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
               aria-pressed={showConfirmPw}
               onClick={() => setShowConfirmPw(!showConfirmPw)}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
+              className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
                 isMatch ? 'text-primary-600' : 'text-gray-400'
               }`}
             >
