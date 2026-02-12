@@ -71,13 +71,23 @@ instance.interceptors.response.use(
 
     const status = error.response.status;
     const errorCode = errorData?.error?.errorCode;
-
-    // refresh 요청 자체면 재진입 방지
     const isRefreshRequest = originalRequest.url?.includes('/auth/refresh') ?? false;
 
-    // 401 또는 A005(만료)이며 refresh 요청 자체가 아닐 때만 재발급 시도
-    if ((status === 401 || errorCode === 'A005') && !isRefreshRequest) {
-      // 이미 누군가 재발급 중이면 큐에 등록 후 대기
+    /** * [수정 포인트] 인증 관련 API 목록
+     * 이 API들은 401 에러가 나더라도 '토큰 재발급'을 시도하지 않고 
+     * 로그인 페이지에서 에러 메시지(예: 소셜 로그인 필요)를 보여줘야 합니다.
+     */
+    const isAuthRequest = 
+      originalRequest.url?.includes('/auth/login') || 
+      originalRequest.url?.includes('/auth/register') ||
+      originalRequest.url?.includes('/auth/email') ||
+      originalRequest.url?.includes('/auth/account-recovery') ||
+      originalRequest.url?.includes('/auth/google') ||
+      originalRequest.url?.includes('/auth/kakao') || 
+      originalRequest.url?.includes('/auth/oauth'); 
+
+    // 401 또는 A005 에러가 발생했지만, 로그인/회원가입/리프레시 요청이 아닐 때만 재발급 시도
+    if ((status === 401 || errorCode === 'A005') && !isRefreshRequest && !isAuthRequest) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           refreshSubscribers.push((success: boolean) => {
@@ -102,17 +112,17 @@ instance.interceptors.response.use(
       } catch (refreshError) {
         isRefreshing = false;
         onRefreshed(false);
-
-        console.error('토큰 재발급 실패:', refreshError);
-
-        // UX 정책은 팀 스타일에 맞춰: alert/redirect 유지
+        
+        // 실제 리프레시 토큰이 만료된 경우에만 로그아웃 처리
+        localStorage.removeItem(LOCAL_STORAGE_KEY.accessToken);
         alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
         window.location.href = '/login';
-
         return Promise.reject(refreshError);
       }
     }
 
+    // 로그인 API 등에서 발생한 401 에러는 이 아래로 내려와서 
+    // 호출한 컴포넌트(로그인 페이지)에서 catch 문으로 잡을 수 있게 됩니다.
     return Promise.reject(error);
   },
 );
