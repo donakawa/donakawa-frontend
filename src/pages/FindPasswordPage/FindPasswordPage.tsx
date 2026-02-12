@@ -204,6 +204,16 @@ const FindPasswordPage = () => {
     }
   };
 
+  const getWrapperClass = (isValid: boolean, isError: boolean) => {
+    const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
+    
+    if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
+    if (isValid) return `${baseClass} border-primary-600 bg-primary-50 ring-1 ring-primary-600`;
+    return `${baseClass} border-gray-200 focus-within:border-primary-600`;
+  };
+
+  const inputInternalClass = "flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 appearance-none min-w-0";
+
   // --- 렌더링 ---
   return (
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-4">
@@ -239,23 +249,19 @@ const FindPasswordPage = () => {
         {step === 1 && (
           <div className="space-y-4 animate-fade-in">
             <div>
-              <input
-                type="email"
-                placeholder="이메일 아이디"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (emailError) setEmailError('');
-                }}
-                className={`w-full rounded-xl border px-4 py-4 text-sm outline-none appearance-none transition-all
-                  ${
-                    emailError
-                      ? 'border-red-500 bg-red-50 focus:border-red-500'
-                      : email.includes('@')
-                        ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
-                        : 'border-gray-200 focus:border-primary-600'
-                  }`}
-              />
+              {/* Wrapper 적용 */}
+              <div className={getWrapperClass(email.includes('@'), !!emailError)}>
+                <input
+                  type="email"
+                  placeholder="이메일 아이디"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError('');
+                  }}
+                  className={inputInternalClass}
+                />
+              </div>
               {emailError && <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">{emailError}</p>}
             </div>
 
@@ -346,25 +352,21 @@ const FindPasswordPage = () => {
         {/* --- [화면 3] 새 비밀번호 입력 --- */}
         {step === 3 && (
           <div className="space-y-2 animate-fade-in">
-            <div className="relative w-full">
+            {/* 비밀번호 입력 Wrapper */}
+            <div className={getWrapperClass(isValidFormat, false)}>
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
-                  ${
-                    password
-                      ? isValidFormat
-                        ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50'
-                        : 'border-red-500 bg-red-50'
-                      : 'border-gray-200 focus:border-primary-600'
-                  }`}
+                className={inputInternalClass}
               />
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
+                aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
+                aria-pressed={showPw}
+                className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -379,28 +381,26 @@ const FindPasswordPage = () => {
 
             {isValidFormat && (
               <div className="relative w-full mt-4 animate-fade-in-up">
-                <input
-                  type={showConfirmPw ? 'text' : 'password'}
-                  placeholder="비밀번호 확인"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full h-12 rounded-xl border px-4 pr-12 text-sm outline-none appearance-none transition-all bg-white
-                    ${
-                      confirmPassword
-                        ? isMatch
-                          ? 'border-primary-600 ring-1 ring-primary-600 bg-primary-50'
-                          : 'border-red-500 bg-red-50'
-                        : 'border-gray-200 focus:border-primary-600'
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPw(!showConfirmPw)}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
-                    isMatch ? 'text-primary-600' : 'text-gray-400'
-                  }`}>
-                  {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
-                </button>
+                {/* 비밀번호 확인 Wrapper */}
+                <div className={getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)}>
+                  <input
+                    type={showConfirmPw ? 'text' : 'password'}
+                    placeholder="비밀번호 확인"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={inputInternalClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPw(!showConfirmPw)}
+                    aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
+                    aria-pressed={showConfirmPw}
+                    className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                      isMatch ? 'text-primary-600' : 'text-gray-400'
+                    }`}>
+                    {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
+                  </button>
+                </div>
 
                 {confirmPassword && !isMatch && (
                   <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">비밀번호가 일치하지 않습니다.</div>

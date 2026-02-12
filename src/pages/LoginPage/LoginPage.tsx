@@ -80,21 +80,19 @@ const LoginPage = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login`;
   };
 
-  const getInputClass = (isValid: boolean, hasError: boolean) => {
+  const getInputWrapperClass = (isValid: boolean, hasError: boolean) => {
     const baseClass =
-      'w-full h-12 rounded-lg border px-4 text-sm outline-none appearance-none placeholder:text-gray-400 transition-colors';
+      'flex items-center w-full h-12 rounded-xl border px-4 transition-colors bg-white transition-all';
 
-    // 1순위: 에러 있음 (빨간색)
-    if (hasError) {
-      return `${baseClass} border-red-500 bg-red-50 focus:border-red-500`;
-    }
-    // 2순위: 유효함 (초록색)
-    if (isValid) {
-      return `${baseClass} border-primary-600 bg-primary-50 focus:border-primary-600`;
-    }
-    // 기본 상태일 때 배경색 흰색 명시
-    return `${baseClass} border-gray-200 bg-white focus:border-primary-600`;
+    // 1순위: 에러
+    if (hasError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
+    // 2순위: 유효
+    if (isValid) return `${baseClass} border-primary-600 bg-primary-50 ring-1 ring-primary-600`;
+    // 3순위: 기본 (포커스 시 테두리 색상 변경을 위해 focus-within 사용)
+    return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
+
+  const inputInternalClass = 'flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 appearance-none min-w-0';
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-24">
@@ -108,41 +106,45 @@ const LoginPage = () => {
       <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4">
         {/* 이메일 입력 */}
         <div>
-          <input
-            type="email"
-            placeholder="이메일"
-            aria-label="이메일"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (emailError) setEmailError(''); // 타이핑 시작하면 에러 삭제 (UX 향상)
-            }}
-            className={getInputClass(isEmailValid, !!emailError)}
-          />
+          {/* Wrapper 적용 */}
+          <div className={getInputWrapperClass(isEmailValid, !!emailError)}>
+            <input
+              type="email"
+              placeholder="이메일"
+              aria-label="이메일"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError(''); // 타이핑 시작하면 에러 삭제 (UX 향상)
+              }}
+              className={inputInternalClass}
+            />
+          </div>
           {/* 🔥 이메일 에러 메시지 */}
           {emailError && <p className="mt-1 ml-1 text-xs text-red-500 animate-fade-in">{emailError}</p>}
         </div>
 
         {/* 비밀번호 입력 */}
         <div>
-          <div className="relative w-full">
+           {/* Wrapper 적용: Input과 Button이 나란히 배치됨 */}
+          <div className={getInputWrapperClass(isPasswordValid, !!passwordError)}>
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="비밀번호"
-              aria-label="비밀번호"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                if (passwordError) setPasswordError(''); // 타이핑 시작하면 에러 삭제
+                if (passwordError) setPasswordError('');
               }}
-              className={`${getInputClass(isPasswordValid, !!passwordError)} pr-12`}
+              className={inputInternalClass}
             />
-                        <button
+            {/* absolute 제거하고 형제 요소로 배치 */}
+            <button
               type="button"
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+              aria-pressed={showPassword}
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10 transition-colors ${
-                isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
-              }`}
+                className={`ml-2 flex-shrink-0 flex items-center justify-center transition-colors ${isPasswordValid ? "text-primary-600" : "text-gray-400"}`}
             >
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>
@@ -180,7 +182,7 @@ const LoginPage = () => {
           구글 로그인
         </button>
 
-        {/*  카카오 로그인 */}
+        {/*  카카오 로그인 */}
         <button
           type="button"
           onClick={handleKakaoLogin}
