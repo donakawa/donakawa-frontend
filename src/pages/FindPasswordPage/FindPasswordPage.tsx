@@ -247,7 +247,7 @@ const FindPasswordPage = () => {
                   setEmail(e.target.value);
                   if (emailError) setEmailError('');
                 }}
-                className={`w-full rounded-xl border px-4 py-4 text-sm outline-none transition-all
+                className={`w-full rounded-xl border px-4 py-4 text-sm outline-none appearance-none transition-all
                   ${
                     emailError
                       ? 'border-red-500 bg-red-50 focus:border-red-500'
@@ -290,7 +290,7 @@ const FindPasswordPage = () => {
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     //  시간 만료 시 비활성화
                     disabled={inputTimeLeft === 0}
-                    className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none transition-all shadow-sm
+                    className={`h-14 w-12 rounded-lg border text-center text-xl font-bold outline-none appearance-none transition-all shadow-sm
                       ${inputTimeLeft === 0
                         ? 'bg-gray-100 border-gray-200 text-gray-400'
                         : codeError
@@ -346,13 +346,13 @@ const FindPasswordPage = () => {
         {/* --- [화면 3] 새 비밀번호 입력 --- */}
         {step === 3 && (
           <div className="space-y-2 animate-fade-in">
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none transition-all
+                className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
                   ${
                     password
                       ? isValidFormat
@@ -364,7 +364,7 @@ const FindPasswordPage = () => {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                className={`absolute right-4 z-10 transition-colors ${
                   isValidFormat ? 'text-primary-600' : 'text-gray-400'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -378,13 +378,13 @@ const FindPasswordPage = () => {
             </div>
 
             {isValidFormat && (
-              <div className="relative mt-4 animate-fade-in-up">
+              <div className="relative flex items-center mt-4 animate-fade-in-up">
                 <input
                   type={showConfirmPw ? 'text' : 'password'}
                   placeholder="비밀번호 확인"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none transition-all
+                  className={`w-full rounded-xl border px-4 py-4 pr-12 text-sm outline-none appearance-none transition-all
                     ${
                       confirmPassword
                         ? isMatch
@@ -396,14 +396,14 @@ const FindPasswordPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPw(!showConfirmPw)}
-                  className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                  className={`absolute right-4 z-10 transition-colors ${
                     isMatch ? 'text-primary-600' : 'text-gray-400'
                   }`}>
                   {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                 </button>
 
                 {confirmPassword && !isMatch && (
-                  <div className="mt-1 text-right text-xs text-red-500">비밀번호가 일치하지 않습니다.</div>
+                  <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">비밀번호가 일치하지 않습니다.</div>
                 )}
               </div>
             )}
