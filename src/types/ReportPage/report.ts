@@ -1,6 +1,6 @@
 export type TabKey = 'record' | 'calendar';
 
-export type ConsumptionReason = '필요해서' | '세일 중' | '품절임박';
+export type ConsumptionReason = string;
 
 export type Star = 1 | 2 | 3 | 4 | 5;
 
@@ -11,12 +11,12 @@ export type Period = {
 };
 
 export type MonthlyReport = {
-  period: Period;
+  period: { from: string; to: string; days: number };
   totalWon: number;
   savedWon: number;
-  reasons: ConsumptionReason[];
-  averageSatisfaction: Star;
-  reasonSatisfaction: Record<ConsumptionReason, Star>;
+  reasons: string[];
+  averageSatisfaction: Star | null;
+  reasonSatisfaction: Record<string, Star | null>;
   insight: string;
 };
 
@@ -49,7 +49,7 @@ export type CalendarPurchaseItem = {
   id: string;
   date: string;
   timeLabel: DayTime;
-  reason: ConsumptionReason[];
+  reason: string;
   title: string;
   price: number;
   imageUrl: string;
