@@ -12,7 +12,6 @@ import StarIcon from '@/assets/star_rare.svg';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
-/** ===== Types ===== */
 type ApiFailError<EData = unknown> = {
   errorCode: string;
   reason: string;
@@ -41,11 +40,7 @@ type PendingItemRaw = {
   imageUrl: string;
   purchaseReasons: string[];
   purchasedAt: string;
-
-  // 시간대(선택)
   purchasedAtTime?: 'DAWN' | 'EVENING' | 'NOON' | 'MORNING' | 'NIGHT' | string;
-
-  // ✅ 서버가 내려주면 사용 (POST /review에 필수)
   itemType?: 'AUTO' | 'MANUAL' | 'auto' | 'manual' | string;
 };
 
@@ -54,7 +49,7 @@ type GetPendingItemsData = {
 };
 
 type PostReviewRequestBody = {
-  itemType: 'AUTO' | 'MANUAL'; // ✅ 서버 필수
+  itemType: 'AUTO' | 'MANUAL';
   satisfaction: number;
   frequency: number;
 };
@@ -77,11 +72,9 @@ type UiPurchase = {
   dayLabelText: string;
   timeLabel?: string;
 
-  // ✅ POST에 보내기 위해 저장
   itemType?: 'AUTO' | 'MANUAL';
 };
 
-/** ===== Utils ===== */
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
@@ -178,13 +171,13 @@ function normalizeItemType(raw: unknown): 'AUTO' | 'MANUAL' | undefined {
   return undefined;
 }
 
-/** ===== Component ===== */
 export default function ReviewWritePage(): React.JSX.Element {
   const navigate = useNavigate();
-  const [params] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
 
-  const purchaseId = params.get('purchaseId');
+  // ✅ URL: /report/review/write?purchasedId=57
+  const purchasedId = searchParams.get('purchasedId');
 
   const [rating, setRating] = useState<RatingValue>(0);
   const [usage, setUsage] = useState<UsageLevel>(0);
@@ -229,7 +222,10 @@ export default function ReviewWritePage(): React.JSX.Element {
           return;
         }
 
-        const target = (purchaseId ? list.find((x) => String(x.itemId) === purchaseId) : null) ?? list[0];
+        const key = purchasedId;
+        const target =
+          (key ? list.find((x) => String(x.reviewId ?? x.itemId) === key || String(x.itemId) === key) : null) ??
+          list[0];
 
         const d = daysSince(target.purchasedAt);
         const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
@@ -243,8 +239,6 @@ export default function ReviewWritePage(): React.JSX.Element {
           dateText: formatDateText(target.purchasedAt),
           dayLabelText,
           timeLabel: normalizeTimeLabel(target.purchasedAtTime),
-
-          // ✅ itemType 저장 (없으면 undefined)
           itemType: normalizeItemType(target.itemType),
         };
 
@@ -265,7 +259,7 @@ export default function ReviewWritePage(): React.JSX.Element {
     return () => {
       alive = false;
     };
-  }, [purchaseId]);
+  }, [purchasedId]);
 
   const handleDone = async () => {
     if (!isCompleted) return;
@@ -277,7 +271,6 @@ export default function ReviewWritePage(): React.JSX.Element {
 
     try {
       const body: PostReviewRequestBody = {
-        // ✅ 서버가 필수로 요구함. 응답에 없으면 일단 AUTO로 fallback
         itemType: purchase.itemType ?? 'AUTO',
         satisfaction: Number(rating),
         frequency: Number(usage),
