@@ -49,8 +49,6 @@ export function isDayTimeDisplayName(v: string): v is DayTime {
 export function toDayTimeFromAnalytics(label: string, displayName: string): DayTime {
   switch (label) {
     case 'MORNING':
-      return '아침';
-    case 'AFTERNOON':
       return '낮';
     case 'EVENING':
       return '저녁';
@@ -87,8 +85,6 @@ export function toWeekdayFromAnalytics(label: string, displayName: string): Week
 export function toDayTimeFromCalendar(purchasedAt: string): DayTime {
   switch (purchasedAt) {
     case 'MORNING':
-      return '아침';
-    case 'AFTERNOON':
       return '낮';
     case 'EVENING':
       return '저녁';
