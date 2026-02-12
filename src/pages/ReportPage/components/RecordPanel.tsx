@@ -401,7 +401,7 @@ export default function RecordView() {
                   </div>
 
                   <div
-                    className="text-xs font-medium overflow-hidden truncate"
+                    className="text-left text-xs font-medium overflow-hidden truncate"
                     style={{ color: 'var(--color-black)', width: '100%' }}>
                     {item.itemName}
                   </div>
