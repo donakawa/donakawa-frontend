@@ -36,7 +36,7 @@ const Step2Password = ({ onNext }: Props) => {
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
-  const inputInternalClass = "flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 appearance-none min-w-0";
+  const inputInternalClass = "flex-1 w-full h-12 bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0";
 
   return (
     <div className="w-full max-w-sm animate-fade-in">
@@ -57,9 +57,10 @@ const Step2Password = ({ onNext }: Props) => {
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
             aria-label="비밀번호"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={inputInternalClass}
+            className={`${inputInternalClass} relative z-10`}
           />
           <button
             type="button"
@@ -88,9 +89,10 @@ const Step2Password = ({ onNext }: Props) => {
               <input
                 type={showConfirmPw ? 'text' : 'password'}
                 placeholder="비밀번호 확인"
+                autoComplete="current-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={inputInternalClass}
+                className={`${inputInternalClass} relative z-10`}
               />
               <button
                 type="button"

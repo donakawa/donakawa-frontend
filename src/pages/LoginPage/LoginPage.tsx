@@ -92,7 +92,7 @@ const LoginPage = () => {
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
-  const inputInternalClass = 'flex-1 w-full h-full bg-transparent outline-none text-sm placeholder:text-gray-400 appearance-none min-w-0';
+  const inputInternalClass = 'flex-1 w-full h-12 bg-transparent outline-none text-sm placeholder:text-gray-400 min-w-0';
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-24">
@@ -131,12 +131,13 @@ const LoginPage = () => {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="비밀번호"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (passwordError) setPasswordError('');
               }}
-              className={inputInternalClass}
+              className={`${inputInternalClass} relative z-10`}
             />
             {/* absolute 제거하고 형제 요소로 배치 */}
             <button
