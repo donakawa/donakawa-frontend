@@ -23,6 +23,34 @@ export default function AIChatPage() {
 
   const isComposingRef = useRef(false);
 
+  // 모바일용 삭제 버튼
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const clearLongPress = () => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const startLongPress = (start: () => void) => {
+    clearLongPress();
+    longPressFiredRef.current = false;
+
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressFiredRef.current = true;
+      start();
+    }, 520);
+  };
+
+  useEffect(() => {
+    return () => {
+      clearLongPress();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     setTitle('도나AI 상담실');
 
@@ -134,8 +162,34 @@ export default function AIChatPage() {
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => void page.openChatRoom(item.id)}
+                        onClick={() => {
+                          if (longPressFiredRef.current) return;
+                          void page.openChatRoom(item.id);
+                        }}
                         onContextMenu={page.handleHistoryContextMenu(item.id)}
+                        onPointerDown={(e) => {
+                          if (e.pointerType === 'mouse') return;
+
+                          if (e.isPrimary === false) return;
+
+                          startLongPress(() => {
+                            page.handleHistoryContextMenu(item.id)(e as unknown as React.MouseEvent<HTMLButtonElement>);
+                          });
+                        }}
+                        onPointerUp={() => {
+                          if (longPressFiredRef.current) {
+                            longPressFiredRef.current = false;
+                          }
+                          clearLongPress();
+                        }}
+                        onPointerCancel={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        onPointerLeave={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
                         className={cx(
                           'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
                           'py-3 px-4',

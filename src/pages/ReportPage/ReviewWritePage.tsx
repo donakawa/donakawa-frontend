@@ -205,6 +205,8 @@ export default function ReviewWritePage(): React.JSX.Element {
   const { setTitle, setRightAction } = useOutletContext<HeaderControlContext>();
 
   const historyIdParam = searchParams.get('historyId');
+  const purchasedIdParam = searchParams.get('purchasedId');
+  const targetKey = historyIdParam ?? purchasedIdParam;
 
   const [mode, setMode] = useState<Mode>('NOT_WRITTEN');
 
@@ -245,6 +247,12 @@ export default function ReviewWritePage(): React.JSX.Element {
       };
     };
 
+    const findByTargetKey = (list: HistoryItemRaw[], key: string): HistoryItemRaw | undefined => {
+      const byItemId = list.find((x) => String(x.itemId) === key);
+      if (byItemId) return byItemId;
+      return list.find((x) => getHistoryKey(x) === key);
+    };
+
     const run = async () => {
       setLoadingPurchase(true);
       setPurchaseError('');
@@ -265,7 +273,7 @@ export default function ReviewWritePage(): React.JSX.Element {
 
         const notWrittenList = notWrittenRes.data.items ?? [];
 
-        if (!historyIdParam) {
+        if (!targetKey) {
           if (notWrittenList.length === 0) {
             setPurchaseError('후기 작성 가능한 아이템이 없어요.');
             return;
@@ -278,7 +286,7 @@ export default function ReviewWritePage(): React.JSX.Element {
           return;
         }
 
-        const foundNotWritten = notWrittenList.find((x) => getHistoryKey(x) === String(historyIdParam));
+        const foundNotWritten = findByTargetKey(notWrittenList, String(targetKey));
         if (foundNotWritten) {
           setMode('NOT_WRITTEN');
           setRating(0);
@@ -299,7 +307,7 @@ export default function ReviewWritePage(): React.JSX.Element {
         }
 
         const writtenList = writtenRes.data.items ?? [];
-        const foundWritten = writtenList.find((x) => getHistoryKey(x) === String(historyIdParam));
+        const foundWritten = findByTargetKey(writtenList, String(targetKey));
 
         if (!foundWritten) {
           setPurchaseError('해당 소비 기록을 후기 목록에서 찾지 못했어요.');
@@ -325,7 +333,7 @@ export default function ReviewWritePage(): React.JSX.Element {
     return () => {
       alive = false;
     };
-  }, [historyIdParam]);
+  }, [targetKey]);
 
   const handleDone = async () => {
     if (isReadOnly) return;

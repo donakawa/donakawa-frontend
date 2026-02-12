@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import type { AxiosResponse } from 'axios';
 
 import { instance } from '@/apis/axios';
 
@@ -9,20 +10,21 @@ import CategoryFilter from './components/CategoryFilter';
 import ArrowIcon from '@/assets/arrow.svg?react';
 import DefaultImg from '@/assets/default_item_photo.svg?url';
 
-type LocationState = { from?: string };
-
+import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
 import type { ChatItemType } from '@/apis/AIChatPage/aichat';
 import type { PickedWishItem } from '../HomePage/hooks/useAIChat';
-import { type HeaderControlContext } from '@/layouts/ProtectedLayout';
+
+type LocationState = { from?: string };
 
 type WishItemStatus = 'WISHLISTED' | 'UNWISHLISTED' | string;
+type WishItemType = 'AUTO' | 'MANUAL' | string;
 
 type WishItem = {
   id: string;
   name: string;
   price: number;
   photoUrl: string | null;
-  type: 'MANUAL' | 'CRAWLED' | string;
+  type: WishItemType;
   status: WishItemStatus;
 };
 
@@ -43,32 +45,52 @@ type WishlistItemsFail = {
 
 type WishlistItemsResponse = WishlistItemsSuccess | WishlistItemsFail;
 
+type WishlistFolder = {
+  id: string;
+  name: string;
+};
+
+type WishlistFoldersSuccess = {
+  resultType: 'SUCCESS';
+  error: null;
+  data: {
+    folders: WishlistFolder[];
+    nextCursor: string | null;
+  };
+};
+
+type WishlistFoldersFail = {
+  resultType: 'FAIL' | 'FAILED';
+  error: { errorCode: string; reason?: string; message?: string; data?: unknown };
+  data: null;
+};
+
+type WishlistFoldersResponse = WishlistFoldersSuccess | WishlistFoldersFail;
+
+type Category = { id: 'all'; label: 'ALL' } | { id: string; label: string };
+
+type LoadState = 'idle' | 'loading' | 'success' | 'error';
+
 const WISH_STATUS: WishItemStatus = 'WISHLISTED';
 
-const CATEGORIES = [
-  { id: 'all', label: 'ALL' },
-  { id: 'outer', label: '아우터' },
-  { id: 'top', label: '상의' },
-  { id: 'winter', label: '겨울 메이트 코트' },
-  { id: 'bottom', label: '하의' },
-  { id: 'shoes', label: '신발' },
-  { id: 'bag', label: '가방' },
-];
+const TAKE = 10;
+const MAX_PAGES = 50;
 
-export default function ItemSelectionPage() {
+export default function ItemSelectionPage(): React.JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
-
   const { setTitle } = useOutletContext<HeaderControlContext>();
 
   const from = (location.state as LocationState | null)?.from ?? '/home/ai-chat';
 
+  const [categories, setCategories] = useState<Category[]>([{ id: 'all', label: 'ALL' }]);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
   const [items, setItems] = useState<WishItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadState, setLoadState] = useState<LoadState>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState('all');
 
   useEffect(() => {
     setTitle('고민템을 선택해주세요!');
@@ -77,68 +99,118 @@ export default function ItemSelectionPage() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchWishlist = async () => {
-      setLoading(true);
-      setErrorMsg(null);
-
+    const fetchAllFolders = async (): Promise<void> => {
       try {
-        const res = await instance.get<WishlistItemsResponse>('/wishlist/items', {
-          params: {
-            status: WISH_STATUS,
-            take: 50,
-            _ts: Date.now(),
-          },
-          headers: {
-            Accept: 'application/json',
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-          },
-          withCredentials: true,
-        });
+        const all: WishlistFolder[] = [];
+        let cursor: string | null = null;
 
-        if (!mounted) return;
+        for (let i = 0; i < MAX_PAGES; i += 1) {
+          const res: AxiosResponse<WishlistFoldersResponse> = await instance.get('/wishlist/folders', {
+            params: { take: TAKE, cursor: cursor ?? undefined, _ts: Date.now() },
+            headers: { Accept: 'application/json' },
+            withCredentials: true,
+          });
 
-        if (res.data.resultType !== 'SUCCESS') {
-          setItems([]);
-          const msg = res.data.error?.reason ?? res.data.error?.message ?? '위시리스트를 불러오지 못했어요.';
-          setErrorMsg(msg);
-          return;
+          if (!mounted) return;
+
+          if (res.data.resultType !== 'SUCCESS') break;
+
+          all.push(...(res.data.data.folders ?? []));
+
+          const next = res.data.data.nextCursor;
+          if (!next) break;
+          cursor = next;
         }
 
-        setItems(res.data.data.wishitems ?? []);
-      } catch (err: unknown) {
         if (!mounted) return;
 
-        const e = err as {
-          response?: { data?: { message?: string; reason?: string; error?: { reason?: string; message?: string } } };
-          message?: string;
-        };
+        const nextCategories: Category[] = [
+          { id: 'all', label: 'ALL' },
+          ...all.map((f) => ({ id: f.id, label: f.name })),
+        ];
 
-        const serverMsg =
-          e?.response?.data?.message ||
-          e?.response?.data?.error?.reason ||
-          e?.response?.data?.error?.message ||
-          e?.response?.data?.reason ||
-          e?.message;
+        setCategories(nextCategories);
 
-        setItems([]);
-        setErrorMsg(serverMsg ? String(serverMsg) : '위시리스트를 불러오는 중 오류가 발생했어요.');
-      } finally {
-        if (mounted) setLoading(false);
+        if (activeCategory !== 'all' && !all.some((f) => f.id === activeCategory)) {
+          setActiveCategory('all');
+        }
+      } catch {
+        if (!mounted) return;
+        setCategories([{ id: 'all', label: 'ALL' }]);
       }
     };
 
-    void fetchWishlist();
+    void fetchAllFolders();
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [activeCategory]);
 
-  const filteredItems = useMemo(() => {
-    if (activeCategory === 'all') return items;
-    return items;
-  }, [items, activeCategory]);
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchAllItemsByCursor = async (): Promise<WishItem[]> => {
+      const isAll = activeCategory === 'all';
+      const url = isAll ? '/wishlist/items' : `/wishlist/folders/${activeCategory}/items`;
+
+      const all: WishItem[] = [];
+      let cursor: string | null = null;
+
+      for (let i = 0; i < MAX_PAGES; i += 1) {
+        const res: AxiosResponse<WishlistItemsResponse> = await instance.get(url, {
+          params: isAll
+            ? { status: WISH_STATUS, take: TAKE, cursor: cursor ?? undefined, _ts: Date.now() }
+            : { take: TAKE, cursor: cursor ?? undefined, _ts: Date.now() },
+          headers: { Accept: 'application/json' },
+          withCredentials: true,
+        });
+
+        if (res.data.resultType !== 'SUCCESS') {
+          const msg =
+            res.data.error?.reason ??
+            res.data.error?.message ??
+            (isAll ? '위시리스트를 불러오지 못했어요.' : '폴더 아이템을 불러오지 못했어요.');
+          throw new Error(msg);
+        }
+
+        all.push(...(res.data.data.wishitems ?? []));
+
+        const next = res.data.data.nextCursor;
+        if (!next) break;
+        cursor = next;
+      }
+
+      return all;
+    };
+
+    const run = async (): Promise<void> => {
+      setLoadState('loading');
+      setErrorMsg(null);
+      setSelectedId(null);
+
+      try {
+        const list = await fetchAllItemsByCursor();
+        if (!mounted) return;
+
+        setItems(list);
+        setLoadState('success');
+      } catch (err: unknown) {
+        if (!mounted) return;
+
+        const msg = err instanceof Error ? err.message : '목록을 불러오는 중 오류가 발생했어요.';
+        setItems([]);
+        setErrorMsg(msg);
+        setLoadState('error');
+      }
+    };
+
+    void run();
+
+    return () => {
+      mounted = false;
+    };
+  }, [activeCategory]);
 
   const selectedItem = useMemo(() => {
     if (!selectedId) return null;
@@ -149,7 +221,7 @@ export default function ItemSelectionPage() {
     setSelectedId((prev) => (prev === id ? null : id));
   };
 
-  const mapWishItemTypeToChatType = (wishType: string): ChatItemType => {
+  const mapWishItemTypeToChatType = (wishType: WishItemType): ChatItemType => {
     if (wishType === 'MANUAL') return 'MANUAL';
     return 'AUTO';
   };
@@ -168,29 +240,27 @@ export default function ItemSelectionPage() {
       type: mapWishItemTypeToChatType(selectedItem.type),
     };
 
-    navigate(from, {
-      state: { pickedWishItem },
-    });
+    navigate(from, { state: { pickedWishItem } });
   };
 
   return (
     <div className="flex h-[100dvh] flex-col">
-      <CategoryFilter categories={CATEGORIES} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
+      <CategoryFilter categories={categories} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
 
       <div
         className="flex-1 overflow-y-auto no-scrollbar rounded-t-[16px] shadow-[0_0_4px_rgba(0,0,0,0.25)]
                    bg-secondary-100 px-[20px] pb-[50px] pt-[20px]">
-        {loading ? (
+        {loadState === 'loading' ? (
           <div className="flex h-full items-center justify-center text-gray-500">
             <p className="text-[16px]">불러오는 중...</p>
           </div>
-        ) : errorMsg ? (
+        ) : loadState === 'error' && errorMsg ? (
           <div className="mt-[100px] flex h-full flex-col items-center text-gray-500">
             <p className="text-center text-[16px] whitespace-pre-line">{errorMsg}</p>
           </div>
-        ) : filteredItems.length > 0 ? (
+        ) : items.length > 0 ? (
           <div className="grid grid-cols-3 gap-[26px]">
-            {filteredItems.map((item) => (
+            {items.map((item) => (
               <SelectableItem
                 key={item.id}
                 id={item.id}
