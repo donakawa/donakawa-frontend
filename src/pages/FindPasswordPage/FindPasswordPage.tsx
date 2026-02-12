@@ -357,7 +357,7 @@ const FindPasswordPage = () => {
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={inputInternalClass}
@@ -387,7 +387,7 @@ const FindPasswordPage = () => {
                   <input
                     type={showConfirmPw ? 'text' : 'password'}
                     placeholder="비밀번호 확인"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={inputInternalClass}

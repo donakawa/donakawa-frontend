@@ -56,7 +56,7 @@ const Step2Password = ({ onNext }: Props) => {
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
             aria-label="비밀번호"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputInternalClass}
@@ -88,7 +88,7 @@ const Step2Password = ({ onNext }: Props) => {
               <input
                 type={showConfirmPw ? 'text' : 'password'}
                 placeholder="비밀번호 확인"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={inputInternalClass}
