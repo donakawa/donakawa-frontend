@@ -9,7 +9,8 @@ interface InfoItemProps {
 }
 
 const InfoItem = ({ label, value, isEdit, onChange, icon }: InfoItemProps) => {
-  const isZero = value === 0;
+  const safeValue = Number(value) || 0;
+  const isZero = safeValue === 0;
 
   return (
     <div className="w-full">
@@ -19,7 +20,7 @@ const InfoItem = ({ label, value, isEdit, onChange, icon }: InfoItemProps) => {
           <input
             type="text"
             inputMode="numeric"
-            value={value.toLocaleString()}
+            value={safeValue.toLocaleString()}
             onChange={(e) => onChange(e.target.value)}
             className="w-full px-[18px] py-[12px] rounded-[6px] text-[14px] border-[2px] 
             border-gray-100 focus:border-primary-500 outline-none transition-colors bg-white"
@@ -32,7 +33,7 @@ const InfoItem = ({ label, value, isEdit, onChange, icon }: InfoItemProps) => {
             <span className="text-[14px] text-gray-600">{label}</span>
             <span className={`text-[20px] font-semibold ${isZero ? 'text-primary-brown-400' : 'text-primary-600'}`}>
               {!isZero && '+ '}
-              {value.toLocaleString()}
+              {safeValue.toLocaleString()}
             </span>
           </div>
         </div>

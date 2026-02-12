@@ -23,14 +23,7 @@ const BudgetSettingPage = () => {
 
   const { setCustomBack, setRightAction, setTitle } = useOutletContext<HeaderControlContext>();
 
-  const [budgetData, setBudgetData] = useState<SetBudgetRequest>({
-    monthlyIncome: 0,
-    incomeDate: 0,
-    fixedExpense: 0,
-    monthlySaving: 0,
-    spendStrategy: 0,
-    shoppingBudget: 0,
-  });
+  const [budgetData, setBudgetData] = useState<Partial<SetBudgetRequest>>({});
 
   const updateData = (key: keyof SetBudgetRequest, value: number) => {
     setBudgetData((prev) => ({ ...prev, [key]: value }));
@@ -57,10 +50,6 @@ const BudgetSettingPage = () => {
   }, [step, navigate]);
 
   const nextStep = useCallback(() => {
-    if (step === TOTAL_STEPS) {
-      submitBudget(budgetData);
-      return;
-    }
     setDirection(1);
     setStep((prev) => prev + 1);
   }, [step, budgetData, submitBudget, navigate, TOTAL_STEPS]);
@@ -162,15 +151,21 @@ const BudgetSettingPage = () => {
               <Step6
                 onNext={(val) => {
                   updateData('shoppingBudget', val);
-                  nextStep();
+
+                  const finalData = {
+                    ...budgetData,
+                    shoppingBudget: val,
+                  };
+
+                  const cleanData = Object.fromEntries(
+                    Object.entries(finalData).filter(
+                      ([_, value]) => value !== 0 && value !== undefined && value !== null,
+                    ),
+                  );
+                  submitBudget(cleanData as unknown as SetBudgetRequest);
                 }}
                 defaultValue={budgetData.shoppingBudget}
-                prevData={{
-                  monthlyIncome: budgetData.monthlyIncome,
-                  fixedExpense: budgetData.fixedExpense,
-                  monthlySaving: budgetData.monthlySaving,
-                  spendStrategy: budgetData.spendStrategy,
-                }}
+                prevData={budgetData}
               />
             )}
           </motion.div>
