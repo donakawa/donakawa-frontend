@@ -125,7 +125,7 @@ const Step4Goal = ({ formData }: Props) => {
 
           <button
             onClick={handleStart}
-            className="w-full rounded-xl bg-primary-600 py-4 text-sm font-bold text-white hover:bg-primary-500 transition-colors">
+            className="w-2/3 rounded-xl bg-primary-600 py-4 text-sm font-bold text-white hover:bg-primary-500 transition-colors">
             도나카와 시작하기
           </button>
         </div>

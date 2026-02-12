@@ -33,24 +33,28 @@ const SignupPage = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-white px-6 pt-4">
-      {/* 상단 네비게이션 */}
-      <div className="relative mb-8 flex w-full max-w-sm items-center justify-center py-4 ">
-        <button 
-          onClick={handleBack} 
-          className="absolute left-0 p-2 text-2xl text-gray-800"
-        >
-          <IoChevronBack />
-        </button>
+      {/* 상단 영역 컨테이너 (너비 제한) */}
+      <div className="w-full max-w-sm">
+        {/* 1. 뒤로가기 버튼 (맨 위 왼쪽) */}
+        <div className="flex justify-start py-2">
+          <button
+            onClick={handleBack}
+            className="-ml-2 p-2 text-2xl text-gray-800" // -ml-2: 아이콘 시각적 정렬 보정
+          >
+            <IoChevronBack />
+          </button>
+        </div>
 
-        {/* 진행 상태 바 (Step 4에서는 숨김) */}
+        {/* 2. 진행 상태 바 (버튼 아래, 중앙 정렬) */}
+        {/* Step 4에서는 숨김 */}
         {step < 4 && (
-          <div className="flex gap-1.5">
+          <div className="mt-2 mb-10 flex justify-center gap-1.5">
             {[1, 2, 3].map((num) => (
-              <div 
+              <div
                 key={num}
-                className={`h-1.5 w-10 rounded-full transition-colors ${
+                className={`h-1.5 w-20 rounded-full transition-colors ${
                   step === num ? 'bg-primary-brown-300' : 'bg-gray-200'
-                }`} 
+                }`}
               />
             ))}
           </div>
