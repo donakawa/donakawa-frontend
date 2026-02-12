@@ -1,11 +1,11 @@
-import type { CalendarCell, CalendarPurchaseItem, DayTime } from '@/types/ReportPage/report';
+import type { CalendarCell, DayTime } from '@/types/ReportPage/report';
 
-export type CalendarPurchase = CalendarPurchaseItem & { rating?: number };
+export const TIME_ORDER = ['아침', '낮', '저녁', '새벽'] as const satisfies readonly DayTime[];
 
-export const TIME_ORDER: DayTime[] = ['아침', '낮', '저녁', '새벽'];
+type ISODate = `${number}-${number}-${number}`;
 
-export function toISO(y: number, m: number, d: number): string {
-  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+export function toISO(y: number, m: number, d: number): ISODate {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` as ISODate;
 }
 
 export function parseISO(iso: string): { y: number; m: number; d: number } | null {
@@ -24,16 +24,22 @@ export function formatKoreanDate(iso: string): string {
   return `${p.y}.${String(p.m).padStart(2, '0')}.${String(p.d).padStart(2, '0')}`;
 }
 
-export function groupByTime(list: CalendarPurchase[]): Record<DayTime, CalendarPurchase[]> {
-  const grouped: Record<DayTime, CalendarPurchase[]> = { 아침: [], 낮: [], 저녁: [], 새벽: [] };
+export function groupByTime<T extends { timeLabel: DayTime }>(list: T[]): Record<DayTime, T[]> {
+  const grouped: Record<DayTime, T[]> = {
+    아침: [],
+    낮: [],
+    저녁: [],
+    새벽: [],
+  };
+
   for (const item of list) grouped[item.timeLabel].push(item);
   return grouped;
 }
 
-export function monthDaysWithLeadingBlanks(
+export function monthDaysWithLeadingBlanks<T>(
   year: number,
   month1to12: number,
-  purchaseMap: Map<string, CalendarPurchase[]>,
+  purchaseMap: Map<string, T[]>,
 ): CalendarCell[] {
   const first = new Date(year, month1to12 - 1, 1);
 

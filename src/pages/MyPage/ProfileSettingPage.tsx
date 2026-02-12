@@ -35,7 +35,7 @@ export default function MyPageSettingPage() {
 
     const fetchMe = async () => {
       try {
-        const me = await getMe(); // ✅ 여기서 UserResponse(data) 바로 옴
+        const me = await getMe();
 
         if (!mounted) return;
 
@@ -60,7 +60,6 @@ export default function MyPageSettingPage() {
 
   const goNickname = () => navigate('/mypage/setting/nickname');
   const goPassword = () => navigate('/mypage/setting/password');
-  const goGoogle = () => navigate('/mypage/setting/google');
   const goWithdrawal = () => navigate('/mypage/setting/withdrawal');
 
   return (
@@ -89,10 +88,10 @@ export default function MyPageSettingPage() {
 
             <button
               type="button"
-              onClick={goGoogle}
+              aria-label="소셜 연동"
               className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
               <div className="flex items-center gap-2">
-                <div className="text-[14px] font-[400] text-black">구글 연동</div>
+                <div className="text-[14px] font-[400] text-black">소셜 연동</div>
 
                 <div className="flex items-center gap-2">
                   {profile.connectedProvider === 'google' ? (

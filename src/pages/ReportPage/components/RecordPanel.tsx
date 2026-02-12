@@ -4,7 +4,7 @@ import StarIcon from '@/assets/star_line.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import RightArrow from '@/assets/arrow_right.svg';
 
-import type { ConsumptionReason, DayTime, Star, Weekday } from '@/types/ReportPage/report';
+import type { DayTime, Star, Weekday } from '@/types/ReportPage/report';
 
 import { clampPercent, formatWon } from '@/utils/ReportPage/report';
 
@@ -53,8 +53,12 @@ export default function RecordView() {
     });
   };
 
-  const currentReasons: ConsumptionReason[] = monthlyReport?.reasons ?? [];
+  const currentReasons: string[] = monthlyReport?.reasons ?? [];
   const currentReasonSatisfaction = monthlyReport?.reasonSatisfaction;
+
+  const hasConsumption = !!monthlyReport && (monthlyReport.totalWon > 0 || (monthlyReport.reasons?.length ?? 0) > 0);
+
+  const hasAvgSatisfaction = hasConsumption && monthlyReport?.averageSatisfaction != null;
 
   return (
     <div
@@ -163,27 +167,51 @@ export default function RecordView() {
                   style={{ color: 'var(--color-gray-600)' }}>
                   평균 만족도
                 </div>
-                <StarLine value={monthlyReport.averageSatisfaction} />
+
+                {hasAvgSatisfaction ? (
+                  <StarLine value={monthlyReport.averageSatisfaction as Star} />
+                ) : (
+                  <div className="text-xs" style={{ color: 'var(--color-gray-600)' }}>
+                    데이터 없음
+                  </div>
+                )}
               </div>
 
-              <div className="mt-2 flex flex-col gap-2.5 pl-[96px]">
-                {(Object.keys(monthlyReport.reasonSatisfaction) as ConsumptionReason[]).map((reason) => (
-                  <div key={reason} className="flex flex-wrap items-center gap-3.5">
-                    <div
-                      className="
-                        px-1.5 py-[3px]
-                        rounded-full
-                        bg-white
-                        shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]
-                        text-xs font-normal
-                      "
-                      style={{ color: 'var(--color-primary-brown-500)' }}>
-                      #{reason}
-                    </div>
-                    <StarLine value={currentReasonSatisfaction?.[reason] ?? monthlyReport.averageSatisfaction} />
-                  </div>
-                ))}
-              </div>
+              {/* ✅ 이유별 만족도: hasConsumption일 때만 렌더, 개별 값 없으면 "데이터 없음" */}
+              {hasConsumption ? (
+                <div className="mt-2 flex flex-col gap-2.5 pl-[96px]">
+                  {currentReasons.map((reason) => {
+                    const v = currentReasonSatisfaction?.[reason] ?? null;
+
+                    return (
+                      <div key={reason} className="flex flex-wrap items-center gap-3.5">
+                        <div
+                          className="
+                            px-1.5 py-[3px]
+                            rounded-full
+                            bg-white
+                            shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)]
+                            text-xs font-normal
+                          "
+                          style={{ color: 'var(--color-primary-brown-500)' }}>
+                          #{reason}
+                        </div>
+
+                        {v != null ? (
+                          <StarLine value={v as Star} />
+                        ) : hasAvgSatisfaction ? (
+                          // ✅ 개별 이유 만족도 없으면 평균으로 fallback (원하면 이 fallback 제거 가능)
+                          <StarLine value={monthlyReport.averageSatisfaction as Star} />
+                        ) : (
+                          <div className="text-xs" style={{ color: 'var(--color-gray-600)' }}>
+                            데이터 없음
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
 
               <div
                 className="h-px my-[30px]"
@@ -362,7 +390,7 @@ export default function RecordView() {
                   </div>
 
                   <div
-                    className="w-[170px] h-[170px] rounded-[8px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] overflow-hidden bg-gray-100"
+                    className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100"
                     style={{ background: 'var(--color-gray-100)' }}>
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt="" className="w-full h-full object-cover block" draggable={false} />
@@ -377,22 +405,6 @@ export default function RecordView() {
                     className="text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap"
                     style={{ color: 'var(--color-black)' }}>
                     {item.itemName}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1">
-                    {item.purchaseReasons.slice(0, 2).map((r) => (
-                      <span
-                        key={`${item.itemId}-${r}`}
-                        className="px-1.5 py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[11px] font-normal"
-                        style={{ color: 'var(--color-primary-brown-500)' }}>
-                        #{r}
-                      </span>
-                    ))}
-                    {item.purchaseReasons.length > 2 ? (
-                      <span className="text-[11px]" style={{ color: 'var(--color-gray-600)' }}>
-                        +{item.purchaseReasons.length - 2}
-                      </span>
-                    ) : null}
                   </div>
                 </div>
               </button>

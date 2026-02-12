@@ -51,7 +51,7 @@ export default function AimPage() {
   const [uiState, setUiState] = useState<UiState>('idle');
   const [helperText, setHelperText] = useState<string>('');
 
-  const isConfirmed = confirmedGoal.length > 0;
+  const isConfirmed = false;
 
   const hasGoalDraft = isConfirmed || !!selected || text.trim().length > 0;
 
@@ -78,7 +78,7 @@ export default function AimPage() {
           const me = res.data.data;
           setCurrentGoal(me.goal ?? '');
           if (me.goal && me.goal.trim().length > 0) {
-            setConfirmedGoal(me.goal);
+            setText(me.goal);
           }
         } else {
           setCurrentGoal('');
@@ -220,7 +220,7 @@ export default function AimPage() {
                 value={text}
                 placeholder={!selected ? '목표를 입력하세요...(10자 이내)' : ''}
                 onChange={(e) => onChangeText(e.target.value)}
-                disabled={isConfirmed || uiState === 'loadingMe'}
+                disabled={uiState === 'loadingMe'}
                 className="flex-1 min-w-[90px] h-[30px] border-0 outline-none bg-transparent p-0 m-0 text-[14px] text-black placeholder:text-gray-600 disabled:text-black"
               />
             </div>

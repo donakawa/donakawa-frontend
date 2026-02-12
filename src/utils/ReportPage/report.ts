@@ -1,14 +1,12 @@
-import type {
-  ConsumptionReason,
-  Star,
-  DayTime,
-  TimeDistribution,
-  Weekday,
-  WeekdayDistribution,
-} from '@/types/ReportPage/report';
+import type { Star, DayTime, TimeDistribution, Weekday, WeekdayDistribution } from '@/types/ReportPage/report';
 
 export function formatWon(value: number): string {
   return new Intl.NumberFormat('ko-KR').format(value);
+}
+
+export function clampPercent(n: number): number {
+  if (Number.isNaN(n)) return 0;
+  return Math.max(0, Math.min(100, n));
 }
 
 export function toStar(n: number): Star {
@@ -17,13 +15,19 @@ export function toStar(n: number): Star {
   return clamped as Star;
 }
 
-export function isConsumptionReason(v: string): v is ConsumptionReason {
-  return v === '필요해서' || v === '세일 중' || v === '품절임박';
+export function toStarOrNull(n: number | null | undefined): Star | null {
+  if (n == null) return null;
+  return toStar(n);
 }
 
-export function clampPercent(n: number): number {
-  if (Number.isNaN(n)) return 0;
-  return Math.max(0, Math.min(100, n));
+export function toStarFallback(n: number | null | undefined, fallback: Star): Star {
+  if (n == null) return fallback;
+  return toStar(n);
+}
+
+export function hasConsumptionData(summary: { totalSpent: number }, topReasons: Array<{ count: number }>): boolean {
+  if (summary.totalSpent > 0) return true;
+  return topReasons.some((r) => r.count > 0);
 }
 
 export function emptyTimeDist(): TimeDistribution {
@@ -32,6 +36,14 @@ export function emptyTimeDist(): TimeDistribution {
 
 export function emptyWeekdayDist(): WeekdayDistribution {
   return { 월: 0, 화: 0, 수: 0, 목: 0, 금: 0, 토: 0, 일: 0 };
+}
+
+export function isWeekdayDisplayName(v: string): v is Weekday {
+  return v === '월' || v === '화' || v === '수' || v === '목' || v === '금' || v === '토' || v === '일';
+}
+
+export function isDayTimeDisplayName(v: string): v is DayTime {
+  return v === '아침' || v === '낮' || v === '저녁' || v === '새벽';
 }
 
 export function toDayTimeFromAnalytics(label: string, displayName: string): DayTime {
@@ -45,9 +57,7 @@ export function toDayTimeFromAnalytics(label: string, displayName: string): DayT
     case 'NIGHT':
       return '새벽';
     default:
-      if (displayName === '아침' || displayName === '낮' || displayName === '저녁' || displayName === '새벽') {
-        return displayName;
-      }
+      if (isDayTimeDisplayName(displayName)) return displayName;
       return '낮';
   }
 }
@@ -69,36 +79,62 @@ export function toWeekdayFromAnalytics(label: string, displayName: string): Week
     case 'SUN':
       return '일';
     default:
-      if (
-        displayName === '월' ||
-        displayName === '화' ||
-        displayName === '수' ||
-        displayName === '목' ||
-        displayName === '금' ||
-        displayName === '토' ||
-        displayName === '일'
-      ) {
-        return displayName;
-      }
+      if (isWeekdayDisplayName(displayName)) return displayName;
       return '월';
   }
 }
 
-export function makeDayLabel(purchasedAtISO: string): string {
-  const p = parseDateYYYYMMDD(purchasedAtISO) ?? parseDateFromISODateTime(purchasedAtISO);
-  if (!p) return 'Day+';
+export function toDayTimeFromCalendar(purchasedAt: string): DayTime {
+  switch (purchasedAt) {
+    case 'MORNING':
+      return '아침';
+    case 'AFTERNOON':
+      return '낮';
+    case 'EVENING':
+      return '저녁';
+    case 'NIGHT':
+      return '새벽';
+    default:
+      return '낮';
+  }
+}
 
+export type DayLabel = 'Today' | `${number} Day+`;
+
+function parseToLocalMidnight(dateString: string): Date | null {
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  if (ymd) {
+    const y = Number(ymd[1]);
+    const m = Number(ymd[2]);
+    const d = Number(ymd[3]);
+    const dt = new Date(y, m - 1, d);
+    if (Number.isNaN(dt.getTime())) return null;
+    dt.setHours(0, 0, 0, 0);
+    return dt;
+  }
+
+  const dt = new Date(dateString);
+  if (Number.isNaN(dt.getTime())) return null;
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+
+export function getDDayLabel(dateString: string): DayLabel {
   const today = new Date();
-  const start = new Date(p.y, p.m - 1, p.d);
-  start.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
 
-  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  end.setHours(0, 0, 0, 0);
+  const purchaseDate = parseToLocalMidnight(dateString);
+  if (!purchaseDate) return 'Today';
 
-  const diffMs = end.getTime() - start.getTime();
-  const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  const diffTime = today.getTime() - purchaseDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
+  if (diffDays <= 0) return 'Today';
   return `${diffDays} Day+`;
+}
+
+export function makeDayLabel(purchasedAtISO: string): DayLabel {
+  return getDDayLabel(purchasedAtISO);
 }
 
 export function parseDateYYYYMMDD(v: string): { y: number; m: number; d: number } | null {
@@ -107,7 +143,6 @@ export function parseDateYYYYMMDD(v: string): { y: number; m: number; d: number 
   return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) };
 }
 
-// "2026-01-26T10:30:00.000Z" 같은 형태도 대응
 export function parseDateFromISODateTime(v: string): { y: number; m: number; d: number } | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})T/.exec(v);
   if (!m) return null;

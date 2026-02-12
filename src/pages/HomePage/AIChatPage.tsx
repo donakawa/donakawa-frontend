@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -20,6 +20,8 @@ export default function AIChatPage() {
   const location = useLocation();
 
   const page = useAIChatPage({ location, navigate });
+
+  const isComposingRef = useRef(false);
 
   useEffect(() => {
     setTitle('도나AI 상담실');
@@ -76,7 +78,17 @@ export default function AIChatPage() {
                 <input
                   placeholder="검색..."
                   value={page.search}
-                  onChange={(e) => page.setSearch(e.target.value)}
+                  onCompositionStart={() => {
+                    isComposingRef.current = true;
+                  }}
+                  onCompositionEnd={(e) => {
+                    isComposingRef.current = false;
+                    page.setSearch(e.currentTarget.value);
+                  }}
+                  onChange={(e) => {
+                    if (isComposingRef.current) return;
+                    page.setSearch(e.target.value);
+                  }}
                   aria-label="채팅 검색"
                   className="h-full min-w-0 flex-1 border-0 bg-transparent text-[16px] font-medium text-black outline-none placeholder:font-semibold placeholder:text-gray-600"
                 />

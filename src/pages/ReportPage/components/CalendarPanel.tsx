@@ -8,13 +8,12 @@ import PlusIcon from '@/assets/view_more(brown).svg';
 import StarFilled from '@/assets/star_full.svg';
 import StarEmpty from '@/assets/star_line.svg';
 
+import type { CalendarPurchase } from '@/apis/ReportPage/report';
 import { formatWon } from '@/utils/ReportPage/report';
 import { formatKoreanDate, toISO } from '@/utils/ReportPage/calendar';
 import { getTimeIcon } from '@/utils/ReportPage/timeIcon';
 import { useCalendarMonth } from '@/pages/ReportPage/hooks/useCalendarMonth';
-import type { CalendarCell, ConsumptionReason, DayTime } from '@/types/ReportPage/report';
-
-type CalendarPurchase = import('@/utils/ReportPage/calendar').CalendarPurchase;
+import type { CalendarCell, DayTime } from '@/types/ReportPage/report';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -252,9 +251,9 @@ export default function CalendarPanel() {
           {selectedPurchases.length === 0 ? (
             <div className="text-primary-brown-400 text-[12px] font-normal">선택한 날짜에 구매 기록이 없어요.</div>
           ) : (
-            (timeOrder as DayTime[]).map((time) => {
+            (timeOrder as readonly DayTime[]).map((time) => {
               const list = groupedMemo[time];
-              if (list.length === 0) return null;
+              if (!list || list.length === 0) return null;
 
               const icon = getTimeIcon(time);
 
@@ -264,50 +263,62 @@ export default function CalendarPanel() {
                     <img src={icon.src} alt={icon.alt} className="h-[30px] block" />
                   </div>
 
-                  {list.map((p: CalendarPurchase) => (
-                    <div
-                      key={p.id}
-                      className="grid grid-cols-[94px_1fr] gap-x-4 px-2 py-5 border-b border-b-[rgba(0,0,0,0.06)]">
-                      <div className="flex items-center justify-center">
-                        <div className="w-[94px] h-[104px] rounded-[5px] bg-gray-100 shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
-                          {p.imageUrl ? (
-                            <img src={p.imageUrl} alt="" className="w-full h-full object-cover block" />
-                          ) : null}
-                        </div>
-                      </div>
+                  {(list as CalendarPurchase[]).map((p) => {
+                    const reasons: string[] = Array.isArray((p as CalendarPurchase).reason)
+                      ? ((p as CalendarPurchase).reason.filter(
+                          (x): x is string => typeof x === 'string' && x.length > 0,
+                        ) as string[])
+                      : [];
 
-                      <div className="flex flex-col justify-between gap-0.5 pl-1">
-                        <div className="text-[16px] font-medium text-black">{p.title}</div>
-
-                        <div className="text-[16px] font-medium text-black mb-1">{formatWon(p.price)}</div>
-
-                        <div className="flex flex-wrap gap-[8px]">
-                          {p.reason.map((r: ConsumptionReason) => (
-                            <div
-                              key={`${p.id}-${r}`}
-                              className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-400">
-                              #{r}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* 리뷰 작성시 -> 별점 */}
-                        {p.hasReview && typeof p.rating === 'number' ? (
-                          <div className="mt-1 w-fit">
-                            <RatingStars value={p.rating} />
+                    return (
+                      <div
+                        key={p.id}
+                        className="grid grid-cols-[94px_1fr] gap-x-4 px-2 py-5 border-b border-b-[rgba(0,0,0,0.06)]">
+                        <div className="flex items-center justify-center">
+                          <div className="w-[94px] h-[104px] rounded-[5px] bg-gray-100 shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
+                            {p.imageUrl ? (
+                              <img src={p.imageUrl} alt="" className="w-full h-full object-cover block" />
+                            ) : null}
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => navigate('/report/review')}
-                            className="mt-1 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-normal inline-flex items-center gap-[8px]">
-                            구매 후기 작성하러 가기
-                            <img src={RightArrow} alt="" className="w-[6px] h-[10px] block" />
-                          </button>
-                        )}
+                        </div>
+
+                        <div className="flex flex-col justify-between gap-0.5 pl-1">
+                          <div className="text-[16px] font-medium text-black">{p.title}</div>
+
+                          <div className="text-[16px] font-medium text-black mb-1">{formatWon(p.price)}</div>
+
+                          {reasons.length > 0 ? (
+                            <div className="flex flex-wrap gap-[8px]">
+                              {reasons.map((r) => (
+                                <div
+                                  key={`${p.id}-${r}`}
+                                  className="px-[6px] py-[3px] rounded-full bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] text-[12px] font-normal text-primary-brown-400">
+                                  #{r}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-[12px] text-gray-600">구매 이유 없음</div>
+                          )}
+
+                          {/* 리뷰 작성시 -> 별점 */}
+                          {p.hasReview && typeof p.rating === 'number' ? (
+                            <div className="mt-1 w-fit">
+                              <RatingStars value={p.rating} />
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => navigate('/report/review')}
+                              className="mt-1 w-fit border-0 bg-transparent p-0 cursor-pointer text-gray-600 text-[12px] font-normal inline-flex items-center gap-[8px]">
+                              구매 후기 작성하러 가기
+                              <img src={RightArrow} alt="" className="w-[6px] h-[10px] block" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })
