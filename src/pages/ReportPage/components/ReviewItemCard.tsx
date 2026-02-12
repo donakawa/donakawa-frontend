@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { PendingReviewItem, CompletedReviewItem } from '@/types/ReportPage/review';
 
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 import StarFullIcon from '@/assets/star_full.svg';
 import StarIcon from '@/assets/star_line.svg';
 
@@ -28,7 +29,9 @@ export function PendingReviewCard({ item }: PendingCardProps) {
 
       <div className="flex gap-[14px]">
         <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100 shrink-0">
-          {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />}
+          {item.imageUrl && (
+            <img src={item.imageUrl ?? DefaultImg} alt={item.title} className="w-full h-full object-cover" />
+          )}
         </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-between gap-1">

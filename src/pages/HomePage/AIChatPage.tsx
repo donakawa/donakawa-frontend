@@ -82,11 +82,9 @@ export default function AIChatPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
-  /** ✅ 사이드바 모달 컴포넌트 (여기서 검색 상태 관리) */
   function SidebarModal() {
     const [searchDraft, setSearchDraft] = useState('');
 
-    // 열릴 때마다 초기화(원하면 유지해도 됨)
     useEffect(() => {
       setSearchDraft(page.search ?? '');
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,7 +112,6 @@ export default function AIChatPage() {
                   <img src={SearchIcon} alt="" />
                 </div>
 
-                {/* ✅ 핵심: 여기서 입력해도 setLayoutModal이 다시 안 불림 -> IME 안 깨짐 */}
                 <input
                   placeholder="검색..."
                   value={searchDraft}
@@ -262,7 +259,6 @@ export default function AIChatPage() {
     );
   }
 
-  /** ✅ 제일 중요: 모달 setLayoutModal은 "열고/닫을 때만" */
   useEffect(() => {
     if (!page.isSidebarOpen) {
       setLayoutModal(null);
@@ -271,7 +267,6 @@ export default function AIChatPage() {
 
     setLayoutModal(<SidebarModal />);
     return () => setLayoutModal(null);
-    // ✅ 의존성에 page.search 같은 거 절대 넣지 마
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page.isSidebarOpen, setLayoutModal]);
 
