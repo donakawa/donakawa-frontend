@@ -51,7 +51,7 @@ const HomePage = () => {
       {/* 말풍선 & 캐릭터 섹션 */}
       <section className="flex flex-col items-center my-[24px] px-[20px] min-h-[200px]">
         <div className="relative text-center bg-white border-2 mb-[24px] max-w-[290px] border-primary-600 rounded-xl drop-shadow-[0_0_3px_rgba(0,0,0,0.25)]">
-          <p className="text-[14px] mx-[17px] my-[14px]">{comment}</p>
+          <p className="text-[14px] mx-[17px] my-[14px]">{budgetData ? comment : '먼저 예산 설정을 해주세요!'}</p>
           <div className="absolute -bottom-[9px] left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-r-2 border-b-2 border-primary-600 rotate-45"></div>
         </div>
         {/* 햄스터 */}
@@ -80,31 +80,40 @@ const HomePage = () => {
         </div>
         <div className="flex-1 overflow-y-auto px-[20px] pb-[600px]">
           {/* 요약 카드 */}
-          <div className="flex justify-between items-center mt-[10px] mb-[28px] border-1 border-gray-50 shadow-[0_0_4px_rgba(0,0,0,0.25)] rounded-[20px] p-[20px] ">
-            <div className="space-y-6">
-              <div className="flex flex-col gap-[10px]">
-                <div className="flex items-center gap-[14px] text-[14px]">
-                  <SeedGreenIcon className="w-[27px] h-[35px]" /> 소비
+          {budgetData ? (
+            <div className="flex justify-between items-center mt-[10px] mb-[28px] border-1 border-gray-50 shadow-[0_0_4px_rgba(0,0,0,0.25)] rounded-[20px] p-[20px] ">
+              <div className="space-y-6">
+                <div className="flex flex-col gap-[10px]">
+                  <div className="flex items-center gap-[14px] text-[14px]">
+                    <SeedGreenIcon className="w-[27px] h-[35px]" /> 소비
+                  </div>
+
+                  <div className="text-[24px] leading-none font-bold ">{spendStats.totalSpend.toLocaleString()}원</div>
                 </div>
 
-                <div className="text-[24px] leading-none font-bold ">{spendStats.totalSpend.toLocaleString()}원</div>
+                <div className="flex flex-col gap-[10px]">
+                  <div className="flex items-center gap-[14px] text-[14px]">
+                    <SeedIcon className=" w-[27px] h-[35px] " /> 남은 예산
+                  </div>
+
+                  <div className="text-[24px] leading-none font-bold">
+                    {spendStats.remainingBudget.toLocaleString()}원
+                  </div>
+                </div>
               </div>
-
-              <div className="flex flex-col gap-[10px]">
-                <div className="flex items-center gap-[14px] text-[14px]">
-                  <SeedIcon className=" w-[27px] h-[35px] " /> 남은 예산
-                </div>
-
-                <div className="text-[24px] leading-none font-bold">
-                  {spendStats.remainingBudget.toLocaleString()}원
-                </div>
+              {/* 파이 차트 */}
+              <div className=" mr-[10px]">
+                <PieChart rate={spendStats.spendRate} size={144} />
               </div>
             </div>
-            {/* 파이 차트 */}
-            <div className=" mr-[10px]">
-              <PieChart rate={spendStats.spendRate} size={144} />
-            </div>
-          </div>
+          ) : (
+            <Link
+              to="/budget/setting"
+              className="flex items-center justify-between px-[16px] py-[14px] mt-[10px] mb-[28px] rounded-[20px] border-1 border-gray-50 shadow-[0_0_4px_rgba(0,0,0,0.25)]">
+              <span className="text-[14px] font-medium">목표 예산을 설정해주세요!</span>
+              <ArrowIcon className="w-[24px] h-[24px] px-[8px] py-[5px] text-gray-600" />
+            </Link>
+          )}
           {/* 만족/후회 버튼 */}
           <div className="grid grid-cols-2 gap-[13px] mb-[28px]">
             <Link
