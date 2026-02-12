@@ -73,7 +73,11 @@ const StrategyCard = ({ isEdit, data, onChange }: StrategyCardProps) => {
                   value={data.shoppingTarget ? Number(data.shoppingTarget).toLocaleString() : ''}
                   placeholder="0"
                   onChange={handleTargetChange}
-                  className={`${inputStyle} w-[104px] ${showWarning ? 'border-red-500 shake-animation' : 'border-gray-600 focus:border-primary-brown-400'}`}
+                  style={{
+                    width: `${Math.max(data.shoppingTarget ? Number(data.shoppingTarget).toLocaleString().length : 1, 1) + 2}ch`,
+                    minWidth: '60px',
+                  }}
+                  className={`${inputStyle} w-auto ${showWarning ? 'border-red-500 shake-animation' : 'border-gray-600 focus:border-primary-brown-400'}`}
                 />
 
                 {showWarning && (
