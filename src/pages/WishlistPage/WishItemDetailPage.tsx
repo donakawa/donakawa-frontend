@@ -12,10 +12,10 @@ import {
   type PurchaseDecisionPayload,
 } from '@/apis/WishlistPage/wishlistItems';
 
-import WishRegistrationPage from './WishRegistrationPage';
 import DefaultPhotoBig from '@/assets/default_item_photo_big.svg';
 import DefaultPhoto from '@/assets/default_item_photo.svg';
 import DonaAI from '@/assets/dona_glass.svg';
+import WishRegistrationPage from './WishRegistrationPage';
 
 type ItemType = 'AUTO' | 'MANUAL';
 
@@ -42,13 +42,13 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
   const [isDropModalOpen, setIsDropModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // ✅ type이 없으면 목록으로 보내기 (훅은 항상 호출되도록 return 위에서 처리)
+  // type이 없으면 목록으로 보내기 (훅은 항상 호출되도록 return 위에서 처리)
   useEffect(() => {
     if (!itemId) return;
     if (!type) navigate('/wishlist', { replace: true });
   }, [itemId, type, navigate]);
 
-  // ✅ 상세 재조회 함수(수정 완료 후 재조회 등)
+  // 상세 재조회 함수(수정 완료 후 재조회 등)
   const fetchItem = useCallback(() => {
     if (!itemId || !type) return;
 
@@ -61,7 +61,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
       });
   }, [itemId, type]);
 
-  // ✅ 최초 진입/파라미터 변경 시 조회 (여기서만!)
+  // 최초 진입/파라미터 변경 시 조회 (여기서만!)
   useEffect(() => {
     fetchItem();
   }, [fetchItem]);
@@ -126,10 +126,10 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
     navigate('/report/review');
   };
 
-  // ✅ 훅들 다 호출한 다음에 return
+  // 훅들 다 호출한 다음에 return
   if (!type) return null;
 
-  // 로딩 UI를 따로 보여주고 싶으면 여기서 스피너로 교체하면 됨
+  // 로딩 UI를 따로 보여주고 싶으면 여기서 스피너로 교체
   if (!item) return null;
 
   if (isEditing) {
@@ -241,15 +241,25 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
           </section>
 
           <section className="px-[18px] py-4">
-            <div
+            <button
+              type="button"
+              onClick={() => navigate('/ai-chat')}
               className={[
                 'w-full rounded-[16px]',
                 'bg-primary-300',
                 'px-[18px] pt-[18px] pb-[18px]',
                 'flex items-end justify-between',
-              ].join(' ')}>
+                'border-0',
+                'cursor-pointer',
+                'text-left',
+                'transition',
+                'active:translate-y-[1px]',
+              ].join(' ')}
+            >
               <div className="flex flex-col items-start gap-3">
-                <div className="text-[12px] font-[400] text-primary-500">내게 필요한 소비일까?</div>
+                <div className="text-[12px] font-[400] text-primary-500">
+                  내게 필요한 소비일까?
+                </div>
                 <h3 className="m-0 font-['Galmuri11',sans-serif] text-[16px] font-[700] leading-[1.5] text-black">
                   구매가 고민될 때,
                   <br />
@@ -263,8 +273,9 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
                 className="w-[71px] h-[67px] object-contain shrink-0"
                 style={{ imageRendering: 'pixelated' }}
               />
-            </div>
+            </button>
           </section>
+
         </section>
       </main>
 

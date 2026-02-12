@@ -30,9 +30,7 @@ export default function WishRegistrationPage({
   itemId, 
   itemType 
 }: Props) {
-  const [image, setImage] = useState<string | null>(
-    initialData?.image || initialData?.imageUrl || DefaultPhoto 
-  );
+  const [image, setImage] = useState<string | null>(initialData?.image || initialData?.imageUrl ||null);
   const [store, setStore] = useState(initialData?.store || initialData?.platformName || '');
   const [name, setName] = useState(initialData?.name || initialData?.productName || '');
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : '');
@@ -138,7 +136,7 @@ export default function WishRegistrationPage({
 
       <main className="flex-1 flex flex-col items-center pt-4 pb-10 px-5 overflow-y-auto no-scrollbar">
         <div className="relative w-[160px] h-[160px] rounded-[10px] bg-gray-100 overflow-hidden shrink-0 mb-5">
-          {image && <img src={image || DefaultPhoto} alt="preview" className="w-full h-full object-cover" />}
+          <img src={image || DefaultPhoto} className="w-full h-full object-cover" />
           {!isAutoMode && (
             <>
               <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*"/>
@@ -158,16 +156,16 @@ export default function WishRegistrationPage({
         </div>
 
         <div className="w-full flex flex-col items-center gap-5">
-          <div className={isAutoMode ? disabledWrapper : "w-full"}>
+          <div className={isAutoMode ? disabledWrapper : ""}>
             <RegistrationInput value={name} onChange={setName} placeholder="상품명" />
           </div>
-          <div className={isAutoMode ? disabledWrapper : "w-full"}>
+          <div className={isAutoMode ? disabledWrapper : ""}>
             <RegistrationInput value={url} onChange={setUrl} placeholder="상품 URL" />
           </div>
-          <div className={isAutoMode ? disabledWrapper : "w-full"}>
+          <div className={isAutoMode ? disabledWrapper : ""}>
             <RegistrationInput value={String(price)} onChange={setPrice} placeholder="가격" />
           </div>
-          <div className={isAutoMode ? disabledWrapper : "w-full"}>
+          <div className={isAutoMode ? disabledWrapper : ""}>
             <RegistrationInput value={brand} onChange={setBrand} placeholder="브랜드" />
           </div>
           <RegistrationInput value={reason} onChange={setReason} placeholder="위시로 담은 이유" maxLength={30} multiline={true} />

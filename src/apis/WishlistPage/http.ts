@@ -1,16 +1,24 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from "axios";
 
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
-http.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    return Promise.reject(err);
-  },
-);
+http.interceptors.request.use((config) => {
+  const isForm =
+    typeof FormData !== "undefined" && config.data instanceof FormData;
+
+  if (!config.headers) config.headers = new AxiosHeaders();
+
+  const headers = config.headers as AxiosHeaders;
+
+  if (isForm) {
+    headers.delete("Content-Type");
+    headers.delete("content-type");
+  } else {
+    headers.set("Content-Type", "application/json");
+  }
+
+  return config;
+});
