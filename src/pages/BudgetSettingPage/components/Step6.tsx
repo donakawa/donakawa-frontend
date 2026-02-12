@@ -5,15 +5,32 @@ import { useQuery } from '@tanstack/react-query';
 import { getRecommendBudget, type RecommendBudgetRequest } from '@/apis/BudgetPage/budget';
 import { getMe } from '@/apis/auth';
 
+const STRATEGY_INFO = {
+  1: { title: '자산 형성', ratio: 0.1 },
+  2: { title: '균형 지출', ratio: 0.25 },
+  3: { title: '자유 지출', ratio: 0.5 },
+};
+
 interface StepProps {
   onNext: (value: number) => void;
   defaultValue?: number;
-  prevData: RecommendBudgetRequest;
+  prevData: Partial<RecommendBudgetRequest>;
 }
 
 const Step6 = ({ onNext, defaultValue, prevData }: StepProps) => {
   const [budget, setBudget] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const currentStrategy = STRATEGY_INFO[prevData.spendStrategy as keyof typeof STRATEGY_INFO];
+
+  const cleanRequestData = Object.fromEntries(
+    Object.entries({
+      monthlyIncome: prevData.monthlyIncome,
+      fixedExpense: prevData.fixedExpense,
+      monthlySaving: prevData.monthlySaving,
+      spendStrategy: prevData.spendStrategy,
+    }).filter(([_, value]) => value !== 0 && value !== undefined && value !== null),
+  );
 
   const { data: userData } = useQuery({
     queryKey: ['user', 'me'],
@@ -22,8 +39,8 @@ const Step6 = ({ onNext, defaultValue, prevData }: StepProps) => {
   });
 
   const { data: budgetData } = useQuery({
-    queryKey: ['budget', 'recommend', prevData],
-    queryFn: () => getRecommendBudget(prevData),
+    queryKey: ['budget', 'recommend', cleanRequestData],
+    queryFn: () => getRecommendBudget(cleanRequestData as unknown as RecommendBudgetRequest),
     enabled: !defaultValue,
     staleTime: 1000 * 60,
   });
@@ -58,7 +75,7 @@ const Step6 = ({ onNext, defaultValue, prevData }: StepProps) => {
 
   return (
     <StepLayout
-      stepText="자산 형성 전략"
+      stepText={`${currentStrategy?.title || '맞춤'} 전략`}
       title={
         <div className="text-center leading-[1.6] whitespace-pre-wrap">
           <span className="text-primary-600">{nickname}</span>님에게 딱 맞는
