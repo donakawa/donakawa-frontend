@@ -83,7 +83,7 @@ const LoginPage = () => {
   // 입력창 스타일 함수
   const getInputClass = (isValid: boolean, hasError: boolean) => {
     const baseClass =
-      'w-full rounded-lg border px-4 py-3.5 text-sm outline-none placeholder:text-gray-400 transition-colors';
+      'w-full rounded-lg border px-4 py-3.5 text-sm outline-none appearance-none placeholder:text-gray-400 transition-colors';
 
     // 1순위: 에러 있음 (빨간색)
     if (hasError) {
@@ -126,7 +126,7 @@ const LoginPage = () => {
 
         {/* 비밀번호 입력 */}
         <div>
-          <div className="relative">
+          <div className="relative flex items-center">
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="비밀번호"
@@ -141,7 +141,7 @@ const LoginPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+              className={`absolute right-4 z-10 transition-colors ${
                 isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
               }`}>
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
@@ -184,8 +184,7 @@ const LoginPage = () => {
         <button
           type="button"
           onClick={handleKakaoLogin}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50"
-        >
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white py-3.5 text-sm font-medium text-black transition-colors hover:bg-gray-50">
           <RiKakaoTalkFill size={20} />
           카카오 로그인
         </button>
