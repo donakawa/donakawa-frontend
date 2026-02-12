@@ -141,7 +141,9 @@ const LoginPage = () => {
               aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
               aria-pressed={showPassword}
               onClick={() => setShowPassword(!showPassword)}
-              className="ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600"
+              className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
+                isPasswordValid ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+                }`}
             >
               {showPassword ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
             </button>

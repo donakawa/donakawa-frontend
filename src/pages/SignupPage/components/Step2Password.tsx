@@ -69,7 +69,9 @@ const Step2Password = ({ onNext }: Props) => {
             aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
-            className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600 transition-colors`}
+            className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
+              isValidFormat ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
             {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
           </button>
@@ -99,7 +101,9 @@ const Step2Password = ({ onNext }: Props) => {
                 aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
                 aria-pressed={showConfirmPw}
                 onClick={() => setShowConfirmPw(!showConfirmPw)}
-                className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600 transition-colors`}
+                className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
+                  isMatch ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
+                }`}
               >
                 {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
               </button>

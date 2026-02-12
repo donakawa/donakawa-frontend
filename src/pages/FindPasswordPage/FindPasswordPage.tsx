@@ -204,16 +204,14 @@ const FindPasswordPage = () => {
     }
   };
 
-  // 🔥 [수정] 기존 getInputClass 제거하고 Wrapper/Input 분리
   const getWrapperClass = (isValid: boolean, isError: boolean) => {
     const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
     
     if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
-    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600`;
+    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600 bg-primary-50`; // <-- bg-primary-50 추가됨
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
-  // 🔥 [수정] text-gray-900 강제 적용, 투명 배경
   const inputInternalClass = "flex-1 w-full h-full bg-transparent border-none outline-none text-sm text-gray-900 placeholder:text-gray-400 p-0 m-0 min-w-0 appearance-none";
 
   // --- 렌더링 ---
