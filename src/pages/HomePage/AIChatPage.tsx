@@ -90,12 +90,12 @@ export default function AIChatPage() {
 
     const node = (
       <div className="absolute inset-0">
-        <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0" />
+        <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
 
         <aside
           ref={page.sidebarRef}
           onMouseDown={page.handleSidebarMouseDown}
-          className="absolute right-0 top-0 h-full w-4/5 max-w-[320px] bg-white p-4">
+          className="absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
             <div className="my-4">
               <div className="box-border flex h-[41px] w-full items-center gap-[5px] rounded-[100px] bg-secondary-100 px-[18px] shadow-[0px_0px_4px_rgba(0,0,0,0.25)]">
@@ -114,7 +114,6 @@ export default function AIChatPage() {
                     page.setSearch(e.currentTarget.value);
                   }}
                   onChange={(e) => {
-                    if (isComposingRef.current) return;
                     page.setSearch(e.target.value);
                   }}
                   aria-label="채팅 검색"
@@ -169,7 +168,6 @@ export default function AIChatPage() {
                         onContextMenu={page.handleHistoryContextMenu(item.id)}
                         onPointerDown={(e) => {
                           if (e.pointerType === 'mouse') return;
-
                           if (e.isPrimary === false) return;
 
                           startLongPress(() => {
