@@ -34,7 +34,7 @@ export function PendingReviewCard({ item }: PendingCardProps) {
         <div className="flex-1 min-w-0 flex flex-col justify-between gap-1">
           <div className="text-[16px] font-medium truncate">{item.title}</div>
           <div className="text-[16px] font-medium">{item.price.toLocaleString()}원</div>
-          <div className="text-[16px] font-medium text-gray-600">구매한 지 {item.dayLabel}DAY+</div>
+          <div className="text-[16px] font-medium text-gray-600">구매한 지 {item.dayLabel}</div>
         </div>
       </div>
 

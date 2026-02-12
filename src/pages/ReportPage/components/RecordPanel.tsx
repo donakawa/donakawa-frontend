@@ -177,7 +177,6 @@ export default function RecordView() {
                 )}
               </div>
 
-              {/* ✅ 이유별 만족도: hasConsumption일 때만 렌더, 개별 값 없으면 "데이터 없음" */}
               {hasConsumption ? (
                 <div className="mt-2 flex flex-col gap-2.5 pl-[96px]">
                   {currentReasons.map((reason) => {
@@ -401,7 +400,9 @@ export default function RecordView() {
                     {formatWon(item.price)}원
                   </div>
 
-                  <div className="text-xs font-medium overflow-hidden truncate" style={{ color: 'var(--color-black)' }}>
+                  <div
+                    className="text-xs font-medium overflow-hidden truncate"
+                    style={{ color: 'var(--color-black)', width: '100%' }}>
                     {item.itemName}
                   </div>
                 </div>
