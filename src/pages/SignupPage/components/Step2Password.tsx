@@ -41,7 +41,7 @@ const Step2Password = ({ onNext }: Props) => {
       <div className="space-y-2">
 
         {/* 1. 비밀번호 입력 */}
-        <div className="relative flex items-center">
+        <div className="relative w-full">
           <input
             type={showPw ? 'text' : 'password'}
             placeholder="비밀번호"
@@ -58,7 +58,7 @@ const Step2Password = ({ onNext }: Props) => {
             aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
             aria-pressed={showPw}
             onClick={() => setShowPw(!showPw)}
-            className={`absolute right-4 z-10 transition-colors ${
+            className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
               isValidFormat ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
@@ -75,7 +75,7 @@ const Step2Password = ({ onNext }: Props) => {
 
         {/* 2. 비밀번호 확인 입력 (조건부 렌더링) */}
         {isValidFormat && (
-          <div className="relative flex items-center mt-4 animate-fade-in-up">
+          <div className="relative w-full mt-4 animate-fade-in-up">
             <input
               type={showConfirmPw ? 'text' : 'password'}
               placeholder="비밀번호 확인"
@@ -92,7 +92,7 @@ const Step2Password = ({ onNext }: Props) => {
               aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
               aria-pressed={showConfirmPw}
               onClick={() => setShowConfirmPw(!showConfirmPw)}
-              className={`absolute right-4 z-10 transition-colors ${
+              className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition-colors ${
                 isMatch ? 'text-primary-600' : 'text-gray-400'
               }`}
             >
