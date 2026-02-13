@@ -64,6 +64,7 @@ type CalendarSuccessResponse = {
         thumbnailUrl: string;
         purchasedAt: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
         satisfaction: number | null;
+        reason?: string;
       }>
     >;
   } | null;
@@ -242,7 +243,7 @@ export const reportApi = {
         id: String(it.itemId),
         date,
         timeLabel: toDayTimeFromCalendar(it.purchasedAt),
-        reason: [],
+        reason: typeof it.reason === 'string' && it.reason.trim().length > 0 ? [it.reason.trim()] : [],
         title: it.name,
         price: it.price,
         imageUrl: it.thumbnailUrl ?? '',
