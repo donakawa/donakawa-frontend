@@ -442,17 +442,15 @@ export default function ReviewWritePage(): React.JSX.Element {
 
           <div className="flex gap-[20px]">
             <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100 relative">
-              {purchase.imageUrl ? (
-                <img
-                  src={purchase.imageUrl ?? DefaultImg}
-                  alt={purchase.title}
-                  className="w-full h-full object-cover block"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[12px] text-gray-400">
-                  이미지 없음
-                </div>
-              )}
+              <img
+                src={purchase.imageUrl ?? DefaultImg}
+                alt={purchase.title}
+                className="w-full h-full object-cover block"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.src !== DefaultImg) img.src = DefaultImg;
+                }}
+              />
             </div>
 
             <div className="flex-1 min-w-0 flex flex-col justify-between">
