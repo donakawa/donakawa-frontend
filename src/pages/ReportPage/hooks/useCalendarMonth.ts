@@ -16,8 +16,8 @@ export type LoadState = 'idle' | 'loading' | 'success' | 'error';
 
 type UseCalendarMonthResult = {
   year: number;
-  month: number; // 1~12
-  selectedDate: string; // YYYY-MM-DD
+  month: number;
+  selectedDate: string;
 
   setSelectedDate: (iso: string) => void;
 
@@ -59,6 +59,8 @@ export function useCalendarMonth(): UseCalendarMonthResult {
 
   const [itemsByDate, setItemsByDate] = useState<Record<string, CalendarPurchase[]>>({});
 
+  const [selectedPurchases, setSelectedPurchases] = useState<CalendarPurchase[]>([]);
+
   useEffect(() => {
     let alive = true;
 
@@ -68,7 +70,6 @@ export function useCalendarMonth(): UseCalendarMonthResult {
         setErrorMessage(null);
 
         const res = await reportApi.fetchCalendarMonth(year, month);
-
         if (!alive) return;
 
         setElement(res.element);
@@ -104,7 +105,34 @@ export function useCalendarMonth(): UseCalendarMonthResult {
     [year, month, purchaseMap],
   );
 
-  const selectedPurchases: CalendarPurchase[] = purchaseMap.get(selectedDate) ?? [];
+  useEffect(() => {
+    let alive = true;
+
+    const run = async () => {
+      try {
+        setErrorMessage(null);
+
+        const detail = await reportApi.fetchHistoryByDate(selectedDate);
+        if (!alive) return;
+
+        setSelectedPurchases(detail ?? []);
+      } catch (e) {
+        if (!alive) return;
+
+        const fallback = purchaseMap.get(selectedDate) ?? [];
+        setSelectedPurchases(fallback);
+
+        const msg = e instanceof Error ? e.message : '선택한 날짜의 기록을 불러오지 못했어요.';
+        setErrorMessage(msg);
+      }
+    };
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [selectedDate, purchaseMap]);
+
   const grouped = useMemo(() => groupByTime(selectedPurchases), [selectedPurchases]);
 
   const selectDate = (iso: string) => {
