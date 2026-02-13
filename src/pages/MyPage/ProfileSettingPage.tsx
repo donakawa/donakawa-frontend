@@ -12,11 +12,13 @@ type ConnectedProvider = 'google' | 'none';
 type SettingProfile = {
   email: string;
   connectedProvider: ConnectedProvider;
+  hasPassword: boolean;
 };
 
 const DEFAULT_PROFILE: SettingProfile = {
   email: '',
   connectedProvider: 'none',
+  hasPassword: true,
 };
 
 export default function MyPageSettingPage() {
@@ -41,10 +43,15 @@ export default function MyPageSettingPage() {
 
         const primary = pickPrimaryProvider(me.providers);
         const connectedProvider: ConnectedProvider = primary === 'google' ? 'google' : 'none';
+        const hasPassword =
+          typeof (me as { hasPassword?: unknown }).hasPassword === 'boolean'
+            ? (me as { hasPassword: boolean }).hasPassword
+            : true;
 
         setProfile({
           email: me.email,
           connectedProvider,
+          hasPassword,
         });
       } catch {
         if (!mounted) return;
@@ -82,7 +89,9 @@ export default function MyPageSettingPage() {
               type="button"
               onClick={goPassword}
               className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
-              <div className="text-[14px] font-[400] text-black">비밀번호 변경</div>
+              <div className="text-[14px] font-[400] text-black">
+                {profile.hasPassword ? '비밀번호 변경' : '비밀번호 설정'}
+              </div>
               <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
             </button>
 
@@ -113,21 +122,25 @@ export default function MyPageSettingPage() {
           <div className="text-[12px] font-[400] text-gray-600 pl-[2px]">고객지원</div>
 
           <div className="rounded-[20px] bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col gap-[15px] px-4 py-[18px]">
-            <button
-              type="button"
+            <a
+              href="https://honored-maraca-63d.notion.site/2ff788909b8d80158057fa727e7c7c81"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="이용약관"
               className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
               <div className="text-[14px] font-[400] text-black">이용약관</div>
               <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
-            </button>
+            </a>
 
-            <button
-              type="button"
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSc-REPQjPA0QxHmvytaIiydk8gZAJuR3dJax4ZDrm9X5_Hz9Q/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="의견 보내기"
               className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
               <div className="text-[14px] font-[400] text-black">의견 보내기</div>
               <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
-            </button>
+            </a>
 
             <button
               type="button"
