@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 import StarIcon from '@/assets/star_line.svg';
 import StarfullIcon from '@/assets/star_full.svg';
 import RightArrow from '@/assets/arrow_right.svg';
@@ -391,9 +392,16 @@ export default function RecordView() {
                   <div
                     className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100"
                     style={{ background: 'var(--color-gray-100)' }}>
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt="" className="w-full h-full object-cover block" draggable={false} />
-                    ) : null}
+                    <img
+                      src={item.imageUrl?.trim() ? item.imageUrl : DefaultImg}
+                      alt=""
+                      className="w-full h-full object-cover block"
+                      draggable={false}
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        if (img.src !== DefaultImg) img.src = DefaultImg;
+                      }}
+                    />
                   </div>
 
                   <div className="text-xs font-medium" style={{ color: 'var(--color-black)' }}>
