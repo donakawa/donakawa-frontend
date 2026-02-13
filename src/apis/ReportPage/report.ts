@@ -64,7 +64,7 @@ type CalendarSuccessResponse = {
         thumbnailUrl: string;
         purchasedAt: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
         satisfaction: number | null;
-        reason?: string;
+        reason?: string | null;
       }>
     >;
   } | null;
@@ -77,6 +77,33 @@ type CalendarFailResponse = {
 };
 
 type CalendarResponse = CalendarSuccessResponse | CalendarFailResponse;
+
+type HistoryByDateSuccessResponse = {
+  resultType: 'SUCCESS';
+  error: null;
+  data: {
+    date: string;
+    summary: { totalAmount: number; purchaseCount: number };
+    items: Array<{
+      itemId: number;
+      itemType: string;
+      name: string;
+      price: number;
+      thumbnailUrl: string | null;
+      purchasedAt: 'MORNING' | 'EVENING' | 'NIGHT';
+      satisfaction: number | null;
+      reason: string;
+    }>;
+  };
+};
+
+type HistoryByDateFailResponse = {
+  resultType: 'FAIL';
+  error: { errorCode: string; reason: string; data?: unknown };
+  success: null;
+};
+
+type HistoryByDateResponse = HistoryByDateSuccessResponse | HistoryByDateFailResponse;
 
 type AnalyticsMetricParam = 'time' | 'day';
 
@@ -128,6 +155,12 @@ function normalizeReasons(topReasons: Array<{ reason: string; count: number }>):
     .filter((r) => r.length > 0);
 
   return Array.from(new Set(list));
+}
+
+function reasonToList(r: unknown): ConsumptionReason[] {
+  if (typeof r !== 'string') return [];
+  const v = r.trim();
+  return v.length > 0 ? [v] : [];
 }
 
 export const reportApi = {
@@ -243,7 +276,7 @@ export const reportApi = {
         id: String(it.itemId),
         date,
         timeLabel: toDayTimeFromCalendar(it.purchasedAt),
-        reason: typeof it.reason === 'string' && it.reason.trim().length > 0 ? [it.reason.trim()] : [],
+        reason: reasonToList(it.reason),
         title: it.name,
         price: it.price,
         imageUrl: it.thumbnailUrl ?? '',
@@ -261,5 +294,27 @@ export const reportApi = {
       },
       itemsByDate: mappedItemsByDate,
     };
+  },
+
+  async fetchHistoryByDate(date: string): Promise<CalendarPurchase[]> {
+    const res = await instance.get<HistoryByDateResponse>('/histories', { params: { date } });
+    const body = res.data;
+
+    if (body.resultType === 'FAIL' || !body.data) {
+      const reason = body.resultType === 'FAIL' ? body.error.reason : 'Unknown error';
+      throw new Error(reason);
+    }
+
+    return (body.data.items ?? []).map((it) => ({
+      id: String(it.itemId),
+      date: body.data.date,
+      timeLabel: toDayTimeFromCalendar(it.purchasedAt),
+      reason: reasonToList(it.reason),
+      title: it.name,
+      price: it.price,
+      imageUrl: it.thumbnailUrl ?? '',
+      hasReview: it.satisfaction !== null,
+      rating: it.satisfaction !== null ? toRating5(it.satisfaction) : undefined,
+    }));
   },
 };
