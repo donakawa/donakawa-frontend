@@ -179,9 +179,11 @@ export default function MyPageSettingPage() {
                   <ConnectedBadge connected={profile.connected.google} />
                 </div>
 
-                <div className="text-[13px] font-[400] text-gray-600 truncate max-w-[180px] text-right">
-                  {profile.email || ''}
-                </div>
+                {profile.connected.google && (
+                  <div className="text-[13px] font-[400] text-gray-600 truncate max-w-[180px] text-right">
+                    {profile.email}
+                  </div>
+                )}
               </div>
 
               <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
@@ -202,9 +204,11 @@ export default function MyPageSettingPage() {
                   <ConnectedBadge connected={profile.connected.kakao} />
                 </div>
 
-                <div className="text-[13px] font-[400] text-gray-600 truncate max-w-[180px] text-right">
-                  {profile.email || ''}
-                </div>
+                {profile.connected.kakao && (
+                  <div className="text-[13px] font-[400] text-gray-600 truncate max-w-[180px] text-right">
+                    {profile.email}
+                  </div>
+                )}
               </div>
 
               <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
