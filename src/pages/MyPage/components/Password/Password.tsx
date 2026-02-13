@@ -96,7 +96,7 @@ export default function Password() {
 
   useEffect(() => {
     setTitle(hasPassword ? '비밀번호 변경' : '비밀번호 설정');
-    setCustomBack(() => handleBack);
+    setCustomBack(handleBack);
 
     return () => {
       setTitle('');
@@ -118,6 +118,11 @@ export default function Password() {
 
       if (res.resultType === 'FAILED') {
         alert(getErrorMessage(res.error.errorCode, res.error.reason || '현재 비밀번호 확인에 실패했습니다.'));
+        return;
+      }
+
+      if (!res.data.isValid) {
+        alert('현재 비밀번호가 일치하지 않습니다.');
         return;
       }
 
