@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 import RightArrow from '@/assets/arrow_right(gray).svg';
 import LeftArrow from '@/assets/arrow_left(gray).svg';
 import UpArrow from '@/assets/arrow_up(gray).svg';
@@ -276,9 +277,16 @@ export default function CalendarPanel() {
                         className="grid grid-cols-[94px_1fr] gap-x-4 px-2 py-5 border-b border-b-[rgba(0,0,0,0.06)]">
                         <div className="flex items-center justify-center">
                           <div className="w-[94px] h-[104px] rounded-[5px] bg-gray-100 shadow-[0px_0px_4px_rgba(0,0,0,0.18)] overflow-hidden">
-                            {p.imageUrl ? (
-                              <img src={p.imageUrl} alt="" className="w-full h-full object-cover block" />
-                            ) : null}
+                            <img
+                              src={p.imageUrl?.trim() ? p.imageUrl : DefaultImg}
+                              alt=""
+                              className="w-full h-full object-cover block"
+                              draggable={false}
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                if (img.src !== DefaultImg) img.src = DefaultImg;
+                              }}
+                            />
                           </div>
                         </div>
 
