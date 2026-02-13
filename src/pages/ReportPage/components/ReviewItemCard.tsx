@@ -16,6 +16,10 @@ type CompletedCardProps = {
   onOpenClick: (id: string) => void;
 };
 
+function safeImgSrc(src: string | null | undefined): string {
+  return src?.trim() ? src : DefaultImg;
+}
+
 export function PendingReviewCard({ item }: PendingCardProps) {
   const navigate = useNavigate();
 
@@ -23,15 +27,23 @@ export function PendingReviewCard({ item }: PendingCardProps) {
     navigate(`/report/review/write?purchasedId=${encodeURIComponent(item.id)}`);
   };
 
+  const imgSrc = safeImgSrc(item.imageUrl);
+
   return (
     <div className="p-5 relative">
       <div className="absolute left-4 right-4 bottom-0 h-px bg-gray-100" />
 
       <div className="flex gap-[14px]">
         <div className="w-[94px] h-[94px] rounded-[5px] overflow-hidden bg-gray-100 shrink-0">
-          {item.imageUrl && (
-            <img src={item.imageUrl ?? DefaultImg} alt={item.title} className="w-full h-full object-cover" />
-          )}
+          <img
+            src={imgSrc}
+            alt={item.title}
+            className="w-full h-full object-cover block"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.src !== DefaultImg) img.src = DefaultImg;
+            }}
+          />
         </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-between gap-1">
@@ -52,6 +64,8 @@ export function PendingReviewCard({ item }: PendingCardProps) {
 }
 
 export function CompletedReviewCard({ item, onOpenClick }: CompletedCardProps) {
+  const imgSrc = safeImgSrc(item.imageUrl);
+
   return (
     <button
       type="button"
@@ -61,7 +75,15 @@ export function CompletedReviewCard({ item, onOpenClick }: CompletedCardProps) {
 
       <div className="flex gap-[20px]">
         <div className="w-[94px] h-[104px] rounded-[5px] overflow-hidden bg-gray-100 shrink-0">
-          {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />}
+          <img
+            src={imgSrc}
+            alt={item.title}
+            className="w-full h-full object-cover block"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.src !== DefaultImg) img.src = DefaultImg;
+            }}
+          />
         </div>
 
         <div className="flex-1 min-w-0 flex flex-col gap-[6px]">
@@ -82,7 +104,7 @@ export function CompletedReviewCard({ item, onOpenClick }: CompletedCardProps) {
 
           <div className="flex gap-[6px]">
             {Array.from({ length: 5 }, (_, i) => (
-              <img key={i} src={i < item.rating ? StarFullIcon : StarIcon} className="w-[18px] h-[18px]" />
+              <img key={i} src={i < item.rating ? StarFullIcon : StarIcon} className="w-[18px] h-[18px]" alt="" />
             ))}
           </div>
         </div>
