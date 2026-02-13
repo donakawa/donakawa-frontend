@@ -1,36 +1,81 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
-import { getMe, pickPrimaryProvider } from '@/apis/auth';
+import { getMe } from '@/apis/auth';
 
 import RightArrow from '@/assets/arrow_right.svg';
 import CheckIcon from '@/assets/circle_check.svg';
 
-type ConnectedProvider = 'google' | 'none';
-
 type SettingProfile = {
   email: string;
-  connectedProvider: ConnectedProvider;
   hasPassword: boolean;
+  connected: {
+    google: boolean;
+    kakao: boolean;
+  };
 };
 
 const DEFAULT_PROFILE: SettingProfile = {
   email: '',
-  connectedProvider: 'none',
   hasPassword: true,
+  connected: { google: false, kakao: false },
 };
+
+function getConnectErrorMessage(code: string) {
+  switch (code) {
+    case 'A004':
+      return '인증 정보가 없습니다. 다시 로그인해 주세요.';
+    case 'A018':
+      return '연동 세션이 만료되었습니다. 다시 시도해 주세요.';
+    case 'A019':
+      return '계정 이메일이 일치하지 않습니다. 같은 이메일로 연동해 주세요.';
+    case 'U001':
+      return '사용자 정보를 찾을 수 없습니다.';
+    case 'U013':
+      return '이미 연동된 소셜 계정입니다.';
+    default:
+      return `연동에 실패했어요. (error: ${code})`;
+  }
+}
 
 export default function MyPageSettingPage() {
   const { setTitle } = useOutletContext<HeaderControlContext>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [profile, setProfile] = useState<SettingProfile>(DEFAULT_PROFILE);
+
+  const API_BASE = useMemo(() => {
+    const v = import.meta.env.VITE_API_URL as string | undefined;
+    return (v ?? '').replace(/\/+$/, '');
+  }, []);
 
   useEffect(() => {
     setTitle('설정');
     return () => setTitle('');
   }, [setTitle]);
 
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<SettingProfile>(DEFAULT_PROFILE);
+  useEffect(() => {
+    const qs = new URLSearchParams(location.search);
+    const connect = qs.get('connect');
+    const provider = qs.get('provider');
+    const error = qs.get('error');
+
+    if (!connect) return;
+
+    if (connect === 'success' && provider) {
+      window.alert(`${provider === 'google' ? '구글' : provider === 'kakao' ? '카카오' : provider} 연동이 완료됐어요!`);
+      navigate('/mypage/setting', { replace: true });
+      return;
+    }
+
+    if (connect === 'failed') {
+      const msg = getConnectErrorMessage(error ?? 'UNKNOWN');
+      window.alert(msg);
+      navigate('/mypage/setting', { replace: true });
+    }
+  }, [location.search, navigate]);
 
   useEffect(() => {
     let mounted = true;
@@ -38,11 +83,12 @@ export default function MyPageSettingPage() {
     const fetchMe = async () => {
       try {
         const me = await getMe();
-
         if (!mounted) return;
 
-        const primary = pickPrimaryProvider(me.providers);
-        const connectedProvider: ConnectedProvider = primary === 'google' ? 'google' : 'none';
+        const providers = (me.providers ?? []).map((p) => String(p).toLowerCase());
+        const connectedGoogle = providers.includes('google');
+        const connectedKakao = providers.includes('kakao');
+
         const hasPassword =
           typeof (me as { hasPassword?: unknown }).hasPassword === 'boolean'
             ? (me as { hasPassword: boolean }).hasPassword
@@ -50,8 +96,11 @@ export default function MyPageSettingPage() {
 
         setProfile({
           email: me.email,
-          connectedProvider,
           hasPassword,
+          connected: {
+            google: connectedGoogle,
+            kakao: connectedKakao,
+          },
         });
       } catch {
         if (!mounted) return;
@@ -68,6 +117,25 @@ export default function MyPageSettingPage() {
   const goNickname = () => navigate('/mypage/setting/nickname');
   const goPassword = () => navigate('/mypage/setting/password');
   const goWithdrawal = () => navigate('/mypage/setting/withdrawal');
+
+  const startConnect = (provider: 'google' | 'kakao') => {
+    if (provider === 'google' && profile.connected.google) return;
+    if (provider === 'kakao' && profile.connected.kakao) return;
+
+    const url = `${API_BASE}/auth/connect/${provider}`;
+    window.location.assign(url);
+  };
+
+  const ConnectedBadge = ({ connected }: { connected: boolean }) => (
+    <span className="flex items-center gap-2">
+      {connected ? (
+        <img src={CheckIcon} alt="연동됨" className="w-4 h-4 mt-[2px] block" />
+      ) : (
+        <span className="w-4 h-4" />
+      )}
+      <span className="text-[13px] font-[400] text-gray-600">{connected ? '연동됨' : '미연동'}</span>
+    </span>
+  );
 
   return (
     <div className="w-full min-h-screen bg-white text-black">
@@ -97,18 +165,46 @@ export default function MyPageSettingPage() {
 
             <button
               type="button"
-              aria-label="소셜 연동"
-              className="w-full border-0 bg-transparent cursor-pointer flex items-center justify-between gap-3 active:translate-y-[0.5px]">
-              <div className="flex items-center gap-2">
-                <div className="text-[14px] font-[400] text-black">소셜 연동</div>
-
+              aria-label="구글 연동"
+              onClick={() => startConnect('google')}
+              disabled={profile.connected.google}
+              className={[
+                'w-full border-0 bg-transparent flex items-center justify-between gap-3',
+                profile.connected.google
+                  ? 'cursor-not-allowed opacity-60'
+                  : 'cursor-pointer active:translate-y-[0.5px]',
+              ].join(' ')}>
+              <div className="flex items-center justify-between w-full gap-3">
                 <div className="flex items-center gap-2">
-                  {profile.connectedProvider === 'google' ? (
-                    <img src={CheckIcon} alt="연동됨" className="w-4 h-4 mt-[3px] block" />
-                  ) : (
-                    <div aria-hidden className="w-5 h-5" />
-                  )}
-                  <div className="text-[13px] font-[400] text-gray-600">{profile.email || ''}</div>
+                  <div className="text-[14px] font-[400] text-black">구글 연동</div>
+                  <ConnectedBadge connected={profile.connected.google} />
+                </div>
+
+                <div className="text-[13px] font-[400] text-gray-600 truncate max-w-[180px] text-right">
+                  {profile.email || ''}
+                </div>
+              </div>
+
+              <img src={RightArrow} alt="" className="w-2 h-[13px] block opacity-75" />
+            </button>
+
+            <button
+              type="button"
+              aria-label="카카오 연동"
+              onClick={() => startConnect('kakao')}
+              disabled={profile.connected.kakao}
+              className={[
+                'w-full border-0 bg-transparent flex items-center justify-between gap-3',
+                profile.connected.kakao ? 'cursor-not-allowed opacity-60' : 'cursor-pointer active:translate-y-[0.5px]',
+              ].join(' ')}>
+              <div className="flex items-center justify-between w-full gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="text-[14px] font-[400] text-black">카카오 연동</div>
+                  <ConnectedBadge connected={profile.connected.kakao} />
+                </div>
+
+                <div className="text-[13px] font-[400] text-gray-600 truncate max-w-[180px] text-right">
+                  {profile.email || ''}
                 </div>
               </div>
 
