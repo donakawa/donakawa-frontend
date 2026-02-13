@@ -133,7 +133,6 @@ export default function MyPageSettingPage() {
       ) : (
         <span className="w-4 h-4" />
       )}
-      <span className="text-[13px] font-[400] text-gray-600">{connected ? '연동됨' : '미연동'}</span>
     </span>
   );
 
