@@ -42,8 +42,8 @@ export async function verifyEmailCode(body: {
 export async function verifyCurrentPassword(body: {
   password: string;
   type: VerifyPasswordType;
-}): Promise<ApiResponse<null>> {
-  const { data } = await instance.post<ApiResponse<null>>('/auth/verify-password', body);
+}): Promise<ApiResponse<{ isValid: boolean }>> {
+  const { data } = await instance.post<ApiResponse<{ isValid: boolean }>>('/auth/verify-password', body);
   return data;
 }
 
