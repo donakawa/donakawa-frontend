@@ -133,24 +133,24 @@ export default function AIChatPage() {
 
             <div className="py-[10px] text-[12px] text-gray-600">채팅 기록</div>
 
-            {page.deleteTargetId !== null && (
-              <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
-                <button
-                  type="button"
-                  onClick={page.openDeleteModal}
-                  className="h-10 w-[60px] cursor-pointer rounded-[10px] border-[1.5px] border-error bg-white text-[16px] font-medium text-error">
-                  삭제
-                </button>
-              </div>
-            )}
-
             <div
               ref={page.chatListScrollRef}
               className={cx(
-                'min-h-0 flex-1 overflow-y-auto',
+                'relative min-h-0 flex-1 overflow-y-auto overflow-x-visible',
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
                 '-mx-4',
               )}>
+              {page.deleteTargetId !== null && (
+                <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
+                  <button
+                    type="button"
+                    onClick={page.openDeleteModal}
+                    className="h-10 w-[60px] cursor-pointer rounded-[10px] border-[1.5px] border-error bg-white text-[16px] font-medium text-error">
+                    삭제
+                  </button>
+                </div>
+              )}
+
               <div className="flex w-full flex-col">
                 {page.isChatHistoryLoading && page.chatHistory.length === 0 ? (
                   <div className="px-4 py-3 text-[12px] text-gray-500">불러오는 중...</div>
@@ -174,7 +174,9 @@ export default function AIChatPage() {
 
                         try {
                           e.currentTarget.setPointerCapture(e.pointerId);
-                        } catch {}
+                        } catch {
+                          // ignore
+                        }
 
                         startLongPress(() => {
                           page.openDeletePopoverFromElement(item.id, e.currentTarget);
@@ -183,7 +185,9 @@ export default function AIChatPage() {
                       onPointerUp={(e) => {
                         try {
                           e.currentTarget.releasePointerCapture(e.pointerId);
-                        } catch {}
+                        } catch {
+                          // ignore
+                        }
 
                         if (longPressFiredRef.current) longPressFiredRef.current = false;
                         clearLongPress();
@@ -191,7 +195,9 @@ export default function AIChatPage() {
                       onPointerCancel={(e) => {
                         try {
                           e.currentTarget.releasePointerCapture(e.pointerId);
-                        } catch {}
+                        } catch {
+                          // ignore
+                        }
                         longPressFiredRef.current = false;
                         clearLongPress();
                       }}
@@ -250,7 +256,11 @@ export default function AIChatPage() {
                 'text-[12px] font-normal text-black',
                 'shadow-[0px_0px_4px_rgba(97,69,64,1)]',
               )}>
-              {page.toast.kind === 'delete' ? '채팅이 삭제되었습니다.' : '서버 문제로 채팅 생성에 실패했어요.'}
+              {page.toast.kind === 'delete'
+                ? '채팅이 삭제되었습니다.'
+                : page.toast.kind === 'sendFail'
+                  ? '서버 문제로 채팅 생성에 실패했어요.'
+                  : '요청에 실패했어요.'}
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
 import {
@@ -202,13 +203,13 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
   const handleHistoryContextMenu =
     (id: number) =>
-    (e: React.MouseEvent<HTMLButtonElement>): void => {
+    (e: ReactMouseEvent<HTMLButtonElement>): void => {
       e.preventDefault();
       openDeletePopoverFromElement(id, e.currentTarget);
     };
 
   const handleSidebarMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLElement>): void => {
+    (e: ReactMouseEvent<HTMLElement>): void => {
       if (deleteTargetId === null) return;
 
       const pop = deletePopoverRef.current;
@@ -221,7 +222,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   );
 
   const openDeleteModal = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>): void => {
+    (e: ReactMouseEvent<HTMLButtonElement>): void => {
       e.stopPropagation();
       if (deleteTargetId === null) return;
 
