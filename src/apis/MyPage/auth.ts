@@ -3,7 +3,7 @@ import type { ApiResponse, MeData } from '@/apis/auth';
 
 export type EmailCodeType = 'REGISTER' | 'RESET_PASSWORD';
 
-export type VerifyPasswordType = 'CHANGE_PASSWORD' | 'RESET_PASSWORD';
+export type VerifyPasswordType = 'CHANGE_PASSWORD' | 'RESET_PASSWORD' | 'DELETE_ACCOUNT';
 
 // 내 정보 조회
 export async function getAuthMe(): Promise<ApiResponse<MeData>> {
