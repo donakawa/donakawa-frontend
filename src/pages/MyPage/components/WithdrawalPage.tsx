@@ -25,11 +25,7 @@ function maskEmail(email: string): string {
 
 type WithdrawStep = 'idle' | 'verifying' | 'deleting';
 
-function isFailed<T>(res: ApiResponse<T>): res is {
-  resultType: 'FAILED';
-  error: { errorCode: string; reason: string; message?: string; data: unknown | null };
-  data: null;
-} {
+function isFailed<T>(res: ApiResponse<T>): res is Extract<ApiResponse<T>, { resultType: 'FAILED' }> {
   return res.resultType === 'FAILED';
 }
 
@@ -50,6 +46,13 @@ function normalizeProviders(providers: unknown): string[] {
     .filter((p): p is string => typeof p === 'string')
     .map((p) => p.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function extractApiErrorCode(err: unknown): string | undefined {
+  const anyErr = err as any;
+  const data = anyErr?.response?.data;
+  const code = data?.error?.errorCode ?? data?.errorCode;
+  return typeof code === 'string' ? code : undefined;
 }
 
 export default function WithdrawalPage() {
@@ -193,13 +196,6 @@ export default function WithdrawalPage() {
   const togglePasswordVisible = () => setUi((prev) => ({ ...prev, isPasswordVisible: !prev.isPasswordVisible }));
   const onChangePassword = (value: string) => setUi((prev) => ({ ...prev, password: value }));
 
-  const pickToastKindFromReason = useCallback((reason?: string): ToastKind => {
-    const r = (reason ?? '').trim();
-    const lockedHint = /5회|다섯|30분|삼십|제한|잠금|locked|limit/i.test(r);
-    if (lockedHint) return 'locked';
-    return 'wrong';
-  }, []);
-
   const handleGoogleVerify = useCallback(() => {
     if (isSubmitting) return;
 
@@ -219,14 +215,8 @@ export default function WithdrawalPage() {
   const handleWithdraw = useCallback(async () => {
     if (isSubmitting) return;
 
-    try {
-      if (!hasPassword) {
-        if (reauthStatus !== 'success') {
-          showToast('wrong');
-          return;
-        }
-
-        setStep('deleting');
+    const runDelete = async () => {
+      try {
         const delRes = await deleteAccount();
 
         if (isFailed(delRes)) {
@@ -239,6 +229,29 @@ export default function WithdrawalPage() {
         }
 
         clearAuthAndGoLogin();
+      } catch (err) {
+        const code = extractApiErrorCode(err);
+        if (code === 'A004') {
+          clearAuthAndGoLogin();
+          return;
+        }
+        if (code === 'A016' || code === 'A105') {
+          showToast('wrong');
+          return;
+        }
+        showToast('systemError');
+      }
+    };
+
+    try {
+      if (!hasPassword) {
+        if (reauthStatus !== 'success') {
+          showToast('wrong');
+          return;
+        }
+
+        setStep('deleting');
+        await runDelete();
         return;
       }
 
@@ -247,35 +260,50 @@ export default function WithdrawalPage() {
 
       setStep('verifying');
 
-      const verifyRes = await verifyCurrentPassword({ password, type: 'CHANGE_PASSWORD' });
-      if (isFailed(verifyRes)) {
-        if (verifyRes.error.errorCode === 'A004') {
+      try {
+        const verifyRes = await verifyCurrentPassword({
+          password,
+          type: 'DELETE_ACCOUNT',
+        });
+
+        if (isFailed(verifyRes)) {
+          if (verifyRes.error.errorCode === 'A004') {
+            clearAuthAndGoLogin();
+            return;
+          }
+          if (verifyRes.error.errorCode === 'A014') {
+            showToast('locked');
+            return;
+          }
+          showToast('wrong');
+          return;
+        }
+
+        const isValid = Boolean((verifyRes.data as any)?.isValid);
+        if (!isValid) {
+          showToast('wrong');
+          return;
+        }
+      } catch (err) {
+        const code = extractApiErrorCode(err);
+        if (code === 'A004') {
           clearAuthAndGoLogin();
           return;
         }
-        showToast(pickToastKindFromReason(verifyRes.error.reason));
+        if (code === 'A014') {
+          showToast('locked');
+          return;
+        }
+        showToast('systemError');
         return;
       }
 
       setStep('deleting');
-
-      const delRes = await deleteAccount();
-      if (isFailed(delRes)) {
-        if (delRes.error.errorCode === 'A004') {
-          clearAuthAndGoLogin();
-          return;
-        }
-        showToast('wrong');
-        return;
-      }
-
-      clearAuthAndGoLogin();
-    } catch {
-      alert('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      await runDelete();
     } finally {
       setStep('idle');
     }
-  }, [clearAuthAndGoLogin, hasPassword, isSubmitting, pickToastKindFromReason, reauthStatus, showToast, ui.password]);
+  }, [clearAuthAndGoLogin, hasPassword, isSubmitting, reauthStatus, showToast, ui.password]);
 
   return (
     <div className="w-full max-w-[375px] mx-auto min-h-[100dvh] bg-white relative">
