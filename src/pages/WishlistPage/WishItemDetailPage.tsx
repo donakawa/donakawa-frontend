@@ -16,6 +16,7 @@ import DefaultPhotoBig from '@/assets/default_item_photo_big.svg';
 import DefaultPhoto from '@/assets/default_item_photo.svg';
 import DonaAI from '@/assets/dona_glass.svg';
 import WishRegistrationPage from './WishRegistrationPage';
+import ArrowLeftWhite from '@/assets/arrow_left(white).svg';
 
 type ItemType = 'AUTO' | 'MANUAL';
 
@@ -165,8 +166,8 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
               <button
                 type="button"
                 onClick={onClickBack}
-                className="w-8 h-8 border-0 bg-transparent cursor-pointer text-[26px] leading-none text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.35)]">
-                ‹
+                className="w-8 h-8 border-0 bg-transparent cursor-pointer flex items-center justify-center">
+                <img src={ArrowLeftWhite} alt="뒤로가기" className="w-12 h-22 object-contain" />
               </button>
             </header>
 
@@ -254,12 +255,9 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
                 'text-left',
                 'transition',
                 'active:translate-y-[1px]',
-              ].join(' ')}
-            >
+              ].join(' ')}>
               <div className="flex flex-col items-start gap-3">
-                <div className="text-[12px] font-[400] text-primary-500">
-                  내게 필요한 소비일까?
-                </div>
+                <div className="text-[12px] font-[400] text-primary-500">내게 필요한 소비일까?</div>
                 <h3 className="m-0 font-['Galmuri11',sans-serif] text-[16px] font-[700] leading-[1.5] text-black">
                   구매가 고민될 때,
                   <br />
@@ -275,7 +273,6 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
               />
             </button>
           </section>
-
         </section>
       </main>
 
