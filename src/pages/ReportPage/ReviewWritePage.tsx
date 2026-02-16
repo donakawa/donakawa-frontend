@@ -44,7 +44,6 @@ type HistoryItemRaw = {
   purchasedAt: string;
   purchasedAtTime?: 'DAWN' | 'EVENING' | 'NOON' | 'MORNING' | 'NIGHT' | string;
   itemType?: 'AUTO' | 'MANUAL' | 'auto' | 'manual' | string;
-
   satisfaction?: number;
   frequency?: number;
   updatedAt?: string;
@@ -68,6 +67,25 @@ type PostReviewResponseData = {
   updatedAt: string;
 };
 
+type GetItemReviewData = {
+  itemId: number;
+  itemType: 'AUTO' | 'MANUAL' | string;
+  purchasedDate: string;
+  purchasedAt: string;
+  product: {
+    name: string;
+    price: number;
+    imageUrl: string | null;
+  };
+  purchaseReason?: string | string[];
+  review: {
+    reviewId: number;
+    satisfaction: number;
+    usageFrequency: number;
+    createdAt: string;
+  };
+};
+
 type UiPurchase = {
   itemId: string;
   title: string;
@@ -86,18 +104,24 @@ function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
 }
 
-async function requestWithOptionalApiPrefix<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+async function requestWithOptionalApiPrefix<T>(
+  method: 'GET' | 'POST',
+  path: string,
+  body?: unknown,
+  params?: Record<string, string | number | boolean | undefined>,
+): Promise<T> {
   const url1 = new URL(path, API_URL).toString();
 
   try {
     if (method === 'GET') {
-      const res = await axios.get<T>(url1, { withCredentials: true });
+      const res = await axios.get<T>(url1, { withCredentials: true, params });
       return res.data;
     }
 
     const res = await axios.post<T>(url1, body, {
       withCredentials: true,
       headers: { 'Content-Type': 'application/json' },
+      params,
     });
     return res.data;
   } catch (e) {
@@ -107,13 +131,14 @@ async function requestWithOptionalApiPrefix<T>(method: 'GET' | 'POST', path: str
       const url2 = new URL(`/api${path}`, API_URL).toString();
 
       if (method === 'GET') {
-        const res2 = await axios.get<T>(url2, { withCredentials: true });
+        const res2 = await axios.get<T>(url2, { withCredentials: true, params });
         return res2.data;
       }
 
       const res2 = await axios.post<T>(url2, body, {
         withCredentials: true,
         headers: { 'Content-Type': 'application/json' },
+        params,
       });
       return res2.data;
     }
@@ -200,6 +225,12 @@ function getHistoryKey(x: HistoryItemRaw): string {
   return String(x.itemId);
 }
 
+function normalizePurchaseReason(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.filter((v): v is string => typeof v === 'string' && v.trim() !== '');
+  if (typeof raw === 'string' && raw.trim() !== '') return [raw];
+  return [];
+}
+
 export default function ReviewWritePage(): React.JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -231,7 +262,7 @@ export default function ReviewWritePage(): React.JSX.Element {
   useEffect(() => {
     let alive = true;
 
-    const buildUi = (target: HistoryItemRaw): UiPurchase => {
+    const buildUiFromListItem = (target: HistoryItemRaw): UiPurchase => {
       const d = daysSince(target.purchasedAt);
       const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
 
@@ -245,6 +276,23 @@ export default function ReviewWritePage(): React.JSX.Element {
         dayLabelText,
         timeLabel: normalizeTimeLabel(target.purchasedAtTime),
         itemType: normalizeItemType(target.itemType),
+      };
+    };
+
+    const buildUiFromDetail = (detail: GetItemReviewData): UiPurchase => {
+      const d = daysSince(detail.purchasedDate);
+      const dayLabelText = d === null ? '' : `구매한 지 ${d}DAY+`;
+
+      return {
+        itemId: String(detail.itemId),
+        title: detail.product?.name || '상품명',
+        price: typeof detail.product?.price === 'number' ? detail.product.price : 0,
+        imageUrl: detail.product?.imageUrl ?? null,
+        tags: normalizePurchaseReason(detail.purchaseReason),
+        dateText: formatDateText(detail.purchasedDate),
+        dayLabelText,
+        timeLabel: normalizeTimeLabel(detail.purchasedAt),
+        itemType: normalizeItemType(detail.itemType),
       };
     };
 
@@ -283,7 +331,7 @@ export default function ReviewWritePage(): React.JSX.Element {
           setMode('NOT_WRITTEN');
           setRating(0);
           setUsage(0);
-          setPurchase(buildUi(first));
+          setPurchase(buildUiFromListItem(first));
           return;
         }
 
@@ -292,7 +340,7 @@ export default function ReviewWritePage(): React.JSX.Element {
           setMode('NOT_WRITTEN');
           setRating(0);
           setUsage(0);
-          setPurchase(buildUi(foundNotWritten));
+          setPurchase(buildUiFromListItem(foundNotWritten));
           return;
         }
 
@@ -315,10 +363,29 @@ export default function ReviewWritePage(): React.JSX.Element {
           return;
         }
 
+        const itemType = normalizeItemType(foundWritten.itemType) ?? 'AUTO';
+
+        const detailRes = await requestWithOptionalApiPrefix<ApiResponse<GetItemReviewData>>(
+          'GET',
+          `/histories/items/${encodeURIComponent(String(foundWritten.itemId))}/review`,
+          undefined,
+          { itemType },
+        );
+        if (!alive) return;
+
+        if (detailRes.resultType === 'FAIL') {
+          setMode('WRITTEN');
+          setPurchase(buildUiFromListItem(foundWritten));
+          setRating(toRatingValue(foundWritten.satisfaction));
+          setUsage(toUsageLevel(foundWritten.frequency));
+          setPurchaseError(detailRes.error.reason || '작성한 후기를 불러오지 못했어요.');
+          return;
+        }
+
         setMode('WRITTEN');
-        setRating(toRatingValue(foundWritten.satisfaction));
-        setUsage(toUsageLevel(foundWritten.frequency));
-        setPurchase(buildUi(foundWritten));
+        setPurchase(buildUiFromDetail(detailRes.data));
+        setRating(toRatingValue(detailRes.data.review?.satisfaction));
+        setUsage(toUsageLevel(detailRes.data.review?.usageFrequency));
       } catch (e) {
         if (!alive) return;
         const err = e as AxiosError;
@@ -409,7 +476,7 @@ export default function ReviewWritePage(): React.JSX.Element {
     );
   }
 
-  if (purchaseError || !purchase) {
+  if (!purchase) {
     return (
       <div className="w-full max-w-[430px] mx-auto min-h-[100dvh] bg-white p-6">
         <p className="text-[14px] text-red-500">{purchaseError || '구매 정보를 찾지 못했어요.'}</p>
@@ -432,6 +499,10 @@ export default function ReviewWritePage(): React.JSX.Element {
           <div className="mb-4 px-3 py-2 rounded-md bg-gray-50 text-[12px] text-gray-600">
             이미 작성된 후기예요. (읽기 전용)
           </div>
+        )}
+
+        {purchaseError && (
+          <div className="mb-3 px-3 py-2 rounded-md bg-red-50 text-[12px] text-red-600">{purchaseError}</div>
         )}
 
         <section className="pb-[18px]">

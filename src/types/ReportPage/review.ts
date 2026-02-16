@@ -40,3 +40,22 @@ export type ReviewWritePurchase = {
   dateText: string;
   timeLabel: string;
 };
+
+export type ItemReviewDetail = {
+  itemId: number;
+  itemType: 'AUTO' | 'MANUAL' | string;
+  purchasedDate: string;
+  purchasedAt: string;
+  product: {
+    name: string;
+    price: number;
+    imageUrl: string | null;
+  };
+  purchaseReason?: string | string[];
+  review: {
+    reviewId: number;
+    satisfaction: number;
+    usageFrequency: number;
+    createdAt: string;
+  };
+};
