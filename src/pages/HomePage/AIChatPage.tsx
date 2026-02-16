@@ -174,9 +174,7 @@ export default function AIChatPage() {
 
                         try {
                           e.currentTarget.setPointerCapture(e.pointerId);
-                        } catch {
-                          // ignore
-                        }
+                        } catch {}
 
                         startLongPress(() => {
                           page.openDeletePopoverFromElement(item.id, e.currentTarget);
@@ -185,9 +183,7 @@ export default function AIChatPage() {
                       onPointerUp={(e) => {
                         try {
                           e.currentTarget.releasePointerCapture(e.pointerId);
-                        } catch {
-                          // ignore
-                        }
+                        } catch {}
 
                         if (longPressFiredRef.current) longPressFiredRef.current = false;
                         clearLongPress();
