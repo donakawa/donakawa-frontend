@@ -1,5 +1,4 @@
-// AIChatPage.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -17,12 +16,39 @@ import ProgressiveSurvey, { LoadingBubble } from '@/components/ProgressiveSurvey
 import { formatWon, cx } from '@/utils/HomePage/aichat';
 import { useAIChatPage, type PickedWishItem } from '@/pages/HomePage/hooks/useAIChat';
 
+const LONG_PRESS_MS = 520;
+
 export default function AIChatPage() {
   const { setTitle, setRightAction, setLayoutModal } = useOutletContext<HeaderControlContext>();
   const navigate = useNavigate();
   const location = useLocation();
 
   const page = useAIChatPage({ location, navigate });
+
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const clearLongPress = () => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const startLongPress = (fire: () => void) => {
+    clearLongPress();
+    longPressFiredRef.current = false;
+
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressFiredRef.current = true;
+      fire();
+    }, LONG_PRESS_MS);
+  };
+
+  useEffect(() => {
+    return () => clearLongPress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setTitle('도나AI 상담실');
@@ -79,6 +105,7 @@ export default function AIChatPage() {
           onMouseDown={page.handleSidebarMouseDown}
           className="absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
+            {/* search */}
             <div className="my-4">
               <div className="box-border flex h-[41px] w-full items-center gap-[5px] rounded-[100px] bg-secondary-100 px-[18px] shadow-[0px_0px_4px_rgba(0,0,0,0.25)]">
                 <div className="flex h-7 w-7 flex-[0_0_28px] items-center justify-center" aria-hidden="true">
@@ -97,6 +124,7 @@ export default function AIChatPage() {
               </div>
             </div>
 
+            {/* new chat */}
             <button
               type="button"
               onClick={page.onNewChat}
@@ -117,7 +145,6 @@ export default function AIChatPage() {
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
                 '-mx-4',
               )}>
-              {/* popover */}
               {page.deleteTargetId !== null && (
                 <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
                   <button
@@ -143,15 +170,45 @@ export default function AIChatPage() {
                         'select-none',
                         item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
                       )}>
-                      {/* 왼쪽: 채팅방 클릭 */}
+                      {/* left: open chat */}
                       <button
                         type="button"
-                        onClick={() => void page.openChatRoom(item.id)}
+                        onClick={() => {
+                          if (longPressFiredRef.current) return;
+                          void page.openChatRoom(item.id);
+                        }}
+                        onContextMenu={page.handleHistoryContextMenu(item.id)}
+                        onPointerDown={(e) => {
+                          if (e.pointerType === 'mouse') return;
+                          if (e.isPrimary === false) return;
+
+                          const el = e.currentTarget;
+
+                          startLongPress(() => {
+                            try {
+                              e.preventDefault();
+                            } catch {
+                              // noop
+                            }
+                            page.openDeletePopoverFromElement(item.id, el);
+                          });
+                        }}
+                        onPointerUp={() => {
+                          if (longPressFiredRef.current) longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        onPointerCancel={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        onPointerLeave={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
                         className="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left text-[16px] font-normal">
                         <span className="block truncate">{item.title}</span>
                       </button>
 
-                      {/* 오른쪽: X 버튼 (close.svg) */}
                       <button
                         type="button"
                         aria-label="채팅 삭제 메뉴 열기"
