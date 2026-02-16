@@ -1,4 +1,3 @@
-// useAIChat.ts (useAIChatPage 훅)
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
@@ -130,23 +129,27 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
   const toggleSidebar = useCallback(() => setIsSidebarOpen((prev) => !prev), []);
 
-  const closeSidebar = useCallback(() => {
+  const closeDeletePopover = useCallback(() => {
     setDeleteTargetId(null);
-    setIsSidebarOpen(false);
   }, []);
 
+  const closeSidebar = useCallback(() => {
+    closeDeletePopover();
+    setIsSidebarOpen(false);
+  }, [closeDeletePopover]);
+
   const onNewChat = useCallback(() => {
-    setDeleteTargetId(null);
+    closeDeletePopover();
     setIsSidebarOpen(false);
     setMessages([]);
     setPickedWishItem(null);
     setActiveHistoryId(null);
-  }, []);
+  }, [closeDeletePopover]);
 
   const openChatRoom = useCallback(
     async (chatId: number): Promise<void> => {
       setActiveHistoryId(chatId);
-      setDeleteTargetId(null);
+      closeDeletePopover();
       closeSidebar();
 
       try {
@@ -180,7 +183,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
         setMessages([{ id: `restore-survey-${chatId}`, role: 'assistant', kind: 'survey', chatId }]);
       }
     },
-    [closeSidebar],
+    [closeSidebar, closeDeletePopover],
   );
 
   const openDeletePopoverFromElement = useCallback(
@@ -211,6 +214,15 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
       setDeleteTop(top);
     },
     [deleteTargetId],
+  );
+
+  const handleHistoryContextMenu = useCallback(
+    (id: number) => (e: React.MouseEvent<HTMLElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openDeletePopoverFromElement(id, e.currentTarget as HTMLElement);
+    },
+    [openDeletePopoverFromElement],
   );
 
   const handleSidebarMouseDown = useCallback(
@@ -357,6 +369,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     openChatRoom,
 
     openDeletePopoverFromElement,
+    handleHistoryContextMenu,
     handleSidebarMouseDown,
 
     openDeleteModal,
