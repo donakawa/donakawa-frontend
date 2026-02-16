@@ -1,3 +1,4 @@
+// useAIChat.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
@@ -57,6 +58,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   const [toast, setToast] = useState<{ open: boolean; kind: ToastKind | null }>({ open: false, kind: null });
   const toastTimerRef = useRef<number | null>(null);
 
+  // ✅ 실제 스크롤되는 채팅 목록 컨테이너(ref가 null이어도 closest로 찾게끔 보완)
   const chatListScrollRef = useRef<HTMLDivElement | null>(null);
 
   const deletePopoverRef = useRef<HTMLDivElement | null>(null);
@@ -180,13 +182,22 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     [closeSidebar],
   );
 
+  // ✅ ref null이어도 작동하도록 보강: closest + fallback
   const openDeletePopoverFromElement = useCallback(
     (id: number, el: HTMLElement): void => {
-      const scrollEl = chatListScrollRef.current;
-      if (!scrollEl) return;
+      const scrollEl = chatListScrollRef.current ?? (el.closest('[data-chatlist-scroll]') as HTMLDivElement | null);
 
       if (deleteTargetId === id) {
         setDeleteTargetId(null);
+        return;
+      }
+
+      // ✅ 스크롤 컨테이너를 못 찾으면 그래도 "보이게" 띄운다(최소한 DOM 생성)
+      if (!scrollEl) {
+        const itemRect = el.getBoundingClientRect();
+        const top = Math.max(0, itemRect.top + (itemRect.height - DELETE_BUTTON_H) / 2);
+        setDeleteTargetId(id);
+        setDeleteTop(top);
         return;
       }
 
