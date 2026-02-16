@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -21,7 +21,9 @@ export default function AIChatPage() {
 
   const page = useAIChatPage({ location, navigate });
 
-  // 모바일 롱프레스
+  const isComposingRef = useRef(false);
+
+  // ✅ 모바일 롱프레스
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
 
@@ -78,53 +80,44 @@ export default function AIChatPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
-  function SidebarModal() {
-    // ✅ 검색 입력은 "모달 내부에서만" 관리 (타이핑해도 setLayoutModal 재호출 X)
-    const [searchDraft, setSearchDraft] = useState<string>('');
+  useEffect(() => {
+    if (!page.isSidebarOpen) {
+      setLayoutModal(null);
+      return;
+    }
 
-    useEffect(() => {
-      setSearchDraft(page.search ?? '');
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const filteredHistory = useMemo(() => {
-      const q = searchDraft.trim().toLowerCase();
-      if (!q) return page.chatHistory;
-      return page.chatHistory.filter((item) => item.title.toLowerCase().includes(q));
-    }, [searchDraft, page.chatHistory]);
-
-    return (
+    const node = (
       <div className="absolute inset-0">
-        {/* overlay */}
-        <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
+        <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0" />
 
         <aside
           ref={page.sidebarRef}
           onMouseDown={page.handleSidebarMouseDown}
-          // ✅ 중요: popover absolute 기준을 aside로 잡아야 top 계산이 안 꼬임
-          className="relative absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
+          className="absolute right-0 top-0 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
-            {/* 검색 */}
             <div className="my-4">
               <div className="box-border flex h-[41px] w-full items-center gap-[5px] rounded-[100px] bg-secondary-100 px-[18px] shadow-[0px_0px_4px_rgba(0,0,0,0.25)]">
                 <div className="flex h-7 w-7 flex-[0_0_28px] items-center justify-center" aria-hidden="true">
                   <img src={SearchIcon} alt="" />
                 </div>
 
-                {/* ✅ 여기: onChange만. 조합 이벤트 없음 */}
                 <input
                   placeholder="검색..."
-                  value={searchDraft}
-                  lang="ko"
-                  inputMode="text"
-                  onChange={(e) => setSearchDraft(e.target.value)}
+                  value={page.search}
+                  onCompositionStart={() => {
+                    isComposingRef.current = true;
+                  }}
+                  onCompositionEnd={(e) => {
+                    isComposingRef.current = false;
+                    page.setSearch(e.currentTarget.value);
+                  }}
+                  onChange={(e) => page.setSearch(e.target.value)}
                   aria-label="채팅 검색"
                   className="h-full min-w-0 flex-1 border-0 bg-transparent text-[16px] font-medium text-black outline-none placeholder:font-semibold placeholder:text-gray-600"
                 />
               </div>
             </div>
 
-            {/* 새 채팅 */}
             <button
               type="button"
               onClick={page.onNewChat}
@@ -137,7 +130,6 @@ export default function AIChatPage() {
 
             <div className="py-[10px] text-[12px] text-gray-600">채팅 기록</div>
 
-            {/* ✅ 삭제 팝오버 */}
             {page.deleteTargetId !== null && (
               <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
                 <button
@@ -149,7 +141,6 @@ export default function AIChatPage() {
               </div>
             )}
 
-            {/* 리스트 */}
             <div
               className={cx(
                 'min-h-0 flex-1 overflow-y-auto',
@@ -160,57 +151,60 @@ export default function AIChatPage() {
                 {page.isChatHistoryLoading && page.chatHistory.length === 0 ? (
                   <div className="px-4 py-3 text-[12px] text-gray-500">불러오는 중...</div>
                 ) : (
-                  filteredHistory.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        // ✅ 롱프레스 후 클릭으로 채팅 열리는 것 방지
-                        if (longPressFiredRef.current) return;
-                        void page.openChatRoom(item.id);
-                      }}
-                      // ✅ PC 우클릭: 기존대로
-                      onContextMenu={page.handleHistoryContextMenu(item.id)}
-                      // ✅ 모바일 롱프레스: "무조건 openDeletePopoverFromElement"로만 열기
-                      onPointerDown={(e) => {
-                        if (e.pointerType === 'mouse') return;
-                        if (e.isPrimary === false) return;
+                  page.chatHistory
+                    .filter((item) => item.title.toLowerCase().includes(page.search.toLowerCase()))
+                    .map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          // ✅ 롱프레스 후에는 클릭으로 방 열리지 않게
+                          if (longPressFiredRef.current) return;
+                          void page.openChatRoom(item.id);
+                        }}
+                        // ✅ 우클릭: 기존 그대로 유지
+                        onContextMenu={page.handleHistoryContextMenu(item.id)}
+                        // ✅ 모바일 꾹 누르기: DOM을 저장해서 타이머 후 팝오버 오픈
+                        onPointerDown={(e) => {
+                          if (e.pointerType === 'mouse') return;
+                          if (e.isPrimary === false) return;
 
-                        e.preventDefault();
+                          // iOS/모바일 텍스트 선택 메뉴 줄이기
+                          e.preventDefault();
 
-                        const el = e.currentTarget;
-                        startLongPress(() => {
-                          page.openDeletePopoverFromElement(item.id, el);
-                        });
-                      }}
-                      onPointerUp={() => {
-                        if (longPressFiredRef.current) longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      onPointerCancel={() => {
-                        longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      onPointerLeave={() => {
-                        longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      className={cx(
-                        'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
-                        'py-3 px-4',
-                        'select-none',
-                        item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
-                      )}>
-                      {item.title}
-                    </button>
-                  ))
+                          const el = e.currentTarget;
+                          startLongPress(() => {
+                            page.openDeletePopoverFromElement(item.id, el);
+                          });
+                        }}
+                        onPointerUp={() => {
+                          if (longPressFiredRef.current) longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        onPointerCancel={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        onPointerLeave={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        className={cx(
+                          'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
+                          'py-3 px-4',
+                          // ✅ 복사/선택 방지(모바일)
+                          'select-none',
+                          item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
+                        )}>
+                        {item.title}
+                      </button>
+                    ))
                 )}
               </div>
             </div>
           </div>
         </aside>
 
-        {/* 삭제 모달 */}
         {page.isDeleteModalOpen && (
           <div
             role="dialog"
@@ -242,7 +236,6 @@ export default function AIChatPage() {
           </div>
         )}
 
-        {/* 토스트 */}
         {page.toast.open && (
           <div className="pointer-events-none absolute bottom-6 left-1/2 z-[60] -translate-x-1/2" aria-live="polite">
             <div
@@ -258,20 +251,36 @@ export default function AIChatPage() {
         )}
       </div>
     );
-  }
 
-  // ✅ 모달은 열고/닫을 때만 setLayoutModal (입력 타이핑에 영향 없음)
-  useEffect(() => {
-    if (!page.isSidebarOpen) {
-      setLayoutModal(null);
-      return;
-    }
-
-    setLayoutModal(<SidebarModal />);
+    setLayoutModal(node);
     return () => setLayoutModal(null);
+  }, [
+    page.isSidebarOpen,
+    page.search,
+    page.setSearch,
+    page.onNewChat,
+    page.chatHistory,
+    page.isChatHistoryLoading,
+    page.activeHistoryId,
+    page.deleteTargetId,
+    page.deleteTop,
+    page.isDeleteModalOpen,
+    page.toast,
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page.isSidebarOpen, setLayoutModal]);
+    page.sidebarRef,
+    page.deletePopoverRef,
+
+    page.closeSidebar,
+    page.handleSidebarMouseDown,
+    page.openChatRoom,
+    page.handleHistoryContextMenu,
+    page.openDeletePopoverFromElement,
+    page.openDeleteModal,
+    page.closeDeleteModal,
+    page.confirmDelete,
+
+    setLayoutModal,
+  ]);
 
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
     const hasImage = Boolean(product.imageUrl && product.imageUrl.trim().length > 0);
