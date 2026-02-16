@@ -1,4 +1,3 @@
-// useAIChat.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
@@ -58,7 +57,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   const [toast, setToast] = useState<{ open: boolean; kind: ToastKind | null }>({ open: false, kind: null });
   const toastTimerRef = useRef<number | null>(null);
 
-  // ✅ 실제 스크롤되는 채팅 목록 컨테이너(ref가 null이어도 closest로 찾게끔 보완)
+  // ✅ 사이드바 "채팅기록 스크롤 컨테이너"
   const chatListScrollRef = useRef<HTMLDivElement | null>(null);
 
   const deletePopoverRef = useRef<HTMLDivElement | null>(null);
@@ -182,28 +181,32 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     [closeSidebar],
   );
 
-  // ✅ ref null이어도 작동하도록 보강: closest + fallback
+  /**
+   * ✅ 어떤 상황에서도 deleteTargetId는 세팅되게 만든다.
+   * - ref가 null이어도 closest()로 찾고
+   * - 그래도 못 찾으면 화면 기준 top으로라도 띄워서 "DOM 생성"을 보장
+   */
   const openDeletePopoverFromElement = useCallback(
     (id: number, el: HTMLElement): void => {
-      const scrollEl = chatListScrollRef.current ?? (el.closest('[data-chatlist-scroll]') as HTMLDivElement | null);
-
+      // 토글
       if (deleteTargetId === id) {
         setDeleteTargetId(null);
         return;
       }
 
-      // ✅ 스크롤 컨테이너를 못 찾으면 그래도 "보이게" 띄운다(최소한 DOM 생성)
+      const scrollEl = chatListScrollRef.current ?? (el.closest('[data-chatlist-scroll]') as HTMLDivElement | null);
+
+      const itemRect = el.getBoundingClientRect();
+
       if (!scrollEl) {
-        const itemRect = el.getBoundingClientRect();
+        // ✅ 최후 fallback: 화면 기준(그래도 DOM은 생김)
         const top = Math.max(0, itemRect.top + (itemRect.height - DELETE_BUTTON_H) / 2);
         setDeleteTargetId(id);
         setDeleteTop(top);
         return;
       }
 
-      const itemRect = el.getBoundingClientRect();
       const scrollRect = scrollEl.getBoundingClientRect();
-
       const top = itemRect.top - scrollRect.top + scrollEl.scrollTop + (itemRect.height - DELETE_BUTTON_H) / 2;
 
       setDeleteTargetId(id);
@@ -216,6 +219,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     (id: number) =>
     (e: ReactMouseEvent<HTMLButtonElement>): void => {
       e.preventDefault();
+      e.stopPropagation();
       openDeletePopoverFromElement(id, e.currentTarget);
     };
 
