@@ -136,34 +136,6 @@ export default function AIChatPage() {
             <div
               ref={page.chatListScrollRef}
               data-chatlist-scroll
-              onContextMenuCapture={(e) => {
-                const target = e.target as HTMLElement;
-                const btn = target.closest('button[data-history-id]') as HTMLButtonElement | null;
-                if (!btn) return;
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                const id = Number(btn.dataset.historyId);
-                if (!Number.isFinite(id)) return;
-
-                page.openDeletePopoverFromElement(id, btn);
-              }}
-              onMouseDownCapture={(e) => {
-                if (e.button !== 2) return;
-
-                const target = e.target as HTMLElement;
-                const btn = target.closest('button[data-history-id]') as HTMLButtonElement | null;
-                if (!btn) return;
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                const id = Number(btn.dataset.historyId);
-                if (!Number.isFinite(id)) return;
-
-                page.openDeletePopoverFromElement(id, btn);
-              }}
               className={cx(
                 'relative min-h-0 flex-1 overflow-y-auto overflow-x-visible',
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
@@ -174,6 +146,7 @@ export default function AIChatPage() {
                 <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
                   <button
                     type="button"
+                    data-testid="chat-delete-button"
                     onClick={page.openDeleteModal}
                     className="h-10 w-[60px] cursor-pointer rounded-[10px] border-[1.5px] border-error bg-white text-[16px] font-medium text-error">
                     삭제
@@ -194,6 +167,20 @@ export default function AIChatPage() {
                         if (longPressFiredRef.current) return;
                         void page.openChatRoom(item.id);
                       }}
+                      // ✅ 우클릭(가장 안정적): 버튼 자체에 직접 연결
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
+                      }}
+                      // ✅ 우클릭 보강(특히 Firefox 등)
+                      onMouseDown={(e) => {
+                        if (e.button !== 2) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
+                      }}
+                      // ✅ 모바일 롱프레스
                       onPointerDown={(e) => {
                         if (e.pointerType === 'mouse') return;
                         if (e.isPrimary === false) return;
