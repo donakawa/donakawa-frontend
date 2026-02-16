@@ -1,4 +1,3 @@
-// AIChatPage.tsx
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
@@ -24,7 +23,7 @@ export default function AIChatPage() {
 
   const isComposingRef = useRef(false);
 
-  // 모바일용 삭제 버튼
+  // 모바일용 롱프레스
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
 
@@ -175,13 +174,15 @@ export default function AIChatPage() {
                         if (longPressFiredRef.current) return;
                         void page.openChatRoom(item.id);
                       }}
-                      onContextMenu={page.handleHistoryContextMenu(item.id)}
+                      onContextMenu={(e) => page.handleHistoryContextMenu(item.id)(e)}
                       onPointerDown={(e) => {
                         if (e.pointerType === 'mouse') return;
                         if (e.isPrimary === false) return;
 
+                        const targetEl = e.currentTarget;
+
                         startLongPress(() => {
-                          page.handleHistoryContextMenu(item.id)(e);
+                          page.openDeletePopoverFromElement(item.id, targetEl);
                         });
                       }}
                       onPointerUp={() => {
