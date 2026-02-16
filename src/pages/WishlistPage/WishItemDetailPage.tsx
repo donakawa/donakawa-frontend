@@ -167,7 +167,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
                 type="button"
                 onClick={onClickBack}
                 className="w-8 h-8 border-0 bg-transparent cursor-pointer flex items-center justify-center">
-                <img src={ArrowLeftWhite} alt="뒤로가기" className="w-12 h-22 object-contain" />
+                <img src={ArrowLeftWhite} alt="뒤로가기" className="object-contain" />
               </button>
             </header>
 
