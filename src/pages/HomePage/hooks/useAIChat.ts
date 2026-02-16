@@ -1,3 +1,4 @@
+// useAIChatPage.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
@@ -178,10 +179,12 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     [closeSidebar],
   );
 
+  // ✅ 수정: MouseEvent + PointerEvent 둘 다 받도록 + stopPropagation 추가
   const handleHistoryContextMenu =
     (id: number) =>
-    (e: React.MouseEvent<HTMLButtonElement>): void => {
+    (e: React.MouseEvent<HTMLButtonElement> | React.PointerEvent<HTMLButtonElement>): void => {
       e.preventDefault();
+      e.stopPropagation();
 
       const sidebarEl = sidebarRef.current;
       if (!sidebarEl) return;

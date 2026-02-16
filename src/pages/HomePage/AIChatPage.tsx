@@ -1,3 +1,4 @@
+// AIChatPage.tsx
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
@@ -180,7 +181,7 @@ export default function AIChatPage() {
                         if (e.isPrimary === false) return;
 
                         startLongPress(() => {
-                          page.handleHistoryContextMenu(item.id)(e as unknown as React.MouseEvent<HTMLButtonElement>);
+                          page.handleHistoryContextMenu(item.id)(e);
                         });
                       }}
                       onPointerUp={() => {

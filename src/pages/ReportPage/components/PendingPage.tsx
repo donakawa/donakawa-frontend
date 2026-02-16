@@ -21,7 +21,7 @@ export default function PendingPage({ items, onWriteClick }: PendingViewProps) {
         작성하지 않은 소비 후기가 {items.length}건 있어요.
       </div>
 
-      <div className="flex flex-col gap-3 px-4 py-4">
+      <div className="flex flex-col gap-3 px-4">
         {items.map((item) => (
           <PendingReviewCard key={item.id} item={item} onWriteClick={onWriteClick} />
         ))}
