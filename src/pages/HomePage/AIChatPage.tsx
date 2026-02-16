@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+// AIChatPage.tsx
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -8,6 +9,8 @@ import PlusIcon from '@/assets/view_more(green).svg';
 import SendIcon from '@/assets/send_icon.svg';
 import SearchIcon from '@/assets/search_icon.svg';
 import NewChatIcon from '@/assets/view_more(brown05).svg';
+import CloseIcon from '@/assets/close.svg';
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 
 import ProgressiveSurvey, { LoadingBubble } from '@/components/ProgressiveSurvey';
 
@@ -20,33 +23,6 @@ export default function AIChatPage() {
   const location = useLocation();
 
   const page = useAIChatPage({ location, navigate });
-
-  // 모바일 롱프레스
-  const longPressTimerRef = useRef<number | null>(null);
-  const longPressFiredRef = useRef(false);
-
-  const clearLongPress = () => {
-    if (longPressTimerRef.current !== null) {
-      window.clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
-
-  const startLongPress = (start: () => void) => {
-    clearLongPress();
-    longPressFiredRef.current = false;
-
-    longPressTimerRef.current = window.setTimeout(() => {
-      longPressFiredRef.current = true;
-      start();
-    }, 520);
-  };
-
-  useEffect(() => {
-    return () => {
-      clearLongPress();
-    };
-  }, []);
 
   useEffect(() => {
     setTitle('도나AI 상담실');
@@ -159,63 +135,38 @@ export default function AIChatPage() {
                   <div className="px-4 py-3 text-[12px] text-gray-500">불러오는 중...</div>
                 ) : (
                   filteredHistory.map((item) => (
-                    <button
+                    <div
                       key={item.id}
-                      data-history-id={item.id}
-                      type="button"
-                      onClick={() => {
-                        if (longPressFiredRef.current) return;
-                        void page.openChatRoom(item.id);
-                      }}
-                      // ✅ 우클릭(가장 안정적): 버튼 자체에 직접 연결
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
-                      }}
-                      // ✅ 우클릭 보강(특히 Firefox 등)
-                      onMouseDown={(e) => {
-                        if (e.button !== 2) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
-                      }}
-                      // ✅ 모바일 롱프레스
-                      onPointerDown={(e) => {
-                        if (e.pointerType === 'mouse') return;
-                        if (e.isPrimary === false) return;
-
-                        try {
-                          e.currentTarget.setPointerCapture(e.pointerId);
-                        } catch {}
-
-                        startLongPress(() => {
-                          page.openDeletePopoverFromElement(item.id, e.currentTarget);
-                        });
-                      }}
-                      onPointerUp={(e) => {
-                        try {
-                          e.currentTarget.releasePointerCapture(e.pointerId);
-                        } catch {}
-
-                        if (longPressFiredRef.current) longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      onPointerCancel={(e) => {
-                        try {
-                          e.currentTarget.releasePointerCapture(e.pointerId);
-                        } catch {}
-                        longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
                       className={cx(
-                        'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
+                        'flex w-full items-center justify-between',
                         'py-3 px-4',
                         'select-none',
                         item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
                       )}>
-                      {item.title}
-                    </button>
+                      {/* 왼쪽: 채팅방 클릭 */}
+                      <button
+                        type="button"
+                        onClick={() => void page.openChatRoom(item.id)}
+                        className="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left text-[16px] font-normal">
+                        <span className="block truncate">{item.title}</span>
+                      </button>
+
+                      {/* 오른쪽: X 버튼 (close.svg) */}
+                      <button
+                        type="button"
+                        aria-label="채팅 삭제 메뉴 열기"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          page.openDeletePopoverFromElement(item.id, e.currentTarget);
+                        }}
+                        className={cx(
+                          'ml-2 flex h-7 w-7 items-center justify-center rounded-full',
+                          'cursor-pointer border-0 bg-transparent',
+                          'hover:bg-gray-200 active:bg-gray-300',
+                        )}>
+                        <img src={CloseIcon} alt="" className="block h-4 w-4 opacity-80" />
+                      </button>
+                    </div>
                   ))
                 )}
               </div>
@@ -291,7 +242,7 @@ export default function AIChatPage() {
   }, [page.isSidebarOpen, setLayoutModal]);
 
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
-    const hasImage = Boolean(product.imageUrl && product.imageUrl.trim().length > 0);
+    const src = product.imageUrl?.trim() ? product.imageUrl : DefaultImg;
 
     return (
       <div
@@ -301,11 +252,7 @@ export default function AIChatPage() {
         )}>
         <div className="p-2.5">
           <div className="h-[94px] w-full overflow-hidden rounded-[5px] bg-gray-100">
-            {hasImage ? (
-              <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full" />
-            )}
+            <img src={src} alt="" className="h-full w-full object-cover" />
           </div>
         </div>
         <div className="p-2.5 pt-0">
@@ -322,42 +269,42 @@ export default function AIChatPage() {
     </div>
   );
 
-  const SelectedProductPreview = ({ product, onRemove }: { product: PickedWishItem; onRemove: () => void }) => (
-    <div className="relative w-[109px]">
-      <button
-        type="button"
-        aria-label="선택한 상품 제거"
-        onClick={onRemove}
-        className={cx(
-          'absolute right-[-12px] top-[-12px] z-20',
-          'h-[21px] w-[21px] rounded-full',
-          'bg-primary-600 flex items-center justify-center',
-          'shadow-[0px_2px_6px_rgba(0,0,0,0.25)]',
-        )}>
-        <span className="relative block h-[14px] w-[14px]">
-          <span className="absolute left-1/2 top-1/2 h-[2px] w-[14px] -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" />
-          <span className="absolute left-1/2 top-1/2 h-[2px] w-[14px] -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-white" />
-        </span>
-      </button>
+  const SelectedProductPreview = ({ product, onRemove }: { product: PickedWishItem; onRemove: () => void }) => {
+    const src = product.imageUrl?.trim() ? product.imageUrl : DefaultImg;
 
-      <div className={cx('overflow-hidden rounded-[10px] bg-white', 'shadow-[0px_0px_6px_rgba(0,0,0,0.18)]')}>
-        <div className="p-2.5">
-          <div className="flex h-[94px] w-full items-center justify-center overflow-hidden rounded-[5px] bg-gray-100">
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full" />
-            )}
+    return (
+      <div className="relative w-[109px]">
+        <button
+          type="button"
+          aria-label="선택한 상품 제거"
+          onClick={onRemove}
+          className={cx(
+            'absolute right-[-12px] top-[-12px] z-20',
+            'h-[21px] w-[21px] rounded-full',
+            'bg-primary-600 flex items-center justify-center',
+            'shadow-[0px_2px_6px_rgba(0,0,0,0.25)]',
+          )}>
+          <span className="relative block h-[14px] w-[14px]">
+            <span className="absolute left-1/2 top-1/2 h-[2px] w-[14px] -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white" />
+            <span className="absolute left-1/2 top-1/2 h-[2px] w-[14px] -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-white" />
+          </span>
+        </button>
+
+        <div className={cx('overflow-hidden rounded-[10px] bg-white', 'shadow-[0px_0px_6px_rgba(0,0,0,0.18)]')}>
+          <div className="p-2.5">
+            <div className="flex h-[94px] w-full items-center justify-center overflow-hidden rounded-[5px] bg-gray-100">
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </div>
+          </div>
+
+          <div className="px-2.5 pb-2.5">
+            <div className="text-[12px] font-medium leading-normal text-black">{formatWon(product.price)}</div>
+            <div className="truncate text-[14px] font-normal leading-normal text-black">{product.name}</div>
           </div>
         </div>
-
-        <div className="px-2.5 pb-2.5">
-          <div className="text-[12px] font-medium leading-normal text-black">{formatWon(product.price)}</div>
-          <div className="truncate text-[14px] font-normal leading-normal text-black">{product.name}</div>
-        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="relative h-[calc(100dvh-56px)] w-full bg-white">
