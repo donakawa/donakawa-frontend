@@ -56,7 +56,8 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   const [toast, setToast] = useState<{ open: boolean; kind: ToastKind | null }>({ open: false, kind: null });
   const toastTimerRef = useRef<number | null>(null);
 
-  const sidebarRef = useRef<HTMLElement | null>(null);
+  const chatListScrollRef = useRef<HTMLDivElement | null>(null);
+
   const deletePopoverRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -180,8 +181,8 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
   const openDeletePopoverFromElement = useCallback(
     (id: number, el: HTMLElement): void => {
-      const sidebarEl = sidebarRef.current;
-      if (!sidebarEl) return;
+      const scrollEl = chatListScrollRef.current;
+      if (!scrollEl) return;
 
       if (deleteTargetId === id) {
         setDeleteTargetId(null);
@@ -189,9 +190,9 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
       }
 
       const itemRect = el.getBoundingClientRect();
-      const sidebarRect = sidebarEl.getBoundingClientRect();
+      const scrollRect = scrollEl.getBoundingClientRect();
 
-      const top = itemRect.top - sidebarRect.top + sidebarEl.scrollTop + (itemRect.height - DELETE_BUTTON_H) / 2;
+      const top = itemRect.top - scrollRect.top + scrollEl.scrollTop + (itemRect.height - DELETE_BUTTON_H) / 2;
 
       setDeleteTargetId(id);
       setDeleteTop(top);
@@ -255,6 +256,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
       fireToast('delete');
     } catch {
       closeDeleteModal();
+      fireToast('deleteFail');
     }
   }, [pendingDeleteId, closeDeleteModal, fireToast]);
 
@@ -320,7 +322,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   }, [pickedWishItem, fetchChatRooms, fireToast]);
 
   return {
-    sidebarRef,
+    chatListScrollRef,
     deletePopoverRef,
     bottomRef,
 
