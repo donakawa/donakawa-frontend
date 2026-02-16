@@ -21,8 +21,6 @@ export default function AIChatPage() {
 
   const page = useAIChatPage({ location, navigate });
 
-  const isComposingRef = useRef(false);
-
   // 모바일 롱프레스
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
@@ -81,13 +79,16 @@ export default function AIChatPage() {
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
   function SidebarModal() {
+    // ✅ 검색 입력은 모달 내부에서만 상태로 관리
     const [searchDraft, setSearchDraft] = useState<string>('');
 
+    // 열릴 때 현재 검색어로 초기화 (원하면 ''로 바꿔도 됨)
     useEffect(() => {
       setSearchDraft(page.search ?? '');
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // ✅ 렌더는 filteredHistory로만
     const filteredHistory = useMemo(() => {
       const q = searchDraft.trim().toLowerCase();
       if (!q) return page.chatHistory;
@@ -109,21 +110,13 @@ export default function AIChatPage() {
                   <img src={SearchIcon} alt="" />
                 </div>
 
+                {/* ✅ IME 관련 핸들러 제거: 그냥 onChange만 */}
                 <input
                   placeholder="검색..."
                   value={searchDraft}
                   lang="ko"
                   inputMode="text"
-                  onCompositionStart={() => {
-                    isComposingRef.current = true;
-                  }}
-                  onCompositionEnd={(e) => {
-                    isComposingRef.current = false;
-                    setSearchDraft(e.currentTarget.value);
-                  }}
-                  onChange={(e) => {
-                    setSearchDraft(e.target.value);
-                  }}
+                  onChange={(e) => setSearchDraft(e.target.value)}
                   aria-label="채팅 검색"
                   className="h-full min-w-0 flex-1 border-0 bg-transparent text-[16px] font-medium text-black outline-none placeholder:font-semibold placeholder:text-gray-600"
                 />
