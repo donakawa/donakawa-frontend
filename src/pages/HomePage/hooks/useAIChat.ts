@@ -1,4 +1,3 @@
-// useAIChatPage.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
@@ -179,13 +178,9 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     [closeSidebar],
   );
 
-  // ✅ 수정: MouseEvent + PointerEvent 둘 다 받도록 + stopPropagation 추가
-  const handleHistoryContextMenu =
-    (id: number) =>
-    (e: React.MouseEvent<HTMLButtonElement> | React.PointerEvent<HTMLButtonElement>): void => {
-      e.preventDefault();
-      e.stopPropagation();
-
+  // ✅ DOM 엘리먼트만으로 팝오버를 띄우는 함수 (롱프레스에서 이벤트 없이도 쓸 수 있게)
+  const openDeletePopoverFromElement = useCallback(
+    (id: number, targetEl: HTMLElement): void => {
       const sidebarEl = sidebarRef.current;
       if (!sidebarEl) return;
 
@@ -194,12 +189,24 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
         return;
       }
 
-      const itemRect = e.currentTarget.getBoundingClientRect();
+      const itemRect = targetEl.getBoundingClientRect();
       const sidebarRect = sidebarEl.getBoundingClientRect();
-      const top = itemRect.top - sidebarRect.top + sidebarEl.scrollTop + (itemRect.height - DELETE_BUTTON_H) / 2;
+
+      const top = itemRect.top - sidebarRect.top + (itemRect.height - DELETE_BUTTON_H) / 2;
 
       setDeleteTargetId(id);
       setDeleteTop(top);
+    },
+    [deleteTargetId],
+  );
+
+  // ✅ 데스크톱 우클릭(컨텍스트 메뉴)용 핸들러는 그대로 유지
+  const handleHistoryContextMenu =
+    (id: number) =>
+    (e: React.MouseEvent<HTMLButtonElement>): void => {
+      e.preventDefault();
+      e.stopPropagation();
+      openDeletePopoverFromElement(id, e.currentTarget);
     };
 
   const handleSidebarMouseDown = useCallback(
@@ -343,6 +350,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
     openChatRoom,
     handleHistoryContextMenu,
+    openDeletePopoverFromElement,
     handleSidebarMouseDown,
     openDeleteModal,
     closeDeleteModal,
