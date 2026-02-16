@@ -1,5 +1,8 @@
+// useAIChat.ts (useAIChatPage 훅)
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
+
+import DefaultImg from '@/assets/default_item_photo.svg?url';
 
 import {
   createChat,
@@ -60,7 +63,6 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   const deletePopoverRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ 사이드바 안 스크롤 컨테이너 ref (popover 위치 계산용)
   const chatListScrollRef = useRef<HTMLDivElement | null>(null);
 
   const fireToast = useCallback((kind: ToastKind) => {
@@ -154,7 +156,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
           wishItemId: detail.wishItem.id,
           name: detail.wishItem.name,
           price: detail.wishItem.price,
-          imageUrl: '',
+          imageUrl: DefaultImg,
           type: detail.wishItem.type,
         };
 
@@ -183,7 +185,6 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
   const openDeletePopoverFromElement = useCallback(
     (id: number, el: HTMLElement): void => {
-      // 토글
       if (deleteTargetId === id) {
         setDeleteTargetId(null);
         return;
@@ -195,7 +196,6 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
 
       const itemRect = el.getBoundingClientRect();
 
-      // ✅ fallback: 그래도 DOM 생성 보장
       if (!scrollEl) {
         const top = Math.max(0, itemRect.top + (itemRect.height - DELETE_BUTTON_H) / 2);
         setDeleteTargetId(id);
