@@ -79,16 +79,14 @@ export default function AIChatPage() {
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
   function SidebarModal() {
-    // ✅ 검색 입력은 모달 내부에서만 상태로 관리
+    // ✅ 검색 입력은 "모달 내부에서만" 관리 (타이핑해도 setLayoutModal 재호출 X)
     const [searchDraft, setSearchDraft] = useState<string>('');
 
-    // 열릴 때 현재 검색어로 초기화 (원하면 ''로 바꿔도 됨)
     useEffect(() => {
       setSearchDraft(page.search ?? '');
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ✅ 렌더는 filteredHistory로만
     const filteredHistory = useMemo(() => {
       const q = searchDraft.trim().toLowerCase();
       if (!q) return page.chatHistory;
@@ -97,20 +95,23 @@ export default function AIChatPage() {
 
     return (
       <div className="absolute inset-0">
+        {/* overlay */}
         <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
 
         <aside
           ref={page.sidebarRef}
           onMouseDown={page.handleSidebarMouseDown}
-          className="absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
+          // ✅ 중요: popover absolute 기준을 aside로 잡아야 top 계산이 안 꼬임
+          className="relative absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
+            {/* 검색 */}
             <div className="my-4">
               <div className="box-border flex h-[41px] w-full items-center gap-[5px] rounded-[100px] bg-secondary-100 px-[18px] shadow-[0px_0px_4px_rgba(0,0,0,0.25)]">
                 <div className="flex h-7 w-7 flex-[0_0_28px] items-center justify-center" aria-hidden="true">
                   <img src={SearchIcon} alt="" />
                 </div>
 
-                {/* ✅ IME 관련 핸들러 제거: 그냥 onChange만 */}
+                {/* ✅ 여기: onChange만. 조합 이벤트 없음 */}
                 <input
                   placeholder="검색..."
                   value={searchDraft}
@@ -123,6 +124,7 @@ export default function AIChatPage() {
               </div>
             </div>
 
+            {/* 새 채팅 */}
             <button
               type="button"
               onClick={page.onNewChat}
@@ -135,6 +137,7 @@ export default function AIChatPage() {
 
             <div className="py-[10px] text-[12px] text-gray-600">채팅 기록</div>
 
+            {/* ✅ 삭제 팝오버 */}
             {page.deleteTargetId !== null && (
               <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
                 <button
@@ -146,6 +149,7 @@ export default function AIChatPage() {
               </div>
             )}
 
+            {/* 리스트 */}
             <div
               className={cx(
                 'min-h-0 flex-1 overflow-y-auto',
@@ -161,10 +165,13 @@ export default function AIChatPage() {
                       key={item.id}
                       type="button"
                       onClick={() => {
+                        // ✅ 롱프레스 후 클릭으로 채팅 열리는 것 방지
                         if (longPressFiredRef.current) return;
                         void page.openChatRoom(item.id);
                       }}
+                      // ✅ PC 우클릭: 기존대로
                       onContextMenu={page.handleHistoryContextMenu(item.id)}
+                      // ✅ 모바일 롱프레스: "무조건 openDeletePopoverFromElement"로만 열기
                       onPointerDown={(e) => {
                         if (e.pointerType === 'mouse') return;
                         if (e.isPrimary === false) return;
@@ -203,6 +210,7 @@ export default function AIChatPage() {
           </div>
         </aside>
 
+        {/* 삭제 모달 */}
         {page.isDeleteModalOpen && (
           <div
             role="dialog"
@@ -234,6 +242,7 @@ export default function AIChatPage() {
           </div>
         )}
 
+        {/* 토스트 */}
         {page.toast.open && (
           <div className="pointer-events-none absolute bottom-6 left-1/2 z-[60] -translate-x-1/2" aria-live="polite">
             <div
@@ -251,6 +260,7 @@ export default function AIChatPage() {
     );
   }
 
+  // ✅ 모달은 열고/닫을 때만 setLayoutModal (입력 타이핑에 영향 없음)
   useEffect(() => {
     if (!page.isSidebarOpen) {
       setLayoutModal(null);
