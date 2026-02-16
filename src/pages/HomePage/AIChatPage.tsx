@@ -1,3 +1,4 @@
+// AIChatPage.tsx (절충안 + X버튼 기준 row로 팝오버 위치 잡기 + 콘솔 체크 추가)
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
@@ -25,6 +26,7 @@ export default function AIChatPage() {
 
   const page = useAIChatPage({ location, navigate });
 
+  // ===== 모바일 롱프레스 =====
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
 
@@ -50,6 +52,7 @@ export default function AIChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ===== 헤더 세팅 =====
   useEffect(() => {
     setTitle('도나AI 상담실');
 
@@ -66,6 +69,7 @@ export default function AIChatPage() {
     };
   }, [setTitle, setRightAction, setLayoutModal, page.toggleSidebar]);
 
+  // ===== ESC 닫기 =====
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
@@ -81,6 +85,7 @@ export default function AIChatPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
+  // ===== Sidebar Modal =====
   function SidebarModal() {
     const [searchDraft, setSearchDraft] = useState<string>('');
 
@@ -137,6 +142,7 @@ export default function AIChatPage() {
 
             <div className="py-[10px] text-[12px] text-gray-600">채팅 기록</div>
 
+            {/* chat list scroll (relative for popover) */}
             <div
               ref={page.chatListScrollRef}
               data-chatlist-scroll
@@ -145,6 +151,7 @@ export default function AIChatPage() {
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
                 '-mx-4',
               )}>
+              {/* popover */}
               {page.deleteTargetId !== null && (
                 <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
                   <button
@@ -164,13 +171,14 @@ export default function AIChatPage() {
                   filteredHistory.map((item) => (
                     <div
                       key={item.id}
+                      data-chat-row
                       className={cx(
                         'flex w-full items-center justify-between',
                         'py-3 px-4',
                         'select-none',
                         item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
                       )}>
-                      {/* left: open chat */}
+                      {/* left: open chat + 우클릭/롱프레스 */}
                       <button
                         type="button"
                         onClick={() => {
@@ -185,12 +193,19 @@ export default function AIChatPage() {
                           const el = e.currentTarget;
 
                           startLongPress(() => {
-                            try {
-                              e.preventDefault();
-                            } catch {
-                              // noop
-                            }
                             page.openDeletePopoverFromElement(item.id, el);
+
+                            // ===== 콘솔 체크 (롱프레스) =====
+                            console.log('[LP] before', {
+                              deleteTargetId: page.deleteTargetId,
+                              deleteTop: page.deleteTop,
+                            });
+                            setTimeout(() => {
+                              console.log('[LP] after', {
+                                deleteTargetId: page.deleteTargetId,
+                                deleteTop: page.deleteTop,
+                              });
+                            }, 0);
                           });
                         }}
                         onPointerUp={() => {
@@ -205,16 +220,34 @@ export default function AIChatPage() {
                           longPressFiredRef.current = false;
                           clearLongPress();
                         }}
-                        className="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left text-[16px] font-normal">
+                        className="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left text-[16px] font-normal touch-manipulation">
                         <span className="block truncate">{item.title}</span>
                       </button>
 
+                      {/* right: X button (backup + 콘솔 체크) */}
                       <button
                         type="button"
                         aria-label="채팅 삭제 메뉴 열기"
                         onClick={(e) => {
                           e.stopPropagation();
-                          page.openDeletePopoverFromElement(item.id, e.currentTarget);
+
+                          const rowEl = (e.currentTarget.closest('[data-chat-row]') as HTMLElement | null) ?? null;
+
+                          // ===== 콘솔 체크 (X) =====
+                          console.log('[X] click', {
+                            id: item.id,
+                            hasRowEl: Boolean(rowEl),
+                            before: { deleteTargetId: page.deleteTargetId, deleteTop: page.deleteTop },
+                          });
+
+                          page.openDeletePopoverFromElement(item.id, rowEl ?? (e.currentTarget as HTMLElement));
+
+                          setTimeout(() => {
+                            console.log('[X] after', {
+                              id: item.id,
+                              after: { deleteTargetId: page.deleteTargetId, deleteTop: page.deleteTop },
+                            });
+                          }, 0);
                         }}
                         className={cx(
                           'ml-2 flex h-7 w-7 items-center justify-center rounded-full',
@@ -287,6 +320,7 @@ export default function AIChatPage() {
     );
   }
 
+  // ===== 사이드바 mount/unmount =====
   useEffect(() => {
     if (!page.isSidebarOpen) {
       setLayoutModal(null);
@@ -298,6 +332,7 @@ export default function AIChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page.isSidebarOpen, setLayoutModal]);
 
+  // ===== bubbles =====
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
     const src = product.imageUrl?.trim() ? product.imageUrl : DefaultImg;
 
@@ -363,6 +398,7 @@ export default function AIChatPage() {
     );
   };
 
+  // ===== main view =====
   return (
     <div className="relative h-[calc(100dvh-56px)] w-full bg-white">
       <div className="flex h-full flex-col">
