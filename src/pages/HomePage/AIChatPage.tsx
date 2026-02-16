@@ -100,7 +100,6 @@ export default function AIChatPage() {
         <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
 
         <aside
-          ref={page.sidebarRef}
           onMouseDown={page.handleSidebarMouseDown}
           className="absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
@@ -146,6 +145,7 @@ export default function AIChatPage() {
             )}
 
             <div
+              ref={page.chatListScrollRef}
               className={cx(
                 'min-h-0 flex-1 overflow-y-auto',
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
@@ -163,27 +163,35 @@ export default function AIChatPage() {
                         if (longPressFiredRef.current) return;
                         void page.openChatRoom(item.id);
                       }}
-                      onContextMenu={page.handleHistoryContextMenu(item.id)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
+                      }}
                       onPointerDown={(e) => {
                         if (e.pointerType === 'mouse') return;
                         if (e.isPrimary === false) return;
 
-                        e.preventDefault();
+                        try {
+                          e.currentTarget.setPointerCapture(e.pointerId);
+                        } catch {}
 
-                        const el = e.currentTarget;
                         startLongPress(() => {
-                          page.openDeletePopoverFromElement(item.id, el);
+                          page.openDeletePopoverFromElement(item.id, e.currentTarget);
                         });
                       }}
-                      onPointerUp={() => {
+                      onPointerUp={(e) => {
+                        try {
+                          e.currentTarget.releasePointerCapture(e.pointerId);
+                        } catch {}
+
                         if (longPressFiredRef.current) longPressFiredRef.current = false;
                         clearLongPress();
                       }}
-                      onPointerCancel={() => {
-                        longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      onPointerLeave={() => {
+                      onPointerCancel={(e) => {
+                        try {
+                          e.currentTarget.releasePointerCapture(e.pointerId);
+                        } catch {}
                         longPressFiredRef.current = false;
                         clearLongPress();
                       }}
