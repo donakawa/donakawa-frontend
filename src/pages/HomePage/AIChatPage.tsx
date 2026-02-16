@@ -1,4 +1,9 @@
-// AIChatPage.tsx (절충안 + X버튼 기준 row로 팝오버 위치 잡기 + 콘솔 체크 추가)
+// AIChatPage.tsx
+// ✅ 수정 포함:
+// 1) setLayoutModal(<SidebarModal />)가 deleteTargetId/deleteTop 등 변화에도 갱신되도록 deps 확장 (popover 안 뜨던 핵심 원인 해결)
+// 2) X/롱프레스에 콘솔 체크 로그 포함
+// 3) X 클릭 시 row 기준으로 popover 위치 잡기 (data-chat-row + closest)
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
@@ -182,6 +187,7 @@ export default function AIChatPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          // 롱프레스 직후 tap으로 열리는 거 방지
                           if (longPressFiredRef.current) return;
                           void page.openChatRoom(item.id);
                         }}
@@ -193,17 +199,18 @@ export default function AIChatPage() {
                           const el = e.currentTarget;
 
                           startLongPress(() => {
+                            // ✅ 롱프레스 기준: 왼쪽 버튼(row left) 기준으로 popover 띄우기
+                            console.log('[LP] click(before)', {
+                              id: item.id,
+                              before: { deleteTargetId: page.deleteTargetId, deleteTop: page.deleteTop },
+                            });
+
                             page.openDeletePopoverFromElement(item.id, el);
 
-                            // ===== 콘솔 체크 (롱프레스) =====
-                            console.log('[LP] before', {
-                              deleteTargetId: page.deleteTargetId,
-                              deleteTop: page.deleteTop,
-                            });
                             setTimeout(() => {
                               console.log('[LP] after', {
-                                deleteTargetId: page.deleteTargetId,
-                                deleteTop: page.deleteTop,
+                                id: item.id,
+                                after: { deleteTargetId: page.deleteTargetId, deleteTop: page.deleteTop },
                               });
                             }, 0);
                           });
@@ -231,15 +238,15 @@ export default function AIChatPage() {
                         onClick={(e) => {
                           e.stopPropagation();
 
-                          const rowEl = (e.currentTarget.closest('[data-chat-row]') as HTMLElement | null) ?? null;
+                          const rowEl = e.currentTarget.closest('[data-chat-row]') as HTMLElement | null;
 
-                          // ===== 콘솔 체크 (X) =====
-                          console.log('[X] click', {
+                          console.log('[X] click(before)', {
                             id: item.id,
                             hasRowEl: Boolean(rowEl),
                             before: { deleteTargetId: page.deleteTargetId, deleteTop: page.deleteTop },
                           });
 
+                          // ✅ 위치 계산은 row 기준으로
                           page.openDeletePopoverFromElement(item.id, rowEl ?? (e.currentTarget as HTMLElement));
 
                           setTimeout(() => {
@@ -320,7 +327,7 @@ export default function AIChatPage() {
     );
   }
 
-  // ===== 사이드바 mount/unmount =====
+  // ✅ 핵심 수정: 모달을 "열 때 1번"이 아니라, sidebar UI에 영향을 주는 상태 변화마다 갱신
   useEffect(() => {
     if (!page.isSidebarOpen) {
       setLayoutModal(null);
@@ -330,7 +337,40 @@ export default function AIChatPage() {
     setLayoutModal(<SidebarModal />);
     return () => setLayoutModal(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page.isSidebarOpen, setLayoutModal]);
+  }, [
+    page.isSidebarOpen,
+
+    // sidebar contents
+    page.chatHistory,
+    page.isChatHistoryLoading,
+    page.activeHistoryId,
+    page.search,
+
+    // delete popover / modal (⭐ 핵심)
+    page.deleteTargetId,
+    page.deleteTop,
+    page.isDeleteModalOpen,
+
+    // toast
+    page.toast,
+
+    // refs/handlers used inside SidebarModal
+    page.sidebarRef,
+    page.chatListScrollRef,
+    page.deletePopoverRef,
+
+    page.handleSidebarMouseDown,
+    page.closeSidebar,
+    page.onNewChat,
+    page.openChatRoom,
+    page.handleHistoryContextMenu,
+    page.openDeletePopoverFromElement,
+    page.openDeleteModal,
+    page.closeDeleteModal,
+    page.confirmDelete,
+
+    setLayoutModal,
+  ]);
 
   // ===== bubbles =====
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
