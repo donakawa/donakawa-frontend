@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -20,6 +20,8 @@ export default function AIChatPage() {
   const location = useLocation();
 
   const page = useAIChatPage({ location, navigate });
+
+  const [searchDraft, setSearchDraft] = useState<string>('');
 
   // 모바일 롱프레스
   const longPressTimerRef = useRef<number | null>(null);
@@ -79,6 +81,12 @@ export default function AIChatPage() {
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
   useEffect(() => {
+    if (page.isSidebarOpen) {
+      setSearchDraft(page.search ?? '');
+    }
+  }, [page.isSidebarOpen, page.search]);
+
+  useEffect(() => {
     if (!page.isSidebarOpen) {
       setLayoutModal(null);
       return;
@@ -101,8 +109,21 @@ export default function AIChatPage() {
 
                 <input
                   placeholder="검색..."
-                  value={page.search}
-                  onChange={(e) => page.setSearch(e.target.value)}
+                  value={searchDraft}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSearchDraft(v);
+
+                    const native = e.nativeEvent as InputEvent;
+                    if (native.isComposing) return;
+
+                    page.setSearch(v);
+                  }}
+                  onCompositionEnd={(e) => {
+                    const v = e.currentTarget.value;
+                    setSearchDraft(v);
+                    page.setSearch(v);
+                  }}
                   aria-label="채팅 검색"
                   className="h-full min-w-0 flex-1 border-0 bg-transparent text-[16px] font-medium text-black outline-none placeholder:font-semibold placeholder:text-gray-600"
                 />
@@ -143,7 +164,7 @@ export default function AIChatPage() {
                   <div className="px-4 py-3 text-[12px] text-gray-500">불러오는 중...</div>
                 ) : (
                   page.chatHistory
-                    .filter((item) => item.title.toLowerCase().includes(page.search.toLowerCase()))
+                    .filter((item) => (item.title ?? '').toLowerCase().includes(searchDraft.toLowerCase()))
                     .map((item) => (
                       <button
                         key={item.id}
@@ -266,6 +287,7 @@ export default function AIChatPage() {
     page.confirmDelete,
 
     setLayoutModal,
+    searchDraft,
   ]);
 
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
