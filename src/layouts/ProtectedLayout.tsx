@@ -95,11 +95,7 @@ export default function ProtectedLayout() {
 
       {shouldShowBottomNav && <BottomNav />}
 
-      {layoutModal && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[rgba(61,43,39,0.8)]">
-          {layoutModal}
-        </div>
-      )}
+      {layoutModal && <div className="absolute inset-0 z-[100] bg-[rgba(61,43,39,0.8)]">{layoutModal}</div>}
     </div>
   );
 }

@@ -46,7 +46,6 @@ export default function AIChatPage() {
     return () => {
       clearLongPress();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -100,6 +99,7 @@ export default function AIChatPage() {
         <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
 
         <aside
+          ref={page.sidebarRef}
           onMouseDown={page.handleSidebarMouseDown}
           className="absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
@@ -136,11 +136,40 @@ export default function AIChatPage() {
             <div
               ref={page.chatListScrollRef}
               data-chatlist-scroll
+              onContextMenuCapture={(e) => {
+                const target = e.target as HTMLElement;
+                const btn = target.closest('button[data-history-id]') as HTMLButtonElement | null;
+                if (!btn) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const id = Number(btn.dataset.historyId);
+                if (!Number.isFinite(id)) return;
+
+                page.openDeletePopoverFromElement(id, btn);
+              }}
+              onMouseDownCapture={(e) => {
+                if (e.button !== 2) return;
+
+                const target = e.target as HTMLElement;
+                const btn = target.closest('button[data-history-id]') as HTMLButtonElement | null;
+                if (!btn) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const id = Number(btn.dataset.historyId);
+                if (!Number.isFinite(id)) return;
+
+                page.openDeletePopoverFromElement(id, btn);
+              }}
               className={cx(
                 'relative min-h-0 flex-1 overflow-y-auto overflow-x-visible',
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
                 '-mx-4',
               )}>
+              {/* popover */}
               {page.deleteTargetId !== null && (
                 <div ref={page.deletePopoverRef} className="absolute right-4 z-30" style={{ top: page.deleteTop }}>
                   <button
@@ -159,21 +188,11 @@ export default function AIChatPage() {
                   filteredHistory.map((item) => (
                     <button
                       key={item.id}
+                      data-history-id={item.id}
                       type="button"
                       onClick={() => {
                         if (longPressFiredRef.current) return;
                         void page.openChatRoom(item.id);
-                      }}
-                      onContextMenuCapture={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
-                      }}
-                      onMouseDownCapture={(e) => {
-                        if (e.button !== 2) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
                       }}
                       onPointerDown={(e) => {
                         if (e.pointerType === 'mouse') return;
@@ -217,6 +236,7 @@ export default function AIChatPage() {
           </div>
         </aside>
 
+        {/* delete modal */}
         {page.isDeleteModalOpen && (
           <div
             role="dialog"
@@ -248,6 +268,7 @@ export default function AIChatPage() {
           </div>
         )}
 
+        {/* toast */}
         {page.toast.open && (
           <div className="pointer-events-none absolute bottom-6 left-1/2 z-[60] -translate-x-1/2" aria-live="polite">
             <div
