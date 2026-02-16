@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { HeaderControlContext } from '@/layouts/ProtectedLayout';
@@ -23,7 +23,7 @@ export default function AIChatPage() {
 
   const isComposingRef = useRef(false);
 
-  // 모바일용 롱프레스
+  // 모바일 롱프레스
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
 
@@ -45,9 +45,7 @@ export default function AIChatPage() {
   };
 
   useEffect(() => {
-    return () => {
-      clearLongPress();
-    };
+    return () => clearLongPress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -82,29 +80,20 @@ export default function AIChatPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [page.isSidebarOpen, page.isDeleteModalOpen, page.closeSidebar, page.closeDeleteModal]);
 
-  function SidebarModal() {
-    const [searchDraft, setSearchDraft] = useState('');
+  useEffect(() => {
+    if (!page.isSidebarOpen) {
+      setLayoutModal(null);
+      return;
+    }
 
-    useEffect(() => {
-      setSearchDraft(page.search ?? '');
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const filteredHistory = useMemo(() => {
-      const q = searchDraft.trim().toLowerCase();
-      if (!q) return page.chatHistory;
-      return page.chatHistory.filter((item) => item.title.toLowerCase().includes(q));
-    }, [searchDraft, page.chatHistory]);
-
-    return (
+    const node = (
       <div className="absolute inset-0">
-        {/* overlay */}
-        <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0 z-0" />
+        <button type="button" aria-label="사이드바 닫기" onClick={page.closeSidebar} className="absolute inset-0" />
 
         <aside
           ref={page.sidebarRef}
           onMouseDown={page.handleSidebarMouseDown}
-          className="absolute right-0 top-0 z-10 h-full w-4/5 max-w-[320px] bg-white p-4">
+          className="absolute right-0 top-0 h-full w-4/5 max-w-[320px] bg-white p-4">
           <div className="flex h-full flex-col">
             <div className="my-4">
               <div className="box-border flex h-[41px] w-full items-center gap-[5px] rounded-[100px] bg-secondary-100 px-[18px] shadow-[0px_0px_4px_rgba(0,0,0,0.25)]">
@@ -114,18 +103,17 @@ export default function AIChatPage() {
 
                 <input
                   placeholder="검색..."
-                  value={searchDraft}
-                  lang="ko"
-                  inputMode="text"
+                  value={page.search}
                   onCompositionStart={() => {
                     isComposingRef.current = true;
                   }}
                   onCompositionEnd={(e) => {
                     isComposingRef.current = false;
-                    setSearchDraft(e.currentTarget.value);
+                    page.setSearch(e.currentTarget.value);
                   }}
                   onChange={(e) => {
-                    setSearchDraft(e.target.value);
+                    if (isComposingRef.current) return;
+                    page.setSearch(e.target.value);
                   }}
                   aria-label="채팅 검색"
                   className="h-full min-w-0 flex-1 border-0 bg-transparent text-[16px] font-medium text-black outline-none placeholder:font-semibold placeholder:text-gray-600"
@@ -166,47 +154,49 @@ export default function AIChatPage() {
                 {page.isChatHistoryLoading && page.chatHistory.length === 0 ? (
                   <div className="px-4 py-3 text-[12px] text-gray-500">불러오는 중...</div>
                 ) : (
-                  filteredHistory.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        if (longPressFiredRef.current) return;
-                        void page.openChatRoom(item.id);
-                      }}
-                      onContextMenu={(e) => page.handleHistoryContextMenu(item.id)(e)}
-                      onPointerDown={(e) => {
-                        if (e.pointerType === 'mouse') return;
-                        if (e.isPrimary === false) return;
+                  page.chatHistory
+                    .filter((item) => item.title.toLowerCase().includes(page.search.toLowerCase()))
+                    .map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          if (longPressFiredRef.current) return;
+                          void page.openChatRoom(item.id);
+                        }}
+                        onContextMenu={page.handleHistoryContextMenu(item.id)}
+                        onPointerDown={(e) => {
+                          if (e.pointerType === 'mouse') return;
+                          if (e.isPrimary === false) return;
 
-                        const targetEl = e.currentTarget;
+                          e.preventDefault();
 
-                        startLongPress(() => {
-                          page.openDeletePopoverFromElement(item.id, targetEl);
-                        });
-                      }}
-                      onPointerUp={() => {
-                        if (longPressFiredRef.current) {
+                          const el = e.currentTarget;
+                          startLongPress(() => {
+                            page.openDeletePopoverFromElement(item.id, el);
+                          });
+                        }}
+                        onPointerUp={() => {
+                          if (longPressFiredRef.current) longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        onPointerCancel={() => {
                           longPressFiredRef.current = false;
-                        }
-                        clearLongPress();
-                      }}
-                      onPointerCancel={() => {
-                        longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      onPointerLeave={() => {
-                        longPressFiredRef.current = false;
-                        clearLongPress();
-                      }}
-                      className={cx(
-                        'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
-                        'py-3 px-4',
-                        item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
-                      )}>
-                      {item.title}
-                    </button>
-                  ))
+                          clearLongPress();
+                        }}
+                        onPointerLeave={() => {
+                          longPressFiredRef.current = false;
+                          clearLongPress();
+                        }}
+                        className={cx(
+                          'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
+                          'py-3 px-4',
+                          'select-none',
+                          item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
+                        )}>
+                        {item.title}
+                      </button>
+                    ))
                 )}
               </div>
             </div>
@@ -259,18 +249,36 @@ export default function AIChatPage() {
         )}
       </div>
     );
-  }
 
-  useEffect(() => {
-    if (!page.isSidebarOpen) {
-      setLayoutModal(null);
-      return;
-    }
-
-    setLayoutModal(<SidebarModal />);
+    setLayoutModal(node);
     return () => setLayoutModal(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page.isSidebarOpen, setLayoutModal]);
+  }, [
+    page.isSidebarOpen,
+    page.search,
+    page.setSearch,
+    page.onNewChat,
+    page.chatHistory,
+    page.isChatHistoryLoading,
+    page.activeHistoryId,
+    page.deleteTargetId,
+    page.deleteTop,
+    page.isDeleteModalOpen,
+    page.toast,
+
+    page.sidebarRef,
+    page.deletePopoverRef,
+
+    page.closeSidebar,
+    page.handleSidebarMouseDown,
+    page.openChatRoom,
+    page.handleHistoryContextMenu,
+    page.openDeletePopoverFromElement,
+    page.openDeleteModal,
+    page.closeDeleteModal,
+    page.confirmDelete,
+
+    setLayoutModal,
+  ]);
 
   const ProductCardBubble = ({ product }: { product: PickedWishItem }) => {
     const hasImage = Boolean(product.imageUrl && product.imageUrl.trim().length > 0);
