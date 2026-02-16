@@ -135,6 +135,7 @@ export default function AIChatPage() {
 
             <div
               ref={page.chatListScrollRef}
+              data-chatlist-scroll
               className={cx(
                 'relative min-h-0 flex-1 overflow-y-auto overflow-x-visible',
                 '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
@@ -163,7 +164,13 @@ export default function AIChatPage() {
                         if (longPressFiredRef.current) return;
                         void page.openChatRoom(item.id);
                       }}
-                      onContextMenu={(e) => {
+                      onContextMenuCapture={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        page.openDeletePopoverFromElement(item.id, e.currentTarget);
+                      }}
+                      onMouseDownCapture={(e) => {
+                        if (e.button !== 2) return;
                         e.preventDefault();
                         e.stopPropagation();
                         page.openDeletePopoverFromElement(item.id, e.currentTarget);
@@ -191,9 +198,7 @@ export default function AIChatPage() {
                       onPointerCancel={(e) => {
                         try {
                           e.currentTarget.releasePointerCapture(e.pointerId);
-                        } catch {
-                          // ignore
-                        }
+                        } catch {}
                         longPressFiredRef.current = false;
                         clearLongPress();
                       }}
@@ -256,7 +261,9 @@ export default function AIChatPage() {
                 ? '채팅이 삭제되었습니다.'
                 : page.toast.kind === 'sendFail'
                   ? '서버 문제로 채팅 생성에 실패했어요.'
-                  : '요청에 실패했어요.'}
+                  : page.toast.kind === 'historyFail'
+                    ? '채팅 기록을 불러오지 못했어요.'
+                    : '요청에 실패했어요.'}
             </div>
           </div>
         )}
