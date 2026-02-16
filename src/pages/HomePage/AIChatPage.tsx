@@ -21,9 +21,7 @@ export default function AIChatPage() {
 
   const page = useAIChatPage({ location, navigate });
 
-  const isComposingRef = useRef(false);
-
-  // ✅ 모바일 롱프레스
+  // 모바일 롱프레스
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
 
@@ -151,18 +149,14 @@ export default function AIChatPage() {
                         key={item.id}
                         type="button"
                         onClick={() => {
-                          // ✅ 롱프레스 후에는 클릭으로 방 열리지 않게
                           if (longPressFiredRef.current) return;
                           void page.openChatRoom(item.id);
                         }}
-                        // ✅ 우클릭: 기존 그대로 유지
                         onContextMenu={page.handleHistoryContextMenu(item.id)}
-                        // ✅ 모바일 꾹 누르기: DOM을 저장해서 타이머 후 팝오버 오픈
                         onPointerDown={(e) => {
                           if (e.pointerType === 'mouse') return;
                           if (e.isPrimary === false) return;
 
-                          // iOS/모바일 텍스트 선택 메뉴 줄이기
                           e.preventDefault();
 
                           const el = e.currentTarget;
@@ -185,7 +179,6 @@ export default function AIChatPage() {
                         className={cx(
                           'block w-full cursor-pointer border-0 text-left text-[16px] font-normal',
                           'py-3 px-4',
-                          // ✅ 복사/선택 방지(모바일)
                           'select-none',
                           item.id === page.activeHistoryId ? 'bg-primary-200' : 'bg-transparent',
                         )}>
