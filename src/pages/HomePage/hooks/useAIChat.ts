@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
 import {
@@ -57,11 +56,12 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   const [toast, setToast] = useState<{ open: boolean; kind: ToastKind | null }>({ open: false, kind: null });
   const toastTimerRef = useRef<number | null>(null);
 
-  // ✅ 사이드바 "채팅기록 스크롤 컨테이너"
-  const chatListScrollRef = useRef<HTMLDivElement | null>(null);
-
+  const sidebarRef = useRef<HTMLElement | null>(null);
   const deletePopoverRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ 사이드바 안 스크롤 컨테이너 ref (popover 위치 계산용)
+  const chatListScrollRef = useRef<HTMLDivElement | null>(null);
 
   const fireToast = useCallback((kind: ToastKind) => {
     if (toastTimerRef.current) {
@@ -181,11 +181,6 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     [closeSidebar],
   );
 
-  /**
-   * ✅ 어떤 상황에서도 deleteTargetId는 세팅되게 만든다.
-   * - ref가 null이어도 closest()로 찾고
-   * - 그래도 못 찾으면 화면 기준 top으로라도 띄워서 "DOM 생성"을 보장
-   */
   const openDeletePopoverFromElement = useCallback(
     (id: number, el: HTMLElement): void => {
       // 토글
@@ -194,12 +189,14 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
         return;
       }
 
-      const scrollEl = chatListScrollRef.current ?? (el.closest('[data-chatlist-scroll]') as HTMLDivElement | null);
+      const sidebarEl = sidebarRef.current;
+      const scrollEl =
+        chatListScrollRef.current ?? (el.closest('[data-chatlist-scroll]') as HTMLDivElement | null) ?? sidebarEl;
 
       const itemRect = el.getBoundingClientRect();
 
+      // ✅ fallback: 그래도 DOM 생성 보장
       if (!scrollEl) {
-        // ✅ 최후 fallback: 화면 기준(그래도 DOM은 생김)
         const top = Math.max(0, itemRect.top + (itemRect.height - DELETE_BUTTON_H) / 2);
         setDeleteTargetId(id);
         setDeleteTop(top);
@@ -207,7 +204,8 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
       }
 
       const scrollRect = scrollEl.getBoundingClientRect();
-      const top = itemRect.top - scrollRect.top + scrollEl.scrollTop + (itemRect.height - DELETE_BUTTON_H) / 2;
+      const top =
+        itemRect.top - scrollRect.top + (scrollEl as HTMLElement).scrollTop + (itemRect.height - DELETE_BUTTON_H) / 2;
 
       setDeleteTargetId(id);
       setDeleteTop(top);
@@ -215,16 +213,8 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     [deleteTargetId],
   );
 
-  const handleHistoryContextMenu =
-    (id: number) =>
-    (e: ReactMouseEvent<HTMLButtonElement>): void => {
-      e.preventDefault();
-      e.stopPropagation();
-      openDeletePopoverFromElement(id, e.currentTarget);
-    };
-
   const handleSidebarMouseDown = useCallback(
-    (e: ReactMouseEvent<HTMLElement>): void => {
+    (e: React.MouseEvent<HTMLElement>): void => {
       if (deleteTargetId === null) return;
 
       const pop = deletePopoverRef.current;
@@ -237,7 +227,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   );
 
   const openDeleteModal = useCallback(
-    (e: ReactMouseEvent<HTMLButtonElement>): void => {
+    (e: React.MouseEvent<HTMLButtonElement>): void => {
       e.stopPropagation();
       if (deleteTargetId === null) return;
 
@@ -338,6 +328,7 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
   }, [pickedWishItem, fetchChatRooms, fireToast]);
 
   return {
+    sidebarRef,
     chatListScrollRef,
     deletePopoverRef,
     bottomRef,
@@ -364,11 +355,10 @@ export function useAIChatPage(args: { location: Location; navigate: NavigateFunc
     onNewChat,
 
     openChatRoom,
-    handleHistoryContextMenu,
 
     openDeletePopoverFromElement,
-
     handleSidebarMouseDown,
+
     openDeleteModal,
     closeDeleteModal,
     confirmDelete,
