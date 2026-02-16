@@ -43,25 +43,13 @@ const TOAST_MESSAGE: Record<ToastKind, string> = {
 };
 
 type ReauthStatus = 'none' | 'success';
-type Provider = 'GOOGLE' | 'KAKAO' | 'LOCAL' | 'UNKNOWN';
 
-function pickProviderFromMe(me: MeData): Provider {
-  const raw =
-    (me as unknown as { provider?: unknown }).provider ??
-    (me as unknown as { socialProvider?: unknown }).socialProvider ??
-    (me as unknown as { loginProvider?: unknown }).loginProvider ??
-    (me as unknown as { loginType?: unknown }).loginType ??
-    (me as unknown as { authProvider?: unknown }).authProvider ??
-    (me as unknown as { oauthProvider?: unknown }).oauthProvider ??
-    (me as unknown as { oauthType?: unknown }).oauthType ??
-    null;
-
-  const v = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
-  if (!v) return 'UNKNOWN';
-  if (v.includes('GOOGLE')) return 'GOOGLE';
-  if (v.includes('KAKAO')) return 'KAKAO';
-  if (v.includes('LOCAL') || v.includes('EMAIL') || v.includes('PASSWORD') || v.includes('BASIC')) return 'LOCAL';
-  return 'UNKNOWN';
+function normalizeProviders(providers: unknown): string[] {
+  if (!Array.isArray(providers)) return [];
+  return providers
+    .filter((p): p is string => typeof p === 'string')
+    .map((p) => p.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 export default function WithdrawalPage() {
@@ -73,7 +61,7 @@ export default function WithdrawalPage() {
   const [step, setStep] = useState<WithdrawStep>('idle');
 
   const [hasPassword, setHasPassword] = useState<boolean>(true);
-  const [provider, setProvider] = useState<Provider>('UNKNOWN');
+  const [providers, setProviders] = useState<string[]>([]);
 
   const [reauthStatus, setReauthStatus] = useState<ReauthStatus>('none');
 
@@ -130,17 +118,18 @@ export default function WithdrawalPage() {
           }
           setEmail('');
           setHasPassword(true);
-          setProvider('UNKNOWN');
+          setProviders([]);
           return;
         }
 
-        setEmail(me.data.email);
-        setHasPassword(Boolean(me.data.hasPassword));
-        setProvider(pickProviderFromMe(me.data));
+        const data = me.data as MeData;
+        setEmail(data.email ?? '');
+        setHasPassword(Boolean(data.hasPassword));
+        setProviders(normalizeProviders((data as unknown as { providers?: unknown }).providers));
       } catch {
         setEmail('');
         setHasPassword(true);
-        setProvider('UNKNOWN');
+        setProviders([]);
       }
     })();
 
@@ -150,6 +139,10 @@ export default function WithdrawalPage() {
   }, [clearAuthAndGoLogin]);
 
   const maskedEmail = useMemo(() => (email ? maskEmail(email) : ''), [email]);
+
+  const providersLower = useMemo(() => normalizeProviders(providers), [providers]);
+  const hasGoogleProvider = providersLower.includes('google');
+  const hasKakaoProvider = providersLower.includes('kakao');
 
   // 소셜 재인증 복귀
   useEffect(() => {
@@ -183,8 +176,8 @@ export default function WithdrawalPage() {
 
   const showPasswordReauth = hasPassword;
 
-  const showGoogleReauth = !hasPassword || provider === 'GOOGLE' || provider === 'UNKNOWN';
-  const showKakaoReauth = provider === 'KAKAO';
+  const showGoogleReauth = hasGoogleProvider;
+  const showKakaoReauth = hasKakaoProvider;
 
   const showSocialDivider = showGoogleReauth || showKakaoReauth;
 
