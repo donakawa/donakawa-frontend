@@ -1,4 +1,5 @@
 import CloseButton from '@/assets/close.svg?react';
+import DefaultPhoto from '@/assets/default_item_photo.png';
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ const SuccessModal = ({
           </div>
           <div className="flex flex-col items-start gap-[4px] w-[94px] h-[141px] mb-[20px]">
             <div className="w-[94px] h-[94px] bg-[color:var(--color-gray-100)] rounded-[5px] overflow-hidden">
-              <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+              <img src={productImage || DefaultPhoto } alt={productName} className="w-full h-full object-cover" />
             </div>
             <span className="text-[12px] font-medium text-[color:var(--color-black)] leading-[150%]">{price}</span>
             <span className="text-[14px] text-[color:var(--color-black)] leading-[150%] truncate w-full">{productName}</span>

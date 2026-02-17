@@ -13,10 +13,9 @@ import {
 } from '@/apis/WishlistPage/wishlistItems';
 
 import DefaultPhotoBig from '@/assets/default_item_photo_big.svg';
-import DefaultPhoto from '@/assets/default_item_photo.svg';
 import DonaAI from '@/assets/dona_glass.svg';
 import WishRegistrationPage from './WishRegistrationPage';
-import ArrowLeftWhite from '@/assets/arrow_left(white).svg';
+import ArrowItem from '@/assets/item_arrow.svg';
 
 type ItemType = 'AUTO' | 'MANUAL';
 
@@ -74,7 +73,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
     addedDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     const diffTime = Math.abs(today.getTime() - addedDate.getTime());
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
   }, [item?.addedAt]);
 
   const onClickBack = () => navigate(-1);
@@ -167,7 +166,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
                 type="button"
                 onClick={onClickBack}
                 className="w-8 h-8 border-0 bg-transparent cursor-pointer flex items-center justify-center">
-                <img src={ArrowLeftWhite} alt="뒤로가기" className="object-contain" />
+                <img src={ArrowItem} alt="뒤로가기" className="object-contain" />
               </button>
             </header>
 
@@ -286,7 +285,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
       <SuccessModal
         isOpen={isSuccessOpen}
         onClose={handleFinalComplete}
-        productImage={item.photoUrl || DefaultPhoto}
+        productImage={item.photoUrl}
         productName={item.name}
         price={item.price?.toLocaleString?.() ?? '0'}
       />
