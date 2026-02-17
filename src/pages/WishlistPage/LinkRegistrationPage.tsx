@@ -66,7 +66,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
               cacheId: dataId,
             });
           } else {
-            showCrawlFailToast();
+            alert('상품 정보를 가져오지 못했습니다.');
           }
         } else if (result === 'FAILED') {
           throw new Error('CRAWL_FAILED');
@@ -76,7 +76,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
           // 성공하지 않았을 때만 에러 처리
           eventSource.close();
           setIsLoading(false);
-          showCrawlFailToast();
+          alert('상품 정보를 가져오지 못했습니다.');
         }
       }
     });
@@ -93,7 +93,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
       } else {
         setIsLoading(false);
         retryCountRef.current = 0;
-        showCrawlFailToast();
+        alert('상품 정보를 가져오는 시간이 너무 오래 걸립니다. 잠시 후 다시 시도해주세요.');
       }
     };
   };
@@ -119,8 +119,10 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
       if (error.response?.status === 409) {
         const errorMessage = error.response.data?.error?.message || '이미 추가된 상품입니다.';
         alert(errorMessage);
-      } else {
+      } else if (error.response?.status === 400) {
         showCrawlFailToast();
+      } else {
+        alert('상품 정보를 가져오지 못했습니다.');
       }
 
       console.error('Crawl request error:', error);
