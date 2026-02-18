@@ -1,7 +1,6 @@
-// donaAIBanner.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DonaIcon from '@/assets/ai_dona.svg?react';
+import DonaIcon from '@/assets/ai_dona.png';
 import CloseArrow from '@/assets/ai_close_arrow.svg?react';
 import OpenArrow from '@/assets/ai_open_arrow.svg?react';
 
@@ -74,7 +73,7 @@ const DonaAiBanner = React.forwardRef<HTMLDivElement, Props>(({ onDismiss }, ref
       </div>
 
       <div className="absolute right-0 w-[72px] h-[72px]">
-        <DonaIcon />
+        <img src={DonaIcon} alt="도나 AI" className="w-full h-full object-contain"/>
       </div>
     </div>
   );

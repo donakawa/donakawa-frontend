@@ -1,4 +1,4 @@
-import DefaultPhoto from '@/assets/default_item_photo.svg';
+import DefaultPhoto from '@/assets/default_item_photo.png';
 
 type Props = {
   imageUrl: string;

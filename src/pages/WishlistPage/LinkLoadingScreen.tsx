@@ -4,7 +4,7 @@ export default function LinkLoadingScreen() {
   const [step, setStep] = useState(1);
 
   const getLoadingImage = (stepNum: number) => {
-    return new URL(`../../assets/loading_${stepNum}.svg`, import.meta.url).href;
+    return new URL(`../../assets/loading_${stepNum}.png`, import.meta.url).href;
   };
 
   useEffect(() => {
