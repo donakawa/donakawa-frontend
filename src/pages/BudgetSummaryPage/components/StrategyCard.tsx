@@ -7,6 +7,12 @@ interface StrategyCardProps {
   onChange: (key: keyof BudgetData, value: string) => void;
 }
 
+const strategyNames: Record<number, string> = {
+  1: '자산 형성',
+  2: '균형 지출',
+  3: '자유 지출',
+};
+
 const StrategyCard = ({ isEdit, data, onChange }: StrategyCardProps) => {
   const [showWarning, setShowWarning] = useState(false);
 
@@ -59,7 +65,9 @@ const StrategyCard = ({ isEdit, data, onChange }: StrategyCardProps) => {
 
   return (
     <div className="flex flex-col items-center w-full border-[1.5px] border-primary-500 rounded-[10px] px-[21px] pt-[10px] mb-[24px] bg-primary-100 shadow-[0_0_3px_rgba(0,0,0,0.25)] shadow-primary-500">
-      <div className="flex px-[10px] py-[6px] rounded-full text-white text-[12px] bg-primary-600">자산 형성 전략</div>
+      <div className="flex px-[10px] py-[6px] rounded-full text-white text-[12px] bg-primary-600">
+        {strategyNames[data.strategy as number] || '자산 형성'} 전략
+      </div>
       <div className="flex flex-col w-full gap-[10px] my-[29px]">
         {/* 쇼핑 목표액 */}
         <div className="flex flex-col gap-[2px] relative">
