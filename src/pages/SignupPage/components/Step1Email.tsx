@@ -308,7 +308,7 @@ const Step1Email = ({ onNext }: Props) => {
             <button
               onClick={handleVerify}
               //  입력 시간이 만료되면 버튼 비활성화
-              disabled={inputTimeLeft === 0 || !isCodeValid}
+              disabled={inputTimeLeft === 0 || !isCodeValid || loading}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
                 (inputTimeLeft > 0 && isCodeValid && !loading)
                   ? 'bg-primary-600 hover:bg-primary-500'

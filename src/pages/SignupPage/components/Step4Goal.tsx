@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IoClose, IoCheckmark } from 'react-icons/io5'; // IoCheckmark 추가
+import { IoClose, IoCheckmark } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { HiCheck } from 'react-icons/hi';
 import { register, login } from '../../../apis/auth';
@@ -32,7 +32,7 @@ const Step4Goal = ({ formData }: Props) => {
   const [isCompleteScreen, setIsCompleteScreen] = useState(false);
 
   // 글자 수 확인
-  const currentLength = inputVal.length;
+  const currentLength = inputVal.trim().length;
   const maxLength = 10;
   const isValidLength = currentLength > 0 && currentLength <= maxLength;
 
@@ -112,7 +112,7 @@ const Step4Goal = ({ formData }: Props) => {
 
   // 입력창 컨테이너 동적 스타일 함수 
   const getWrapperClass = () => {
-    const baseClass = "relative flex-1 rounded-xl border px-3 transition-all flex items-center";
+    const baseClass = "relative w-full rounded-xl border px-4 transition-all flex items-center";
     
     if (selectedGoal) {
       return `${baseClass} border-primary-600 bg-white ring-1 ring-primary-600`;
@@ -171,36 +171,53 @@ const Step4Goal = ({ formData }: Props) => {
 
       <div className="space-y-6">
         <div>
-          <div className="flex gap-2 h-[54px]">
-            <div className={getWrapperClass()}>
-              {selectedGoal ? (
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary-600 bg-white px-3 py-1.5">
-                  <span className="text-sm font-bold text-gray-800 pt-0.5">{selectedGoal}</span>
-                  <button
-                    type="button"
-                    aria-label="선택한 목표 삭제"
-                    onClick={handleRemoveGoal}
-                    className="text-gray-400 hover:text-gray-600 flex items-center">
-                    <IoClose size={16} />
-                  </button>
+          <div className="flex items-start gap-2">
+            <div className="flex-1 flex flex-col w-full">
+              <div className={`h-[52px] ${getWrapperClass()}`}>
+                {selectedGoal ? (
+                  <div className="inline-flex items-center gap-2 rounded-full border border-primary-600 bg-white px-3 py-1.5">
+                    <span className="text-sm font-bold text-gray-800 pt-0.5">{selectedGoal}</span>
+                    <button
+                      type="button"
+                      aria-label="선택한 목표 삭제"
+                      onClick={handleRemoveGoal}
+                      className="text-gray-400 hover:text-gray-600 flex items-center">
+                      <IoClose size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    maxLength={10}
+                    placeholder="목표를 입력하세요...(10자 이내)"
+                    aria-label="목표"
+                    value={inputVal}
+                    onChange={(e) => setInputVal(e.target.value)}
+                    className="w-full h-full bg-transparent text-sm outline-none placeholder:text-gray-300"
+                  />
+                )}
+              </div>
+
+              {/* 하단 글자 수 카운터 (선택된 목표가 없을 때만 표시) */}
+              {!selectedGoal && (
+                <div className="flex justify-end items-start h-5 mt-1">
+                  <div className="flex items-center gap-1 text-xs shrink-0">
+                    {isValidLength && <IoCheckmark className="text-primary-600" />}
+                    <span
+                      className={`font-medium transition-colors ${
+                        isValidLength ? 'text-primary-600' : 'text-gray-400'
+                      }`}>
+                      {currentLength}/{maxLength}
+                    </span>
+                  </div>
                 </div>
-              ) : (
-                <input
-                  type="text"
-                  maxLength={10}
-                  placeholder="목표를 입력하세요...(10자 이내)"
-                  aria-label="목표"
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-gray-300 px-1"
-                />
               )}
             </div>
 
             <button
               onClick={handleConfirm}
               disabled={!isValidLength || selectedGoal !== null}
-              className={`rounded-xl px-4 text-sm font-bold text-white transition-colors shrink-0
+              className={`h-[52px] min-w-[72px] rounded-xl px-5 text-sm font-bold text-white transition-colors shrink-0
                 ${
                   isValidLength && !selectedGoal
                     ? 'bg-primary-brown-300 hover:bg-primary-brown-400'
@@ -210,21 +227,6 @@ const Step4Goal = ({ formData }: Props) => {
               확정
             </button>
           </div>
-
-          {/* 하단 글자 수 카운터 (선택된 목표가 없을 때만 표시) */}
-          {!selectedGoal && (
-            <div className="flex justify-end items-start h-5 mt-1 pr-20">
-              <div className="flex items-center gap-1 text-xs shrink-0">
-                {isValidLength && <IoCheckmark className="text-primary-600" />}
-                <span
-                  className={`font-medium transition-colors ${
-                    isValidLength ? 'text-primary-600' : 'text-gray-400'
-                  }`}>
-                  {currentLength}/{maxLength}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         <div>

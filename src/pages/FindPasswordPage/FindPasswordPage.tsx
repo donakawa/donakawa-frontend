@@ -95,6 +95,7 @@ const FindPasswordPage = () => {
   // --- [Step 2] 재전송 ---
   const handleResend = async () => {
     setCodeError('');
+    setLoading(true);
     try {
       await sendAuthCode(email, 'RESET_PASSWORD');
       alert('인증번호가 재전송되었습니다.');
@@ -109,6 +110,9 @@ const FindPasswordPage = () => {
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
       alert(err.response?.data?.error?.reason || '재전송 실패');
+    }
+    finally {
+    setLoading(false);
     }
   };
 
@@ -341,8 +345,9 @@ const FindPasswordPage = () => {
               ) : (
                 <button
                   onClick={handleResend}
-                  className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors">
-                  인증번호 재전송
+                  disabled={loading}
+                  className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors disabled:text-gray-400 disabled:cursor-not-allowed">
+                  {loading ? '재전송 중...' : '인증번호 재전송'}
                 </button>
               )}
             </div>
