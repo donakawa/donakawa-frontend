@@ -135,7 +135,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
       wishItemId: Number(itemId),
       name: item.name,
       price: item.price,
-      imageUrl: item.photoUrl,
+      imageUrl: item.photoUrl ?? '',
       type,
     };
 
