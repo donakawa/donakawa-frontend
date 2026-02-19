@@ -17,6 +17,8 @@ interface Props {
 
 const Step1Email = ({ onNext }: Props) => {
   const [view, setView] = useState<'email' | 'code'>('email');
+  const [loading, setLoading] = useState(false); // 로딩 상태 추가
+
   const [email, setEmail] = useState('');
   const [authCode, setAuthCode] = useState(['', '', '', '', '', '']);
   const [showModal, setShowModal] = useState(false);
@@ -62,6 +64,7 @@ const Step1Email = ({ onNext }: Props) => {
     setEmailError('');
     if (!isEmailValid) return;
 
+    setLoading(true); // 로딩 시작 (버튼 비활성화)
     try {
       // API 호출
       await sendAuthCode(email);
@@ -71,9 +74,6 @@ const Step1Email = ({ onNext }: Props) => {
       setInputTimeLeft(300);
       setResendCooldown(30);
       setTimerTrigger(prev => prev + 1);
-      setView('code');
-
-      setTimerTrigger((prev) => prev + 1);
       setView('code');
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
@@ -92,6 +92,8 @@ const Step1Email = ({ onNext }: Props) => {
       } else {
         alert(errorReason || '인증번호 발송에 실패했습니다.');
       }
+    } finally {
+      setLoading(false); // 로딩 종료
     }
   };
 
@@ -99,7 +101,7 @@ const Step1Email = ({ onNext }: Props) => {
   const handleResend = async () => {
     // 에러 초기화
     setCodeError('');
-
+    setLoading(true); // 재전송 중 로딩 처리
     try {
       await sendAuthCode(email);
       alert('인증번호가 재전송되었습니다.');
@@ -121,6 +123,8 @@ const Step1Email = ({ onNext }: Props) => {
       } else {
         alert('인증번호 재전송에 실패했습니다.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,6 +162,7 @@ const Step1Email = ({ onNext }: Props) => {
         return;
     }
 
+    setLoading(true); // 확인 중 로딩 처리
     try {
       const codeString = authCode.join('');
       await verifyAuthCode(email, codeString);
@@ -174,6 +179,8 @@ const Step1Email = ({ onNext }: Props) => {
       } else {
         alert('인증에 실패했습니다. 다시 시도해주세요.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -224,11 +231,11 @@ const Step1Email = ({ onNext }: Props) => {
 
             <button
               onClick={handleSendCode}
-              disabled={!isEmailValid}
+              disabled={!isEmailValid || loading} // loading 상태일 때 비활성화
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                isEmailValid ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
+                isEmailValid && !loading ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
               }`}>
-              인증번호 발송
+              {loading ? '인증번호 전송 중...' : '인증번호 발송'}
             </button>
           </>
         ) : (
@@ -290,9 +297,10 @@ const Step1Email = ({ onNext }: Props) => {
                 ) : (
                     <button 
                         onClick={handleResend}
-                        className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors"
+                        disabled={loading}
+                        className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors disabled:text-gray-400"
                     >
-                        인증번호 재전송
+                        {loading ? '인증번호 재전송 중...' : '인증번호 재전송'}
                     </button>
                 )}
             </div>
@@ -302,12 +310,12 @@ const Step1Email = ({ onNext }: Props) => {
               //  입력 시간이 만료되면 버튼 비활성화
               disabled={inputTimeLeft === 0 || !isCodeValid}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                (inputTimeLeft > 0 && isCodeValid)
+                (inputTimeLeft > 0 && isCodeValid && !loading)
                   ? 'bg-primary-600 hover:bg-primary-500'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}
             >
-              확인
+              {loading ? '확인 중...' : '확인'}
             </button>
           </>
         )}
