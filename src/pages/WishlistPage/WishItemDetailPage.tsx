@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import PurchaseReasonModal from './components/PurchaseReasonModal';
 import SuccessModal from './components/SuccessContent';
 import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal';
+import type { PickedWishItem } from '@/pages/HomePage/hooks/useAIChat';
 
 import {
   getWishlistItemDetail,
@@ -42,6 +43,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
   const [isDropModalOpen, setIsDropModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  
   // type이 없으면 목록으로 보내기 (훅은 항상 호출되도록 return 위에서 처리)
   useEffect(() => {
     if (!itemId) return;
@@ -125,6 +127,20 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
     setIsSuccessOpen(false);
     navigate('/report/review');
   };
+
+  const handleGoDonaAI = useCallback(() => {
+    if (!itemId || !type || !item) return;
+
+    const pickedWishItem: PickedWishItem = {
+      wishItemId: Number(itemId),
+      name: item.name,
+      price: item.price,
+      imageUrl: item.photoUrl,
+      type,
+    };
+
+    navigate('/ai-chat', { state: { pickedWishItem } });
+  }, [navigate, itemId, type, item]);
 
   // 훅들 다 호출한 다음에 return
   if (!type) return null;
@@ -241,9 +257,7 @@ export default function WishItemDetailPage(): React.JSX.Element | null {
           </section>
 
           <section className="px-[18px] py-4">
-            <button
-              type="button"
-              onClick={() => navigate('/ai-chat')}
+            <button type="button" onClick={handleGoDonaAI}
               className={[
                 'w-full rounded-[16px]',
                 'bg-primary-300',
