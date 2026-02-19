@@ -3,6 +3,7 @@ import RegistrationInput from './components/RegistrationInput';
 import LinkLoadingScreen from './LinkLoadingScreen';
 import type { WishItemData } from '../../types/WishlistPage/WishItemData';
 import { startCrawlTask, getCrawlResult } from '@/apis/WishlistPage/wishlistItems';
+import ToastModal from './components/modals/ToastModal';
 
 interface Props {
   onBack: () => void;
@@ -15,6 +16,7 @@ const MAX_RETRIES = 3;
 export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryCountRef = useRef(0);
   const isDoneRef = useRef(false);
@@ -26,6 +28,10 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
       }
     };
   }, []);
+
+  const showCrawlFailToast = () => {
+    setToastOpen(true);
+  };
 
   //SSE(Server-Sent Events)를 통해 크롤링 진행 상황을 수신
   const subscribeToEvents = (jobId: string, originalUrl: string) => {
@@ -60,7 +66,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
               cacheId: dataId,
             });
           } else {
-            alert('상품 정보를 분석하는 데 실패했습니다.');
+            alert('상품 정보를 가져오지 못했습니다.');
           }
         } else if (result === 'FAILED') {
           throw new Error('CRAWL_FAILED');
@@ -70,7 +76,7 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
           // 성공하지 않았을 때만 에러 처리
           eventSource.close();
           setIsLoading(false);
-          alert('상품 정보를 분석하는 데 실패했습니다.');
+          alert('상품 정보를 가져오지 못했습니다.');
         }
       }
     });
@@ -113,8 +119,10 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
       if (error.response?.status === 409) {
         const errorMessage = error.response.data?.error?.message || '이미 추가된 상품입니다.';
         alert(errorMessage);
+      } else if (error.response?.status === 400) {
+        showCrawlFailToast();
       } else {
-        alert('크롤링 요청 중 오류가 발생했습니다.');
+        alert('상품 정보를 가져오지 못했습니다.');
       }
 
       console.error('Crawl request error:', error);
@@ -153,6 +161,8 @@ export default function LinkRegistrationPage({ onBack, onComplete }: Props) {
           </button>
         </div>
       </main>
+
+      <ToastModal open={toastOpen} onClose={() => setToastOpen(false)} />
     </div>
   );
 }

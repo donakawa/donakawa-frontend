@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { ReportDetailProduct, PurchaseDecision } from '@/types/ReportPage/Detail';
 
-import LeftArrow from '@/assets/arrow_left(white).svg';
+import ArrowItem from '@/assets/item_arrow.svg';
 import SampleImage from '@/assets/sample2.svg';
 import DonaAI from '@/assets/dona_glass.svg';
 
@@ -102,7 +102,7 @@ export default function ReportDetailPage({ enableMock = true }: Props) {
                 aria-label="뒤로가기"
                 onClick={onClickBack}
                 className="w-10 h-10 border-0 bg-transparent p-0 flex items-center justify-center cursor-pointer">
-                <img src={LeftArrow} alt="뒤로가기" className="block" />
+                <img src={ArrowItem} alt="뒤로가기" className="block" />
               </button>
 
               <div aria-hidden className="w-10 h-10" />
