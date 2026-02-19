@@ -112,7 +112,7 @@ const FindPasswordPage = () => {
       alert(err.response?.data?.error?.reason || '재전송 실패');
     }
     finally {
-    setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -289,7 +289,7 @@ const FindPasswordPage = () => {
               onClick={handleSendCode}
               disabled={!email.includes('@') || loading}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                email.includes('@') ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
+                email.includes('@') && !loading ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
               }`}>
               {loading ? '전송 중...' : '인증번호 발송'}
             </button>
