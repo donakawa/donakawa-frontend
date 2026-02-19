@@ -12,12 +12,28 @@ interface ErrorResponse {
   };
 }
 
+// 에러 메시지 생성 함수
+const getErrorMessage = (pw: string) => {
+  if (!pw) return '';
+  
+  if (/\s/.test(pw)) return '공백은 사용할 수 없습니다.';
+  if (pw.length < 8 || pw.length > 12) return '8~12자 이내로 입력해주세요.';
+  if (!/(?=.*[A-Za-z])/.test(pw)) return '영문을 하나 이상 포함해야 합니다.';
+  if (!/(?=.*\d)/.test(pw)) return '숫자를 하나 이상 포함해야 합니다.';
+  
+  return ''; // 모든 조건 통과
+};
+
 const FindPasswordPage = () => {
   const navigate = useNavigate();
 
   // --- 공통 상태 ---
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [loading, setLoading] = useState(false);
+  
+  // 로딩 상태 분리
+  const [isSubmitting, setIsSubmitting] = useState(false); // Step 1 발송 & Step 3 변경 공용
+  const [isResending, setIsResending] = useState(false);   // Step 2 재전송용
+  const [isVerifying, setIsVerifying] = useState(false);   // Step 2 확인용
 
   // --- Step 1 & 2 상태 (이메일 & 인증코드) ---
   const [email, setEmail] = useState('');
@@ -41,7 +57,7 @@ const FindPasswordPage = () => {
   const [showPw, setShowPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
-  //  타이머 로직 변경 
+  // 타이머 로직 변경 
   useEffect(() => {
     if (step !== 2) return;
     
@@ -66,12 +82,12 @@ const FindPasswordPage = () => {
     setEmailError('');
     if (!email.includes('@')) return;
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       await sendAuthCode(email, 'RESET_PASSWORD');
       alert('인증번호가 발송되었습니다.');
       
-      //  타이머 초기화 (5분 / 30초)
+      // 타이머 초기화 (5분 / 30초)
       setInputTimeLeft(300);
       setResendCooldown(30);
       setTimerTrigger((prev) => prev + 1);
@@ -88,19 +104,19 @@ const FindPasswordPage = () => {
         alert(errorReason || '인증번호 발송에 실패했습니다.');
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   // --- [Step 2] 재전송 ---
   const handleResend = async () => {
     setCodeError('');
-    setLoading(true);
+    setIsResending(true);
     try {
       await sendAuthCode(email, 'RESET_PASSWORD');
       alert('인증번호가 재전송되었습니다.');
       
-      //  재전송 시 타이머 리셋 (5분 / 30초)
+      // 재전송 시 타이머 리셋 (5분 / 30초)
       setInputTimeLeft(300);
       setResendCooldown(30);
       
@@ -110,9 +126,8 @@ const FindPasswordPage = () => {
     } catch (error) {
       const err = error as AxiosError<ErrorResponse>;
       alert(err.response?.data?.error?.reason || '재전송 실패');
-    }
-    finally {
-      setLoading(false);
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -149,7 +164,7 @@ const FindPasswordPage = () => {
         return;
     }
 
-    setLoading(true);
+    setIsVerifying(true);
     try {
       const codeString = authCode.join('');
       await verifyAuthCode(email, codeString, 'RESET_PASSWORD');
@@ -163,7 +178,7 @@ const FindPasswordPage = () => {
         alert('인증에 실패했습니다. 다시 시도해주세요.');
       }
     } finally {
-      setLoading(false);
+      setIsVerifying(false);
     }
   };
 
@@ -180,23 +195,11 @@ const FindPasswordPage = () => {
   const isMatch = password === confirmPassword && password !== '';
   const canSubmitPassword = isValidFormat && isMatch;
 
-  // 에러 메시지 생성 함수
-  const getErrorMessage = (pw: string) => {
-    if (!pw) return ''; // 입력 전이면 에러 없음
-    
-    if (/\s/.test(pw)) return '공백은 사용할 수 없습니다.';
-    if (pw.length < 8 || pw.length > 12) return '8~12자 이내로 입력해주세요.';
-    if (!/(?=.*[A-Za-z])/.test(pw)) return '영문을 하나 이상 포함해야 합니다.';
-    if (!/(?=.*\d)/.test(pw)) return '숫자를 하나 이상 포함해야 합니다.';
-    
-    return ''; // 모든 조건 통과
-  };
-
   const errorMessage = getErrorMessage(password);
 
   const handleResetPassword = async () => {
     if (!canSubmitPassword) return;
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       await resetPassword({ email, newPassword: password });
       alert('비밀번호가 성공적으로 변경되었습니다.\n로그인 페이지로 이동합니다.');
@@ -212,7 +215,7 @@ const FindPasswordPage = () => {
         alert(errorReason || '비밀번호 변경에 실패했습니다.');
       }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -287,11 +290,11 @@ const FindPasswordPage = () => {
 
             <button
               onClick={handleSendCode}
-              disabled={!email.includes('@') || loading}
+              disabled={!email.includes('@') || isSubmitting}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                email.includes('@') && !loading ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
+                email.includes('@') && !isSubmitting ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
               }`}>
-              {loading ? '전송 중...' : '인증번호 발송'}
+              {isSubmitting ? '전송 중...' : '인증번호 발송'}
             </button>
           </div>
         )}
@@ -345,22 +348,22 @@ const FindPasswordPage = () => {
               ) : (
                 <button
                   onClick={handleResend}
-                  disabled={loading}
+                  disabled={isResending}
                   className="text-sm text-blue-500 font-bold underline underline-offset-4 hover:text-blue-600 transition-colors disabled:text-gray-400 disabled:cursor-not-allowed">
-                  {loading ? '재전송 중...' : '인증번호 재전송'}
+                  {isResending ? '재전송 중...' : '인증번호 재전송'}
                 </button>
               )}
             </div>
 
             <button
               onClick={handleVerify}
-              disabled={inputTimeLeft === 0 || authCode.some(c => c === '') || loading}
+              disabled={inputTimeLeft === 0 || authCode.some(c => c === '') || isVerifying}
               className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                (inputTimeLeft > 0 && !authCode.some(c => c === ''))
+                (inputTimeLeft > 0 && !authCode.some(c => c === '') && !isVerifying)
                   ? 'bg-primary-600 hover:bg-primary-500'
                   : 'bg-gray-200 cursor-not-allowed'
               }`}>
-              {loading ? '확인 중...' : '확인'}
+              {isVerifying ? '확인 중...' : '확인'}
             </button>
           </div>
         )}
@@ -369,7 +372,7 @@ const FindPasswordPage = () => {
         {step === 3 && (
           <div className="space-y-2 animate-fade-in">
             {/* 비밀번호 입력 Wrapper */}
-            <div className={getWrapperClass(isValidFormat, !!errorMessage && password.length > 0)}>
+            <div className={getWrapperClass(isValidFormat, !!errorMessage)}>
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
@@ -435,11 +438,11 @@ const FindPasswordPage = () => {
 
             <button
               onClick={handleResetPassword}
-              disabled={!canSubmitPassword || loading}
+              disabled={!canSubmitPassword || isSubmitting}
               className={`mt-10 w-full rounded-xl py-4 text-sm font-bold text-white transition-colors ${
-                canSubmitPassword ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
+                canSubmitPassword && !isSubmitting ? 'bg-primary-600 hover:bg-primary-500' : 'bg-gray-200'
               }`}>
-              {loading ? '변경 중...' : '비밀번호 변경하기'}
+              {isSubmitting ? '변경 중...' : '비밀번호 변경하기'}
             </button>
           </div>
         )}
