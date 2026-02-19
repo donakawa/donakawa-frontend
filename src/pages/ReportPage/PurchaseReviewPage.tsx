@@ -149,8 +149,8 @@ export default function PurchaseReview() {
     navigate(`/report/review/write?purchasedId=${encodeURIComponent(id)}`);
   };
 
-  const handleOpenClick = (id: string) => {
-    console.log('open completed review:', id);
+  const handleOpenClick = (itemId: string) => {
+    navigate(`/report/review/write?historyId=${encodeURIComponent(itemId)}`);
   };
 
   return (

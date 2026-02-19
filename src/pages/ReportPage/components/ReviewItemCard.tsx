@@ -69,7 +69,7 @@ export function CompletedReviewCard({ item, onOpenClick }: CompletedCardProps) {
   return (
     <button
       type="button"
-      onClick={() => onOpenClick(item.reviewId)}
+      onClick={() => onOpenClick(item.itemId)}
       className="w-full text-left p-5 relative bg-transparent border-0">
       <div className="absolute left-4 right-4 bottom-0 h-px bg-gray-100" />
 
