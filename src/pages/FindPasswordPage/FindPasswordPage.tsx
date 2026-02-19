@@ -168,10 +168,27 @@ const FindPasswordPage = () => {
     setStep(3);
   };
 
-  // --- [Step 3] 비밀번호 변경 ---
-  const isValidFormat = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,12}$/.test(password);
+  // --- [Step 3] 비밀번호 변경 로직 ---
+  // 1. 형식 검사 (영문+숫자 필수, 특수문자 허용, 8~12자리)
+  const isValidFormat = /^(?=.*[A-Za-z])(?=.*\d)[^\s]{8,12}$/.test(password);
+  
+  // 2. 일치 검사
   const isMatch = password === confirmPassword && password !== '';
   const canSubmitPassword = isValidFormat && isMatch;
+
+  // 에러 메시지 생성 함수
+  const getErrorMessage = (pw: string) => {
+    if (!pw) return ''; // 입력 전이면 에러 없음
+    
+    if (/\s/.test(pw)) return '공백은 사용할 수 없습니다.';
+    if (pw.length < 8 || pw.length > 12) return '8~12자 이내로 입력해주세요.';
+    if (!/(?=.*[A-Za-z])/.test(pw)) return '영문을 하나 이상 포함해야 합니다.';
+    if (!/(?=.*\d)/.test(pw)) return '숫자를 하나 이상 포함해야 합니다.';
+    
+    return ''; // 모든 조건 통과
+  };
+
+  const errorMessage = getErrorMessage(password);
 
   const handleResetPassword = async () => {
     if (!canSubmitPassword) return;
@@ -208,7 +225,7 @@ const FindPasswordPage = () => {
     const baseClass = "flex items-center w-full h-12 rounded-xl border px-4 bg-white transition-all";
     
     if (isError) return `${baseClass} border-red-500 bg-red-50 focus-within:border-red-500`;
-    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600 bg-primary-50`; // <-- bg-primary-50 추가됨
+    if (isValid) return `${baseClass} border-primary-600 ring-1 ring-primary-600 bg-primary-50`;
     return `${baseClass} border-gray-200 focus-within:border-primary-600`;
   };
 
@@ -249,7 +266,6 @@ const FindPasswordPage = () => {
         {step === 1 && (
           <div className="space-y-4 animate-fade-in">
             <div>
-              {/* Wrapper 적용 */}
               <div className={getWrapperClass(email.includes('@'), !!emailError)}>
                 <input
                   type="email"
@@ -348,7 +364,7 @@ const FindPasswordPage = () => {
         {step === 3 && (
           <div className="space-y-2 animate-fade-in">
             {/* 비밀번호 입력 Wrapper */}
-            <div className={getWrapperClass(isValidFormat, false)}>
+            <div className={getWrapperClass(isValidFormat, !!errorMessage && password.length > 0)}>
               <input
                 type={showPw ? 'text' : 'password'}
                 placeholder="비밀번호"
@@ -361,23 +377,29 @@ const FindPasswordPage = () => {
                 onClick={() => setShowPw(!showPw)}
                 aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 표시'}
                 aria-pressed={showPw}
-                // absolute 제거, 옆에 배치
                 className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
-                  isValidFormat ? 'text-primary-600' : 'text-gray-400'
+                  isValidFormat ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
                 }`}>
                 {showPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
               </button>
             </div>
 
+            {/* 헬퍼 텍스트 or 에러 메시지 */}
             <div className="flex justify-end mb-4">
-              <span className={`text-xs transition-colors ${isValidFormat ? 'text-primary-600' : 'text-gray-400'}`}>
+              {errorMessage ? (
+                <span className="text-xs text-red-500 transition-colors animate-fade-in">
+                  {errorMessage}
+                </span>
+              ) : (
+                <span className={`text-xs transition-colors ${isValidFormat ? 'text-primary-600' : 'text-gray-400'}`}>
                 영문과 숫자 조합, 8~12자리
-              </span>
+                </span>
+              )}
             </div>
 
+            {/* 비밀번호 확인 입력 (조건부 렌더링) */}
             {isValidFormat && (
               <div className="relative w-full mt-4 animate-fade-in-up">
-                {/* 비밀번호 확인 Wrapper */}
                 <div className={getWrapperClass(isMatch, confirmPassword !== '' && !isMatch)}>
                   <input
                     type={showConfirmPw ? 'text' : 'password'}
@@ -391,16 +413,17 @@ const FindPasswordPage = () => {
                     onClick={() => setShowConfirmPw(!showConfirmPw)}
                     aria-label={showConfirmPw ? '비밀번호 확인 숨기기' : '비밀번호 확인 표시'}
                     aria-pressed={showConfirmPw}
-                    // absolute 제거, 옆에 배치
                     className={`ml-2 flex-shrink-0 flex items-center justify-center w-6 h-6 transition-colors ${
-                      isMatch ? 'text-primary-600' : 'text-gray-400'
+                      isMatch ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'
                     }`}>
                     {showConfirmPw ? <IoEyeOutline size={20} /> : <IoEyeOffOutline size={20} />}
                   </button>
                 </div>
 
                 {confirmPassword && !isMatch && (
-                  <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">비밀번호가 일치하지 않습니다.</div>
+                  <div className="absolute right-0 top-full mt-1 text-right text-xs text-red-500">
+                    비밀번호가 일치하지 않습니다.
+                  </div>
                 )}
               </div>
             )}
